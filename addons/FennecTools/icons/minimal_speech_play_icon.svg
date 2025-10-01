@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- minimal_speech_play_icon.svg
+     Minimalist flat icon, 64x64 SVG.
+     - Rounded speech bubble with thin 2px outline (no gradients).
+     - Two short horizontal strokes inside to hint text.
+     - Small animated 'play' triangle over top-right corner (subtle pulsing).
+     - Uses currentColor so you can adapt to dark/light themes; includes media query fallbacks for contrast.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" role="img" aria-labelledby="titleDesc">
+  <title id="titleDesc">Speech bubble with play</title>
+  <desc>Minimal rounded speech bubble with two short text lines and a small animated play triangle on the top-right.</desc>
+
+  <style><![CDATA[
+    /* Default color (high contrast on light backgrounds) */
+    svg { color: #111111; }
+    /* Prefer light on dark backgrounds */
+    @media (prefers-color-scheme: dark) {
+      svg { color: #ffffff; }
+    }
+    /* Keep animation subtle and accessible */
+    .play { transform-box: fill-box; transform-origin: 100% 0%; }
+  ]]></style>
+
+  <!-- Bubble outline -->
+  <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <!-- rounded speech bubble body with a small tail -->
+    <path d="M12 18
+             a6 6 0 0 1 6 -6
+             h28
+             a6 6 0 0 1 6 6
+             v18
+             a6 6 0 0 1 -6 6
+             h-16
+             l-6 6
+             v-6
+             h-12
+             a6 6 0 0 1 -6 -6
+             z" />
+    <!-- interior short lines to hint text -->
+    <path d="M22 30 h18" stroke-linecap="round" />
+    <path d="M22 36 h12" stroke-linecap="round" />
+  </g>
+
+  <!-- Small play triangle (filled) at top-right with subtle pulsing animation -->
+  <g class="play" fill="currentColor" stroke="none">
+    <!-- Position triangle so it sits slightly above/right of the bubble's corner -->
+    <g transform="translate(46,10)">
+      <polygon points="0,0 8,4 0,8" />
+      <!-- subtle pulse scale animation -->
+      <animateTransform attributeName="transform"
+                        type="scale"
+                        values="1;1.15;1"
+                        dur="1.2s"
+                        repeatCount="indefinite"
+                        additive="sum" />
+    </g>
+  </g>
+</svg>

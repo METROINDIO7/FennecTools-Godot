@@ -1,0 +1,141 @@
+[gd_scene load_steps=2 format=3 uid="uid://cqm8k7x2qvn8w"]
+
+[ext_resource type="Script" uid="uid://b7kiu72jt214l" path="res://addons/FennecTools/View/conditional_editor.gd" id="1_8x9yv"]
+
+[node name="ConditionalEditor" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+script = ExtResource("1_8x9yv")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Label" type="Label" parent="VBoxContainer"]
+layout_mode = 2
+text = "Editor de Condicionales"
+horizontal_alignment = 1
+
+[node name="FilterContainer" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="VBoxContainer/FilterContainer"]
+layout_mode = 2
+text = "Filtrar por grupo:"
+
+[node name="GroupFilter" type="OptionButton" parent="VBoxContainer/FilterContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+selected = 0
+item_count = 1
+popup/item_0/text = "Todos"
+popup/item_0/id = 0
+
+[node name="ScrollContainer" type="ScrollContainer" parent="VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="ItemList" type="ItemList" parent="VBoxContainer/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+item_count = 1
+item_0/text = "❌ Error: No se pudieron cargar las condicionales"
+
+[node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="NameInput" type="LineEdit" parent="VBoxContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+placeholder_text = "Nombre del condicional"
+
+[node name="TypeOption" type="OptionButton" parent="VBoxContainer/HBoxContainer"]
+layout_mode = 2
+selected = 0
+item_count = 4
+popup/item_0/text = "Booleano"
+popup/item_0/id = 0
+popup/item_1/text = "Numérico"
+popup/item_1/id = 1
+popup/item_2/text = "Texto"
+popup/item_2/id = 2
+popup/item_3/text = "Texto Múltiple"
+popup/item_3/id = 3
+
+[node name="ValueCheckBox" type="CheckBox" parent="VBoxContainer/HBoxContainer"]
+layout_mode = 2
+text = "Valor"
+
+[node name="ValueSpinBox" type="SpinBox" parent="VBoxContainer/HBoxContainer"]
+visible = false
+layout_mode = 2
+min_value = -999999.0
+max_value = 999999.0
+step = 0.01
+
+[node name="HBoxContainer2" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="GroupInput" type="LineEdit" parent="VBoxContainer/HBoxContainer2"]
+layout_mode = 2
+size_flags_horizontal = 3
+placeholder_text = "Grupo (opcional)"
+
+[node name="DescriptionInput" type="TextEdit" parent="VBoxContainer"]
+custom_minimum_size = Vector2(0, 60)
+layout_mode = 2
+placeholder_text = "Descripción del condicional..."
+
+[node name="TextValuesContainer" type="VBoxContainer" parent="VBoxContainer"]
+visible = false
+layout_mode = 2
+
+[node name="Label" type="Label" parent="VBoxContainer/TextValuesContainer"]
+layout_mode = 2
+text = "Valores de texto múltiple:"
+
+[node name="TextValuesList" type="ItemList" parent="VBoxContainer/TextValuesContainer"]
+custom_minimum_size = Vector2(0, 100)
+layout_mode = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer/TextValuesContainer"]
+layout_mode = 2
+
+[node name="TextInput" type="LineEdit" parent="VBoxContainer/TextValuesContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+placeholder_text = "Nuevo valor de texto..."
+
+[node name="AddTextButton" type="Button" parent="VBoxContainer/TextValuesContainer/HBoxContainer"]
+layout_mode = 2
+text = "Agregar"
+
+[node name="RemoveTextButton" type="Button" parent="VBoxContainer/TextValuesContainer/HBoxContainer"]
+layout_mode = 2
+text = "Remover"
+
+[node name="ButtonContainer" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="AddButton" type="Button" parent="VBoxContainer/ButtonContainer"]
+layout_mode = 2
+text = "Agregar"
+
+[node name="EditButton" type="Button" parent="VBoxContainer/ButtonContainer"]
+layout_mode = 2
+text = "Editar"
+
+[node name="DeleteButton" type="Button" parent="VBoxContainer/ButtonContainer"]
+layout_mode = 2
+text = "Eliminar"

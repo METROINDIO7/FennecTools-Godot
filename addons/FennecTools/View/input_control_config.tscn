@@ -1,0 +1,184 @@
+[gd_scene load_steps=2 format=3 uid="uid://bvxqy8r7qxqkn"]
+
+[ext_resource type="Script" uid="uid://bfwudprdx5ktb" path="res://addons/FennecTools/View/input_control_config.gd" id="1_0k8xj"]
+
+[node name="InputControlConfig" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_0k8xj")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 20.0
+offset_top = 20.0
+offset_right = -20.0
+offset_bottom = -20.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="TitleLabel" type="Label" parent="VBoxContainer"]
+layout_mode = 2
+text = "Control de Entrada Personalizable"
+horizontal_alignment = 1
+
+[node name="EnabledContainer" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="EnabledLabel" type="Label" parent="VBoxContainer/EnabledContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Activar Sistema de Control:"
+
+[node name="EnabledCheckBox" type="CheckBox" parent="VBoxContainer/EnabledContainer"]
+layout_mode = 2
+button_pressed = true
+
+[node name="HSeparator2" type="HSeparator" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="GroupContainer" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="GroupLabel" type="Label" parent="VBoxContainer/GroupContainer"]
+custom_minimum_size = Vector2(150, 0)
+layout_mode = 2
+text = "Grupo de Nodos:"
+
+[node name="GroupLineEdit" type="LineEdit" parent="VBoxContainer/GroupContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "player"
+placeholder_text = "interactuable"
+
+[node name="HSeparator5" type="HSeparator" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="MappingsLabel" type="Label" parent="VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 1
+text = "Mapeo de Entradas:"
+
+[node name="VBoxContainer_ScrollContainer#MappingsContainer" type="VBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="VBoxContainer_ScrollContainer_MappingsContainer#UpContainer" type="HBoxContainer" parent="VBoxContainer/VBoxContainer_ScrollContainer#MappingsContainer"]
+layout_mode = 2
+
+[node name="VBoxContainer_ScrollContainer_MappingsContainer_UpContainer#UpLabel" type="Label" parent="VBoxContainer/VBoxContainer_ScrollContainer#MappingsContainer/VBoxContainer_ScrollContainer_MappingsContainer#UpContainer"]
+custom_minimum_size = Vector2(100, 0)
+layout_mode = 2
+text = "Arriba:"
+
+[node name="VBoxContainer_ScrollContainer_MappingsContainer_UpContainer#UpLineEdit" type="LineEdit" parent="VBoxContainer/VBoxContainer_ScrollContainer#MappingsContainer/VBoxContainer_ScrollContainer_MappingsContainer#UpContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "ui_up"
+placeholder_text = "ui_up, joypad_up"
+
+[node name="VBoxContainer_ScrollContainer_MappingsContainer#DownContainer" type="HBoxContainer" parent="VBoxContainer/VBoxContainer_ScrollContainer#MappingsContainer"]
+layout_mode = 2
+
+[node name="VBoxContainer_ScrollContainer_MappingsContainer_DownContainer#DownLabel" type="Label" parent="VBoxContainer/VBoxContainer_ScrollContainer#MappingsContainer/VBoxContainer_ScrollContainer_MappingsContainer#DownContainer"]
+custom_minimum_size = Vector2(100, 0)
+layout_mode = 2
+text = "Abajo:"
+
+[node name="VBoxContainer_ScrollContainer_MappingsContainer_DownContainer#DownLineEdit" type="LineEdit" parent="VBoxContainer/VBoxContainer_ScrollContainer#MappingsContainer/VBoxContainer_ScrollContainer_MappingsContainer#DownContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "ui_down"
+placeholder_text = "ui_down, joypad_down"
+
+[node name="VBoxContainer_ScrollContainer_MappingsContainer#LeftContainer" type="HBoxContainer" parent="VBoxContainer/VBoxContainer_ScrollContainer#MappingsContainer"]
+layout_mode = 2
+
+[node name="VBoxContainer_ScrollContainer_MappingsContainer_LeftContainer#LeftLabel" type="Label" parent="VBoxContainer/VBoxContainer_ScrollContainer#MappingsContainer/VBoxContainer_ScrollContainer_MappingsContainer#LeftContainer"]
+custom_minimum_size = Vector2(100, 0)
+layout_mode = 2
+text = "Izquierda:"
+
+[node name="VBoxContainer_ScrollContainer_MappingsContainer_LeftContainer#LeftLineEdit" type="LineEdit" parent="VBoxContainer/VBoxContainer_ScrollContainer#MappingsContainer/VBoxContainer_ScrollContainer_MappingsContainer#LeftContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "ui_left"
+placeholder_text = "ui_left, joypad_left"
+
+[node name="VBoxContainer_ScrollContainer_MappingsContainer#RightContainer" type="HBoxContainer" parent="VBoxContainer/VBoxContainer_ScrollContainer#MappingsContainer"]
+layout_mode = 2
+
+[node name="VBoxContainer_ScrollContainer_MappingsContainer_RightContainer#RightLabel" type="Label" parent="VBoxContainer/VBoxContainer_ScrollContainer#MappingsContainer/VBoxContainer_ScrollContainer_MappingsContainer#RightContainer"]
+custom_minimum_size = Vector2(100, 0)
+layout_mode = 2
+text = "Derecha:"
+
+[node name="VBoxContainer_ScrollContainer_MappingsContainer_RightContainer#RightLineEdit" type="LineEdit" parent="VBoxContainer/VBoxContainer_ScrollContainer#MappingsContainer/VBoxContainer_ScrollContainer_MappingsContainer#RightContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "ui_right"
+placeholder_text = "ui_right, joypad_right"
+
+[node name="VBoxContainer_ScrollContainer_MappingsContainer#AcceptContainer" type="HBoxContainer" parent="VBoxContainer/VBoxContainer_ScrollContainer#MappingsContainer"]
+layout_mode = 2
+
+[node name="VBoxContainer_ScrollContainer_MappingsContainer_AcceptContainer#AcceptLabel" type="Label" parent="VBoxContainer/VBoxContainer_ScrollContainer#MappingsContainer/VBoxContainer_ScrollContainer_MappingsContainer#AcceptContainer"]
+custom_minimum_size = Vector2(100, 0)
+layout_mode = 2
+text = "Aceptar:"
+
+[node name="VBoxContainer_ScrollContainer_MappingsContainer_AcceptContainer#AcceptLineEdit" type="LineEdit" parent="VBoxContainer/VBoxContainer_ScrollContainer#MappingsContainer/VBoxContainer_ScrollContainer_MappingsContainer#AcceptContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "ui_accept"
+placeholder_text = "ui_accept, joypad_accept"
+
+[node name="VBoxContainer_ScrollContainer_MappingsContainer#BackContainer" type="HBoxContainer" parent="VBoxContainer/VBoxContainer_ScrollContainer#MappingsContainer"]
+layout_mode = 2
+
+[node name="VBoxContainer_ScrollContainer_MappingsContainer_BackContainer#BackLabel" type="Label" parent="VBoxContainer/VBoxContainer_ScrollContainer#MappingsContainer/VBoxContainer_ScrollContainer_MappingsContainer#BackContainer"]
+custom_minimum_size = Vector2(100, 0)
+layout_mode = 2
+text = "Retroceder:"
+
+[node name="VBoxContainer_ScrollContainer_MappingsContainer_BackContainer#BackLineEdit" type="LineEdit" parent="VBoxContainer/VBoxContainer_ScrollContainer#MappingsContainer/VBoxContainer_ScrollContainer_MappingsContainer#BackContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "ui_cancel"
+placeholder_text = "ui_cancel, joypad_back"
+
+[node name="HSeparator3" type="HSeparator" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="ButtonsContainer" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="SaveButton" type="Button" parent="VBoxContainer/ButtonsContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Guardar Configuración"
+
+[node name="ResetButton" type="Button" parent="VBoxContainer/ButtonsContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Restaurar Valores por Defecto"
+
+[node name="TestButton" type="Button" parent="VBoxContainer/ButtonsContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Probar Configuración"
+
+[node name="HSeparator4" type="HSeparator" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="StatusLabel" type="Label" parent="VBoxContainer"]
+layout_mode = 2
+text = "Estado: Sistema ACTIVADO"
+horizontal_alignment = 1

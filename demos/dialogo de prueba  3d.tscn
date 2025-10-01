@@ -1,0 +1,88 @@
+[gd_scene load_steps=13 format=3 uid="uid://durf6pbtbrj4v"]
+
+[ext_resource type="Script" uid="uid://bt45v110li4dh" path="res://addons/FennecTools/nodes/DialogueLauncher.gd" id="1_kl2yw"]
+[ext_resource type="Script" uid="uid://d2ntn8vru5vta" path="res://demos/dialogo_de_prueba__3d.gd" id="1_m4gi8"]
+[ext_resource type="Script" uid="uid://du8yk53skbjc8" path="res://addons/FennecTools/nodes/DialogueSlotConfig.gd" id="3_m4gi8"]
+[ext_resource type="PackedScene" uid="uid://c4852hpydxq" path="res://demos/panel de dialogo gx.tscn" id="4_yw17p"]
+
+[sub_resource type="Resource" id="Resource_kl2yw"]
+script = ExtResource("3_m4gi8")
+chain_start_id = 4
+chain_count = 2
+metadata/_custom_type_script = "uid://du8yk53skbjc8"
+
+[sub_resource type="Resource" id="Resource_yw17p"]
+script = ExtResource("3_m4gi8")
+mode = 1
+sequence_ids = Array[int]([6])
+metadata/_custom_type_script = "uid://du8yk53skbjc8"
+
+[sub_resource type="Resource" id="Resource_m4gi8"]
+script = ExtResource("3_m4gi8")
+mode = 1
+sequence_ids = Array[int]([1])
+metadata/_custom_type_script = "uid://du8yk53skbjc8"
+
+[sub_resource type="Resource" id="Resource_0evlg"]
+script = ExtResource("3_m4gi8")
+chain_start_id = 2
+chain_count = 2
+metadata/_custom_type_script = "uid://du8yk53skbjc8"
+
+[sub_resource type="Resource" id="Resource_ctttj"]
+script = ExtResource("3_m4gi8")
+chain_start_id = 10
+chain_count = 2
+metadata/_custom_type_script = "uid://du8yk53skbjc8"
+
+[sub_resource type="Resource" id="Resource_26c4r"]
+script = ExtResource("3_m4gi8")
+chain_start_id = 13
+panel_override = ExtResource("4_yw17p")
+metadata/_custom_type_script = "uid://du8yk53skbjc8"
+
+[sub_resource type="Resource" id="Resource_5aa2m"]
+script = ExtResource("3_m4gi8")
+chain_start_id = 14
+chain_count = 2
+metadata/_custom_type_script = "uid://du8yk53skbjc8"
+
+[sub_resource type="Resource" id="Resource_do007"]
+script = ExtResource("3_m4gi8")
+chain_start_id = 16
+chain_count = 4
+metadata/_custom_type_script = "uid://du8yk53skbjc8"
+
+[node name="Node3D" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_m4gi8")
+
+[node name="DialogueLauncher" type="Node" parent="."]
+process_mode = 3
+script = ExtResource("1_kl2yw")
+slots = Array[ExtResource("3_m4gi8")]([SubResource("Resource_kl2yw"), SubResource("Resource_yw17p"), SubResource("Resource_m4gi8"), SubResource("Resource_0evlg"), SubResource("Resource_ctttj"), SubResource("Resource_26c4r"), SubResource("Resource_5aa2m"), SubResource("Resource_do007")])
+auto_advance_delay = 5.0
+advance_action_name = "E"
+metadata/_custom_type_script = "uid://bt45v110li4dh"
+
+[node name="Button" type="Button" parent="."]
+layout_mode = 0
+offset_left = 66.0
+offset_top = 32.0
+offset_right = 194.0
+offset_bottom = 88.0
+text = "play"
+
+[node name="Label" type="Label" parent="."]
+layout_mode = 0
+offset_left = 314.0
+offset_top = 45.0
+offset_right = 354.0
+offset_bottom = 68.0
+
+[connection signal="pressed" from="Button" to="." method="_on_button_pressed"]

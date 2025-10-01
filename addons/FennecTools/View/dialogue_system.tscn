@@ -1,0 +1,527 @@
+[gd_scene load_steps=3 format=3 uid="uid://dak8m3x4qvn8w"]
+
+[ext_resource type="Script" uid="uid://dugsnip8ar66o" path="res://addons/FennecTools/View/dialogue_system.gd" id="1_7x6yv"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_14gqn"]
+bg_color = Color(0, 0, 0, 1)
+border_width_left = 5
+border_width_top = 5
+border_width_right = 5
+border_width_bottom = 5
+border_color = Color(1, 1, 1, 1)
+border_blend = true
+corner_radius_top_left = 5
+corner_radius_top_right = 5
+corner_radius_bottom_right = 5
+corner_radius_bottom_left = 5
+expand_margin_left = 3.0
+expand_margin_top = 3.0
+expand_margin_right = 3.0
+expand_margin_bottom = 3.0
+
+[node name="DialogueSystem" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+script = ExtResource("1_7x6yv")
+
+[node name="MainVBox" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Header" type="Label" parent="MainVBox"]
+layout_mode = 2
+text = "Sistema de Diálogos"
+horizontal_alignment = 1
+
+[node name="HSeparator" type="HSeparator" parent="MainVBox"]
+layout_mode = 2
+
+[node name="FiltersPanel" type="PanelContainer" parent="MainVBox"]
+layout_mode = 2
+size_flags_vertical = 0
+
+[node name="FiltersVBox" type="VBoxContainer" parent="MainVBox/FiltersPanel"]
+layout_mode = 2
+size_flags_vertical = 0
+
+[node name="CharacterAndLanguageRow" type="HBoxContainer" parent="MainVBox/FiltersPanel/FiltersVBox"]
+layout_mode = 2
+size_flags_vertical = 0
+
+[node name="CharacterLabel" type="Label" parent="MainVBox/FiltersPanel/FiltersVBox/CharacterAndLanguageRow"]
+layout_mode = 2
+size_flags_vertical = 0
+text = "Personaje:"
+
+[node name="CharacterOption" type="OptionButton" parent="MainVBox/FiltersPanel/FiltersVBox/CharacterAndLanguageRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 0
+selected = 0
+item_count = 5
+popup/item_0/text = "Todos"
+popup/item_0/id = 0
+popup/item_1/text = "Ayudante"
+popup/item_1/id = 1
+popup/item_2/text = "Narrador"
+popup/item_2/id = 2
+popup/item_3/text = "Protagonista"
+popup/item_3/id = 3
+popup/item_4/text = "Vendedor"
+popup/item_4/id = 4
+
+[node name="GroupFilterLabel" type="Label" parent="MainVBox/FiltersPanel/FiltersVBox/CharacterAndLanguageRow"]
+layout_mode = 2
+size_flags_vertical = 0
+text = "Filtro Grupo:"
+
+[node name="GroupFilterInput" type="LineEdit" parent="MainVBox/FiltersPanel/FiltersVBox/CharacterAndLanguageRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 0
+placeholder_text = "Buscar por grupo..."
+
+[node name="ClearGroupFilterButton" type="Button" parent="MainVBox/FiltersPanel/FiltersVBox/CharacterAndLanguageRow"]
+custom_minimum_size = Vector2(30, 0)
+layout_mode = 2
+size_flags_vertical = 0
+text = "X"
+
+[node name="AddCharacterRow" type="HBoxContainer" parent="MainVBox/FiltersPanel/FiltersVBox"]
+layout_mode = 2
+size_flags_vertical = 0
+
+[node name="AddCharacterInput" type="LineEdit" parent="MainVBox/FiltersPanel/FiltersVBox/AddCharacterRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 0
+placeholder_text = "Nuevo personaje"
+
+[node name="AddCharacterButton" type="Button" parent="MainVBox/FiltersPanel/FiltersVBox/AddCharacterRow"]
+layout_mode = 2
+size_flags_vertical = 0
+text = "Agregar Personaje"
+
+[node name="LanguageCheckboxToggleButton" type="Button" parent="MainVBox/FiltersPanel/FiltersVBox/AddCharacterRow"]
+layout_mode = 2
+size_flags_vertical = 0
+toggle_mode = true
+text = "▶ Columnas visibles"
+
+[node name="DialogueTableScroll" type="ScrollContainer" parent="MainVBox"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="DialogueTable" type="Tree" parent="MainVBox/DialogueTableScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_colors/font_color = Color(0.253238, 0.253238, 0.253238, 1)
+theme_override_colors/font_hovered_color = Color(0.552941, 0.552941, 0.552941, 1)
+theme_override_colors/font_hovered_dimmed_color = Color(0.552941, 0.552941, 0.552941, 1)
+theme_override_colors/font_hovered_selected_color = Color(0.552941, 0.552941, 0.552941, 1)
+theme_override_colors/font_selected_color = Color(0, 0, 0, 1)
+columns = 4
+column_titles_visible = true
+allow_reselect = true
+hide_root = true
+select_mode = 1
+
+[node name="HSeparator3" type="HSeparator" parent="MainVBox"]
+layout_mode = 2
+size_flags_vertical = 0
+
+[node name="EditPanel" type="PanelContainer" parent="MainVBox"]
+layout_mode = 2
+size_flags_vertical = 0
+
+[node name="EditVBox" type="VBoxContainer" parent="MainVBox/EditPanel"]
+layout_mode = 2
+size_flags_vertical = 0
+
+[node name="BasicEditRow" type="HBoxContainer" parent="MainVBox/EditPanel/EditVBox"]
+layout_mode = 2
+size_flags_vertical = 0
+
+[node name="CharacterLabel" type="Label" parent="MainVBox/EditPanel/EditVBox/BasicEditRow"]
+layout_mode = 2
+size_flags_vertical = 0
+text = "Personaje:"
+
+[node name="CharacterNameInput" type="OptionButton" parent="MainVBox/EditPanel/EditVBox/BasicEditRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 0
+selected = 0
+item_count = 4
+popup/item_0/text = "Ayudante"
+popup/item_0/id = 0
+popup/item_1/text = "Narrador"
+popup/item_1/id = 1
+popup/item_2/text = "Protagonista"
+popup/item_2/id = 2
+popup/item_3/text = "Vendedor"
+popup/item_3/id = 3
+
+[node name="AddButton" type="Button" parent="MainVBox/EditPanel/EditVBox/BasicEditRow"]
+layout_mode = 2
+size_flags_vertical = 0
+text = "Agregar"
+
+[node name="DeleteButton" type="Button" parent="MainVBox/EditPanel/EditVBox/BasicEditRow"]
+layout_mode = 2
+size_flags_vertical = 0
+text = "Eliminar"
+
+[node name="VSeparator" type="VSeparator" parent="MainVBox/EditPanel/EditVBox/BasicEditRow"]
+layout_mode = 2
+size_flags_vertical = 0
+
+[node name="MoveUpButton" type="Button" parent="MainVBox/EditPanel/EditVBox/BasicEditRow"]
+layout_mode = 2
+size_flags_vertical = 0
+text = "↑ Subir"
+
+[node name="MoveDownButton" type="Button" parent="MainVBox/EditPanel/EditVBox/BasicEditRow"]
+layout_mode = 2
+size_flags_vertical = 0
+text = "↓ Bajar"
+
+[node name="ConfigButton" type="Button" parent="MainVBox/EditPanel/EditVBox/BasicEditRow"]
+layout_mode = 2
+size_flags_vertical = 0
+toggle_mode = true
+text = "⚙ Configurar Paneles y Nombres"
+
+[node name="MoodGroupRow" type="HBoxContainer" parent="MainVBox/EditPanel/EditVBox"]
+layout_mode = 2
+size_flags_vertical = 0
+
+[node name="MoodLabel" type="Label" parent="MainVBox/EditPanel/EditVBox/MoodGroupRow"]
+layout_mode = 2
+size_flags_vertical = 0
+text = "Estado/Mood:"
+
+[node name="MoodOption" type="OptionButton" parent="MainVBox/EditPanel/EditVBox/MoodGroupRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 0
+selected = 0
+item_count = 44
+popup/item_0/text = "neutral"
+popup/item_0/id = 0
+popup/item_1/text = "happy"
+popup/item_1/id = 1
+popup/item_2/text = "sad"
+popup/item_2/id = 2
+popup/item_3/text = "angry"
+popup/item_3/id = 3
+popup/item_4/text = "excited"
+popup/item_4/id = 4
+popup/item_5/text = "scared"
+popup/item_5/id = 5
+popup/item_6/text = "confused"
+popup/item_6/id = 6
+popup/item_7/text = "romantic"
+popup/item_7/id = 7
+popup/item_8/text = "whisper"
+popup/item_8/id = 8
+popup/item_9/text = "shout"
+popup/item_9/id = 9
+popup/item_10/text = "sarcastic"
+popup/item_10/id = 10
+popup/item_11/text = "formal"
+popup/item_11/id = 11
+popup/item_12/text = "casual"
+popup/item_12/id = 12
+popup/item_13/text = "mysterious"
+popup/item_13/id = 13
+popup/item_14/text = "playful"
+popup/item_14/id = 14
+popup/item_15/text = "serious"
+popup/item_15/id = 15
+popup/item_16/text = "thoughtful"
+popup/item_16/id = 16
+popup/item_17/text = "confident"
+popup/item_17/id = 17
+popup/item_18/text = "nervous"
+popup/item_18/id = 18
+popup/item_19/text = "tired"
+popup/item_19/id = 19
+popup/item_20/text = "energetic"
+popup/item_20/id = 20
+popup/item_21/text = "bored"
+popup/item_21/id = 21
+popup/item_22/text = "curious"
+popup/item_22/id = 22
+popup/item_23/text = "determined"
+popup/item_23/id = 23
+popup/item_24/text = "friendly"
+popup/item_24/id = 24
+popup/item_25/text = "hostile"
+popup/item_25/id = 25
+popup/item_26/text = "protective"
+popup/item_26/id = 26
+popup/item_27/text = "submissive"
+popup/item_27/id = 27
+popup/item_28/text = "dominant"
+popup/item_28/id = 28
+popup/item_29/text = "apologetic"
+popup/item_29/id = 29
+popup/item_30/text = "grateful"
+popup/item_30/id = 30
+popup/item_31/text = "explaining"
+popup/item_31/id = 31
+popup/item_32/text = "questioning"
+popup/item_32/id = 32
+popup/item_33/text = "storytelling"
+popup/item_33/id = 33
+popup/item_34/text = "joking"
+popup/item_34/id = 34
+popup/item_35/text = "complaining"
+popup/item_35/id = 35
+popup/item_36/text = "praising"
+popup/item_36/id = 36
+popup/item_37/text = "threatening"
+popup/item_37/id = 37
+popup/item_38/text = "comforting"
+popup/item_38/id = 38
+popup/item_39/text = "breathless"
+popup/item_39/id = 39
+popup/item_40/text = "drunk"
+popup/item_40/id = 40
+popup/item_41/text = "sick"
+popup/item_41/id = 41
+popup/item_42/text = "cold"
+popup/item_42/id = 42
+popup/item_43/text = "hot"
+popup/item_43/id = 43
+
+[node name="ApplyMoodButton" type="Button" parent="MainVBox/EditPanel/EditVBox/MoodGroupRow"]
+layout_mode = 2
+size_flags_vertical = 0
+text = "Aplicar Mood"
+
+[node name="GroupLabel" type="Label" parent="MainVBox/EditPanel/EditVBox/MoodGroupRow"]
+layout_mode = 2
+size_flags_vertical = 0
+text = "Grupo:"
+
+[node name="GroupInput" type="LineEdit" parent="MainVBox/EditPanel/EditVBox/MoodGroupRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 0
+placeholder_text = "Nombre del grupo (opcional)"
+
+[node name="ApplyGroupButton" type="Button" parent="MainVBox/EditPanel/EditVBox/MoodGroupRow"]
+layout_mode = 2
+size_flags_vertical = 0
+text = "Aplicar Grupo"
+
+[node name="OverlayConfig" type="Control" parent="."]
+visible = false
+z_index = 1000
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Backdrop" type="ColorRect" parent="OverlayConfig"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.5882353)
+
+[node name="CenterContainer" type="CenterContainer" parent="OverlayConfig"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="OverlayPanel" type="PanelContainer" parent="OverlayConfig/CenterContainer"]
+custom_minimum_size = Vector2(800, 550)
+layout_mode = 2
+
+[node name="OverlayVBox" type="VBoxContainer" parent="OverlayConfig/CenterContainer/OverlayPanel"]
+custom_minimum_size = Vector2(700, 420)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="HeaderRow" type="HBoxContainer" parent="OverlayConfig/CenterContainer/OverlayPanel/OverlayVBox"]
+layout_mode = 2
+size_flags_vertical = 0
+
+[node name="Title" type="Label" parent="OverlayConfig/CenterContainer/OverlayPanel/OverlayVBox/HeaderRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 0
+text = "Configuración de Paneles y Nombres"
+
+[node name="CloseButton" type="Button" parent="OverlayConfig/CenterContainer/OverlayPanel/OverlayVBox/HeaderRow"]
+layout_mode = 2
+size_flags_vertical = 0
+text = "Cerrar"
+
+[node name="ConfigContainer" type="VBoxContainer" parent="OverlayConfig/CenterContainer/OverlayPanel/OverlayVBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="DefaultPanelRow" type="HBoxContainer" parent="OverlayConfig/CenterContainer/OverlayPanel/OverlayVBox/ConfigContainer"]
+layout_mode = 2
+size_flags_vertical = 0
+
+[node name="Label" type="Label" parent="OverlayConfig/CenterContainer/OverlayPanel/OverlayVBox/ConfigContainer/DefaultPanelRow"]
+layout_mode = 2
+size_flags_vertical = 0
+text = "Panel por defecto:"
+
+[node name="DefaultPanelInput" type="LineEdit" parent="OverlayConfig/CenterContainer/OverlayPanel/OverlayVBox/ConfigContainer/DefaultPanelRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 0
+text = "res://demos/panel de dialogo.tscn"
+placeholder_text = "res://path/to/dialog_panel.tscn"
+
+[node name="SaveConfigButton" type="Button" parent="OverlayConfig/CenterContainer/OverlayPanel/OverlayVBox/ConfigContainer/DefaultPanelRow"]
+layout_mode = 2
+size_flags_vertical = 0
+text = "Guardar Config"
+
+[node name="OverrideRow" type="HBoxContainer" parent="OverlayConfig/CenterContainer/OverlayPanel/OverlayVBox/ConfigContainer"]
+layout_mode = 2
+size_flags_vertical = 0
+
+[node name="Label" type="Label" parent="OverlayConfig/CenterContainer/OverlayPanel/OverlayVBox/ConfigContainer/OverrideRow"]
+layout_mode = 2
+size_flags_vertical = 0
+text = "Override personaje:"
+
+[node name="OverrideCharacterOption" type="OptionButton" parent="OverlayConfig/CenterContainer/OverlayPanel/OverlayVBox/ConfigContainer/OverrideRow"]
+layout_mode = 2
+size_flags_vertical = 0
+selected = 0
+item_count = 4
+popup/item_0/text = "Ayudante"
+popup/item_0/id = 0
+popup/item_1/text = "Narrador"
+popup/item_1/id = 1
+popup/item_2/text = "Protagonista"
+popup/item_2/id = 2
+popup/item_3/text = "Vendedor"
+popup/item_3/id = 3
+
+[node name="OverridePanelInput" type="LineEdit" parent="OverlayConfig/CenterContainer/OverlayPanel/OverlayVBox/ConfigContainer/OverrideRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 0
+placeholder_text = "res://path/to/custom_panel.tscn"
+
+[node name="OverrideDefaultNameInput" type="LineEdit" parent="OverlayConfig/CenterContainer/OverlayPanel/OverlayVBox/ConfigContainer/OverrideRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 0
+text = "Alex"
+placeholder_text = "Nombre por defecto (fallback)"
+
+[node name="SaveOverrideButton" type="Button" parent="OverlayConfig/CenterContainer/OverlayPanel/OverlayVBox/ConfigContainer/OverrideRow"]
+layout_mode = 2
+size_flags_vertical = 0
+text = "Guardar Override"
+
+[node name="NamesScrollContainer" type="ScrollContainer" parent="OverlayConfig/CenterContainer/OverlayPanel/OverlayVBox/ConfigContainer"]
+custom_minimum_size = Vector2(600, 200)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="NamesTree" type="Tree" parent="OverlayConfig/CenterContainer/OverlayPanel/OverlayVBox/ConfigContainer/NamesScrollContainer"]
+custom_minimum_size = Vector2(600, 200)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+columns = 2
+column_titles_visible = true
+hide_root = true
+
+[node name="HSeparator" type="HSeparator" parent="OverlayConfig/CenterContainer/OverlayPanel/OverlayVBox"]
+layout_mode = 2
+size_flags_vertical = 0
+
+[node name="CharacterManagement" type="VBoxContainer" parent="OverlayConfig/CenterContainer/OverlayPanel/OverlayVBox"]
+layout_mode = 2
+size_flags_vertical = 0
+
+[node name="Title" type="Label" parent="OverlayConfig/CenterContainer/OverlayPanel/OverlayVBox/CharacterManagement"]
+layout_mode = 2
+size_flags_vertical = 0
+text = "Gestión de Personajes"
+
+[node name="ManagementRow" type="HBoxContainer" parent="OverlayConfig/CenterContainer/OverlayPanel/OverlayVBox/CharacterManagement"]
+layout_mode = 2
+size_flags_vertical = 0
+
+[node name="CharacterList" type="ItemList" parent="OverlayConfig/CenterContainer/OverlayPanel/OverlayVBox/CharacterManagement/ManagementRow"]
+custom_minimum_size = Vector2(0, 60)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 0
+select_mode = 1
+
+[node name="ActionsVBox" type="VBoxContainer" parent="OverlayConfig/CenterContainer/OverlayPanel/OverlayVBox/CharacterManagement/ManagementRow"]
+layout_mode = 2
+size_flags_vertical = 0
+
+[node name="RenameInput" type="LineEdit" parent="OverlayConfig/CenterContainer/OverlayPanel/OverlayVBox/CharacterManagement/ManagementRow/ActionsVBox"]
+layout_mode = 2
+size_flags_vertical = 0
+placeholder_text = "Nuevo nombre"
+
+[node name="RenameButton" type="Button" parent="OverlayConfig/CenterContainer/OverlayPanel/OverlayVBox/CharacterManagement/ManagementRow/ActionsVBox"]
+layout_mode = 2
+size_flags_vertical = 0
+text = "Renombrar"
+
+[node name="DeleteCharacterButton" type="Button" parent="OverlayConfig/CenterContainer/OverlayPanel/OverlayVBox/CharacterManagement/ManagementRow/ActionsVBox"]
+layout_mode = 2
+size_flags_vertical = 0
+text = "Eliminar"
+
+[node name="LanguageCheckboxPanel" type="PanelContainer" parent="."]
+visible = false
+z_index = 1
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -156.0
+offset_top = 110.0
+offset_right = -37.0
+offset_bottom = 151.0
+grow_horizontal = 0
+theme_override_styles/panel = SubResource("StyleBoxFlat_14gqn")
+
+[node name="LanguageCheckboxGrid" type="GridContainer" parent="LanguageCheckboxPanel"]
+layout_mode = 2
+size_flags_vertical = 0
+mouse_filter = 0
+columns = 3

@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- flow_branch_node_icon.svg
+     64x64 flat icon — mono-color accent, 2px stroke, no gradients.
+     Start node (rounded square) connected by arrows to three target nodes.
+     Tiny speech bubble on the first (top) target to imply dialogues.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" aria-hidden="false" role="img">
+  <title>Flow / Branch Node</title>
+  <defs>
+    <!-- mono-color accent marker for arrowheads -->
+    <marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto" markerUnits="strokeWidth">
+      <path d="M0 2 L6 4 L0 6 z" fill="#1f2937" />
+    </marker>
+  </defs>
+
+  <!-- Accent color (single color used for strokes and fills) -->
+  <g fill="none" stroke="#1f2937" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Start rounded square (left) - small rounded rect -->
+    <rect x="8" y="26" width="12" height="12" rx="3" ry="3" fill="#1f2937" stroke="#1f2937"/>
+
+    <!-- Target rounded squares (right side): top, middle, bottom -->
+    <rect x="44" y="12" width="12" height="12" rx="3" ry="3" fill="#ffffff" stroke="#1f2937"/>
+    <rect x="44" y="28" width="12" height="12" rx="3" ry="3" fill="#ffffff" stroke="#1f2937"/>
+    <rect x="44" y="44" width="12" height="12" rx="3" ry="3" fill="#ffffff" stroke="#1f2937"/>
+
+    <!-- Connection lines with arrowheads -->
+    <!-- from center of start (x=14, y=32) to each target center -->
+    <path d="M20 32 L44 18" stroke="#1f2937" marker-end="url(#arrow)" fill="none"/>
+    <path d="M20 32 L44 34" stroke="#1f2937" marker-end="url(#arrow)" fill="none"/>
+    <path d="M20 32 L44 50" stroke="#1f2937" marker-end="url(#arrow)" fill="none"/>
+  </g>
+
+  <!-- Tiny speech bubble on the first (top) target -->
+  <g fill="#1f2937" stroke="none">
+    <!-- bubble body (small rounded rect) -->
+    <rect x="38" y="8" width="10" height="8" rx="2" ry="2"/>
+    <!-- tail (triangle) -->
+    <path d="M45 16 L43 14 L46 14 z" />
+  </g>
+</svg>

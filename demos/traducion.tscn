@@ -1,0 +1,49 @@
+[gd_scene load_steps=2 format=3 uid="uid://df7lokqxe7ffc"]
+
+[ext_resource type="Script" uid="uid://bvvvqtvrtfdtf" path="res://demos/traducion.gd" id="1_gpu22"]
+
+[node name="Control" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_gpu22")
+
+[node name="welcome" type="Label" parent="." groups=["traducir"]]
+custom_minimum_size = Vector2(100, 50)
+layout_mode = 0
+offset_left = 318.0
+offset_top = 226.0
+offset_right = 418.0
+offset_bottom = 276.0
+text = "hi"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="goodbye" type="Button" parent="." groups=["traducir"]]
+modulate = Color(0.941176, 0.972549, 1, 1)
+custom_minimum_size = Vector2(100, 50)
+layout_mode = 0
+offset_left = 693.0
+offset_top = 217.0
+offset_right = 793.0
+offset_bottom = 267.0
+text = "bay"
+
+[node name="OptionButton" type="OptionButton" parent="."]
+custom_minimum_size = Vector2(100, 50)
+layout_mode = 0
+offset_left = 460.0
+offset_top = 402.0
+offset_right = 560.0
+offset_bottom = 452.0
+selected = 0
+item_count = 2
+popup/item_0/text = "englis"
+popup/item_0/id = 0
+popup/item_1/text = "español"
+popup/item_1/id = 1
+
+[connection signal="item_selected" from="OptionButton" to="." method="_on_option_button_item_selected"]

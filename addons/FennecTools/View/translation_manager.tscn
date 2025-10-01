@@ -1,0 +1,107 @@
+[gd_scene load_steps=2 format=3 uid="uid://b8j7x2qvn8wm"]
+
+[ext_resource type="Script" uid="uid://dtp6nm07uyxyy" path="res://addons/FennecTools/View/translation_manager.gd" id="1_9x8yv"]
+
+[node name="TranslationManager" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+script = ExtResource("1_9x8yv")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Label" type="Label" parent="VBoxContainer"]
+layout_mode = 2
+text = "Gestor de Traducciones"
+horizontal_alignment = 1
+
+[node name="LanguageContainer" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="AddLanguageInput" type="LineEdit" parent="VBoxContainer/LanguageContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+placeholder_text = "Código de idioma (ej: fr, de, pt)"
+
+[node name="AddLanguageButton" type="Button" parent="VBoxContainer/LanguageContainer"]
+layout_mode = 2
+text = "Agregar Idioma"
+
+[node name="DeleteLanguageButton" type="Button" parent="VBoxContainer/LanguageContainer"]
+layout_mode = 2
+text = "Eliminar Idioma"
+
+[node name="NodeGroupsContainer" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="Label2" type="Label" parent="VBoxContainer/NodeGroupsContainer"]
+layout_mode = 2
+text = "Grupo de nodos a actualizar:"
+
+[node name="GroupTargetInput" type="LineEdit" parent="VBoxContainer/NodeGroupsContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "traducir"
+placeholder_text = "Escribe el nombre del grupo (ej: ui, pp, player)"
+
+[node name="ApplyToGroupButton" type="Button" parent="VBoxContainer/NodeGroupsContainer"]
+layout_mode = 2
+text = "Aplicar al Grupo"
+
+[node name="ScrollContainer" type="ScrollContainer" parent="VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="TranslationTree" type="Tree" parent="VBoxContainer/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+columns = 3
+column_titles_visible = true
+
+[node name="EditContainer" type="VBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="LanguageOption" type="OptionButton" parent="VBoxContainer/EditContainer"]
+layout_mode = 2
+selected = 0
+item_count = 2
+popup/item_0/text = "EN"
+popup/item_0/id = 0
+popup/item_1/text = "ES"
+popup/item_1/id = 1
+
+[node name="KeyInput" type="LineEdit" parent="VBoxContainer/EditContainer"]
+layout_mode = 2
+placeholder_text = "Clave de traducción"
+
+[node name="ValueInput" type="TextEdit" parent="VBoxContainer/EditContainer"]
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+placeholder_text = "Texto traducido..."
+
+[node name="ButtonContainer" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="AddButton" type="Button" parent="VBoxContainer/ButtonContainer"]
+layout_mode = 2
+text = "Agregar"
+
+[node name="EditButton" type="Button" parent="VBoxContainer/ButtonContainer"]
+layout_mode = 2
+text = "Editar"
+
+[node name="DeleteButton" type="Button" parent="VBoxContainer/ButtonContainer"]
+layout_mode = 2
+text = "Eliminar"

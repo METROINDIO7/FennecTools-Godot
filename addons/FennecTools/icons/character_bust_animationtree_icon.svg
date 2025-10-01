@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- character_bust_animationtree_icon.svg
+     64x64 icon — simplified head & shoulders, star/emoji overlay, branching node (AnimationTree hint).
+     2px stroke, flat, no gradients. Uses currentColor for easy theme adaptation.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" role="img" aria-labelledby="title">
+  <title id="title">Character bust with expression star and AnimationTree hint</title>
+
+  <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Shoulders / torso (simple rounded shape) -->
+    <path d="M16 46 Q24 38 32 38 Q40 38 48 46" />
+
+    <!-- Neck -->
+    <path d="M28 34 L36 34" />
+
+    <!-- Head (circle) -->
+    <circle cx="32" cy="22" r="12" />
+
+    <!-- Eyes (simple dots) -->
+    <circle cx="28" cy="20" r="1.2" fill="currentColor" stroke="none" />
+    <circle cx="36" cy="20" r="1.2" fill="currentColor" stroke="none" />
+
+    <!-- Mouth (small curve) -->
+    <path d="M28 25 Q32 27 36 25" stroke-width="1.8" />
+
+    <!-- Small star/emoji overlay at top-right of the head -->
+    <g transform="translate(42,10)" fill="currentColor" stroke="none">
+      <!-- star simplified -->
+      <path d="M4 0 L5 3 L8 3 L5.5 5 L6.5 8 L4 6.2 L1.5 8 L2.5 5 L0 3 L3 3 Z" />
+    </g>
+
+    <!-- Small circular emoji sparkle (optional) near star -->
+    <circle cx="50" cy="12" r="1.2" fill="currentColor" stroke="none" />
+
+    <!-- AnimationTree hint: small branching node symbol on the right side -->
+    <g transform="translate(52,34)" stroke="currentColor" fill="none">
+      <!-- center node -->
+      <circle cx="0" cy="0" r="2.4" fill="currentColor" stroke="none" />
+      <!-- branches -->
+      <path d="M0 -2.4 L8 -8" />
+      <path d="M0 0 L8 0" />
+      <path d="M0 2.4 L8 8" />
+      <!-- end nodes -->
+      <circle cx="8" cy="-8" r="1.6" fill="currentColor" stroke="none" />
+      <circle cx="8" cy="0" r="1.6" fill="currentColor" stroke="none" />
+      <circle cx="8" cy="8" r="1.6" fill="currentColor" stroke="none" />
+    </g>
+  </g>
+</svg>

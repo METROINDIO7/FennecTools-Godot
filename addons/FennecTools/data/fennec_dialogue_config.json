@@ -1,0 +1,44 @@
+{
+	"character_overrides": {
+		"Ayudante": {
+			"default_name": "Alex",
+			"names": {
+
+			},
+			"panel_scene": ""
+		},
+		"Narrador": {
+			"default_name": "",
+			"names": {
+
+			},
+			"panel_scene": ""
+		},
+		"Personaje Ejemplo": {
+			"default_name": "",
+			"names": {
+
+			},
+			"panel_scene": ""
+		},
+		"Protagonista": {
+			"default_name": "Miguel",
+			"names": {
+
+			},
+			"panel_scene": "res://demos/panel de dialogo prota.tscn"
+		},
+		"Vendedor": {
+			"default_name": "Martin",
+			"names": {
+
+			},
+			"panel_scene": ""
+		}
+	},
+	"characters": [
+		"Vendedor",
+		"Ayudante"
+	],
+	"default_panel_scene": "res://demos/panel de dialogo.tscn"
+}

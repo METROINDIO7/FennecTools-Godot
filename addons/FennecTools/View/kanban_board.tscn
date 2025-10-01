@@ -1,0 +1,243 @@
+[gd_scene load_steps=2 format=3 uid="uid://bvxqy8n7qkr2w"]
+
+[ext_resource type="Script" uid="uid://cuvsme6p6hwp6" path="res://addons/FennecTools/View/kanban_manager.gd" id="1_0x8vq"]
+
+[node name="KanbanBoard" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_0x8vq")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="HeaderPanel" type="Panel" parent="VBoxContainer"]
+custom_minimum_size = Vector2(0, 60)
+layout_mode = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer/HeaderPanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 10.0
+offset_top = 10.0
+offset_right = -10.0
+offset_bottom = -10.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="TitleLabel" type="Label" parent="VBoxContainer/HeaderPanel/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "📋 Tablero Kanban - Fennec Tools"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="StatsLabel" type="Label" parent="VBoxContainer/HeaderPanel/HBoxContainer"]
+layout_mode = 2
+text = "Tareas: 0 | Columnas: 3"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="FilterPanel" type="Panel" parent="VBoxContainer"]
+custom_minimum_size = Vector2(0, 50)
+layout_mode = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer/FilterPanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 10.0
+offset_top = 5.0
+offset_right = -10.0
+offset_bottom = -5.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="FilterLabel" type="Label" parent="VBoxContainer/FilterPanel/HBoxContainer"]
+layout_mode = 2
+text = "🔍 Filtros:"
+vertical_alignment = 1
+
+[node name="FilterAssignee" type="LineEdit" parent="VBoxContainer/FilterPanel/HBoxContainer"]
+custom_minimum_size = Vector2(150, 0)
+layout_mode = 2
+placeholder_text = "Filtrar por asignado..."
+
+[node name="FilterStatus" type="OptionButton" parent="VBoxContainer/FilterPanel/HBoxContainer"]
+custom_minimum_size = Vector2(150, 0)
+layout_mode = 2
+selected = 0
+item_count = 4
+popup/item_0/text = "Todos los estados"
+popup/item_0/id = -1
+popup/item_1/text = "Por Hacer"
+popup/item_1/id = 1
+popup/item_2/text = "En Progreso"
+popup/item_2/id = 2
+popup/item_3/text = "Completado"
+popup/item_3/id = 3
+
+[node name="ClearFiltersButton" type="Button" parent="VBoxContainer/FilterPanel/HBoxContainer"]
+layout_mode = 2
+text = "✖️ Limpiar"
+
+[node name="VSeparator" type="VSeparator" parent="VBoxContainer/FilterPanel/HBoxContainer"]
+layout_mode = 2
+
+[node name="RefreshButton" type="Button" parent="VBoxContainer/FilterPanel/HBoxContainer"]
+layout_mode = 2
+text = "🔄 Actualizar"
+
+[node name="ColumnManagement" type="Panel" parent="VBoxContainer"]
+custom_minimum_size = Vector2(0, 50)
+layout_mode = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer/ColumnManagement"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 10.0
+offset_top = 5.0
+offset_right = -10.0
+offset_bottom = -5.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="ColumnLabel" type="Label" parent="VBoxContainer/ColumnManagement/HBoxContainer"]
+layout_mode = 2
+text = "📂 Gestión de Columnas:"
+vertical_alignment = 1
+
+[node name="ColumnNameInput" type="LineEdit" parent="VBoxContainer/ColumnManagement/HBoxContainer"]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+placeholder_text = "Nombre de nueva columna..."
+
+[node name="ColorLabel" type="Label" parent="VBoxContainer/ColumnManagement/HBoxContainer"]
+layout_mode = 2
+text = "🎨 Color (hex):"
+vertical_alignment = 1
+
+[node name="ColumnColorInput" type="LineEdit" parent="VBoxContainer/ColumnManagement/HBoxContainer"]
+custom_minimum_size = Vector2(100, 0)
+layout_mode = 2
+placeholder_text = "#9B59B6"
+
+[node name="AddColumnButton" type="Button" parent="VBoxContainer/ColumnManagement/HBoxContainer"]
+layout_mode = 2
+text = "➕ Agregar Columna"
+
+[node name="MainContent" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="ScrollContainer" type="ScrollContainer" parent="VBoxContainer/MainContent"]
+layout_mode = 2
+size_flags_horizontal = 3
+horizontal_scroll_bar_policy = 1
+
+[node name="ColumnsContainer" type="HBoxContainer" parent="VBoxContainer/MainContent/ScrollContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="TaskDetailPanel" type="Panel" parent="VBoxContainer/MainContent"]
+visible = false
+custom_minimum_size = Vector2(400, 0)
+layout_mode = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="VBoxContainer/MainContent/TaskDetailPanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 15.0
+offset_top = 15.0
+offset_right = -15.0
+offset_bottom = -15.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="DetailTitleLabel" type="Label" parent="VBoxContainer/MainContent/TaskDetailPanel/VBoxContainer"]
+layout_mode = 2
+text = "📝 Detalles de la Tarea"
+horizontal_alignment = 1
+
+[node name="HSeparator" type="HSeparator" parent="VBoxContainer/MainContent/TaskDetailPanel/VBoxContainer"]
+layout_mode = 2
+
+[node name="TitleLabel" type="Label" parent="VBoxContainer/MainContent/TaskDetailPanel/VBoxContainer"]
+layout_mode = 2
+text = "Título:"
+
+[node name="DetailTitle" type="LineEdit" parent="VBoxContainer/MainContent/TaskDetailPanel/VBoxContainer"]
+layout_mode = 2
+placeholder_text = "Título de la tarea..."
+
+[node name="DescriptionLabel" type="Label" parent="VBoxContainer/MainContent/TaskDetailPanel/VBoxContainer"]
+layout_mode = 2
+text = "Descripción:"
+
+[node name="DetailDescription" type="TextEdit" parent="VBoxContainer/MainContent/TaskDetailPanel/VBoxContainer"]
+custom_minimum_size = Vector2(0, 150)
+layout_mode = 2
+placeholder_text = "Descripción detallada de la tarea..."
+
+[node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer/MainContent/TaskDetailPanel/VBoxContainer"]
+layout_mode = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="VBoxContainer/MainContent/TaskDetailPanel/VBoxContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="AssigneeLabel" type="Label" parent="VBoxContainer/MainContent/TaskDetailPanel/VBoxContainer/HBoxContainer/VBoxContainer"]
+layout_mode = 2
+text = "👤 Asignado a:"
+
+[node name="DetailAssignee" type="LineEdit" parent="VBoxContainer/MainContent/TaskDetailPanel/VBoxContainer/HBoxContainer/VBoxContainer"]
+layout_mode = 2
+placeholder_text = "Nombre del responsable..."
+
+[node name="VBoxContainer2" type="VBoxContainer" parent="VBoxContainer/MainContent/TaskDetailPanel/VBoxContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="DueDateLabel" type="Label" parent="VBoxContainer/MainContent/TaskDetailPanel/VBoxContainer/HBoxContainer/VBoxContainer2"]
+layout_mode = 2
+text = "📅 Fecha límite:"
+
+[node name="DetailDueDate" type="LineEdit" parent="VBoxContainer/MainContent/TaskDetailPanel/VBoxContainer/HBoxContainer/VBoxContainer2"]
+layout_mode = 2
+placeholder_text = "DD/MM/YYYY"
+
+[node name="HSeparator2" type="HSeparator" parent="VBoxContainer/MainContent/TaskDetailPanel/VBoxContainer"]
+layout_mode = 2
+
+[node name="ButtonContainer" type="HBoxContainer" parent="VBoxContainer/MainContent/TaskDetailPanel/VBoxContainer"]
+layout_mode = 2
+
+[node name="SaveButton" type="Button" parent="VBoxContainer/MainContent/TaskDetailPanel/VBoxContainer/ButtonContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "💾 Guardar"
+
+[node name="CancelButton" type="Button" parent="VBoxContainer/MainContent/TaskDetailPanel/VBoxContainer/ButtonContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "❌ Cancelar"
+
+[node name="DeleteButton" type="Button" parent="VBoxContainer/MainContent/TaskDetailPanel/VBoxContainer/ButtonContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "🗑️ Eliminar"
