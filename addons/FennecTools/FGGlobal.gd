@@ -42,6 +42,11 @@ var is_dialog_active: bool = false
 var current_character: CharacterBody3D = null
 var talk = false
 
+# === SISTEMA DE NOMBRES DINÁMICOS DE PERSONAJES ===
+# Diccionario global para nombres personalizados asignados por código
+# Claves normales: to_lower() y strip_edges() de la clave lógica de personaje
+var dynamic_character_names: Dictionary = {}
+
 # ============================================================================
 # SISTEMA DE CONFIGURACIÓN (heredado de tu código original)
 # ============================================================================
@@ -1503,3 +1508,5 @@ func select_navigation_node(node: Control):
 	"""Selecciona un nodo específico en el sistema de navegación"""
 	if navigation_system and navigation_system.has_method("select_specific_node"):
 		navigation_system.select_specific_node(node)
+
+#

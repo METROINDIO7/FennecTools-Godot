@@ -304,7 +304,7 @@ func start() -> void:
 	started.emit(total)
 	
 	var global_index := 0
-	var shared_panel: Node = null
+	var current_panel: Node = null
 	
 	# Procesar cada slot
 	for slot_idx in range(slots.size()):
@@ -330,54 +330,44 @@ func start() -> void:
 			
 			item_started.emit(global_index, id)
 			
-			# Determinar si necesitamos un nuevo panel
-			var current_panel: Node = null
-			var panel_scene_needed: PackedScene = null
-			var need_new_panel = false
-			
 			# Determinar personaje efectivo para este item
 			var effective_char = slot.character if slot.character.strip_edges() != "" else _get_character_for_id(id)
 			if effective_char.strip_edges() == "":
 				effective_char = character_name
 			
+			# Determinar el panel necesario
+			var panel_scene_needed: PackedScene = null
 			if slot.panel_override:
 				panel_scene_needed = slot.panel_override
 			else:
 				panel_scene_needed = _fallback_panel_for_character(effective_char)
 			
-			if reuse_single_panel:
-				if not shared_panel:
-					# Crear panel compartido la primera vez
-					if panel_scene_needed:
-						shared_panel = panel_scene_needed.instantiate()
-						if shared_panel:
-							parent.add_child(shared_panel)
-					need_new_panel = true  # Es el primer panel
-				else:
-					# Verificar si necesitamos cambiar de panel (diferente escena)
-					var current_scene = _get_panel_scene_reference(shared_panel)
-					if current_scene != panel_scene_needed:
-						# Necesitamos cambiar de panel - hacer exit del actual
-						if shared_panel.has_method("request_exit"):
-							await shared_panel.request_exit()
-						else:
-							shared_panel.queue_free()
-						
-						# Crear nuevo panel
-						if panel_scene_needed:
-							shared_panel = panel_scene_needed.instantiate()
-							if shared_panel:
-								parent.add_child(shared_panel)
-						need_new_panel = true
+			# VERIFICACIÓN SIMPLIFICADA: ¿Necesitamos nuevo panel?
+			var need_new_panel = true
+			
+			# Si tenemos un panel actual y es del mismo tipo, lo reutilizamos
+			if current_panel and is_instance_valid(current_panel):
+				var current_scene = _get_panel_scene_reference(current_panel)
+				if current_scene == panel_scene_needed:
+					need_new_panel = false
+					# Resetear el panel para reuso
+					if current_panel.has_method("reset_for_reuse"):
+						current_panel.reset_for_reuse()
+			
+			# Crear nuevo panel si es necesario
+			if need_new_panel:
+				# Eliminar panel anterior si existe
+				if current_panel and is_instance_valid(current_panel):
+					if current_panel.has_method("request_exit"):
+						await current_panel.request_exit()
+					current_panel.queue_free()
+					current_panel = null
 				
-				current_panel = shared_panel
-			else:
-				# Crear nuevo panel para cada item (comportamiento original)
+				# Crear nuevo panel
 				if panel_scene_needed:
 					current_panel = panel_scene_needed.instantiate()
 					if current_panel:
 						parent.add_child(current_panel)
-				need_new_panel = true
 			
 			if current_panel:
 				_setup_panel(current_panel, slot)
@@ -409,21 +399,23 @@ func start() -> void:
 				if not _cancelled:
 					await _await_between_dialogue_advance(is_last_item)
 				
-				# Solo hacer exit si NO reutilizamos panel O si es el último item
-				var should_exit_panel = false
-				if not reuse_single_panel:
-					should_exit_panel = true  # Siempre hacer exit si no reutilizamos
-				elif is_last_item:
-					should_exit_panel = true  # Exit solo en el último item cuando reutilizamos
+				# Solo hacer exit si es el último item
+				var should_exit_panel = is_last_item
 				
-				if should_exit_panel and current_panel.has_method("request_exit"):
+				if should_exit_panel and current_panel and current_panel.has_method("request_exit"):
 					await current_panel.request_exit()
-				elif should_exit_panel and not reuse_single_panel:
-					# Para paneles individuales sin request_exit
-					if current_panel and is_instance_valid(current_panel):
-						current_panel.queue_free()
+				elif should_exit_panel and current_panel:
+					current_panel.queue_free()
+					current_panel = null
 				
 				item_finished.emit(global_index, id)
 				global_index += 1
+	
+	# Limpieza final
+	if current_panel and is_instance_valid(current_panel):
+		if current_panel.has_method("request_exit"):
+			await current_panel.request_exit()
+		current_panel.queue_free()
+		current_panel = null
 	
 	finished.emit()

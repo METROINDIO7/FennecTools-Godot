@@ -50,8 +50,6 @@ enum TextHorizontalAlign {
 	FILL
 }
 
-
-
 @export var text_alignment: TextHorizontalAlign = TextHorizontalAlign.LEFT
 
 # Configuración adicional para el espaciado del StyleBoxEmpty
@@ -60,8 +58,6 @@ enum TextHorizontalAlign {
 @export var spacing_bottom: int = 0
 @export var spacing_left: int = 0
 @export var spacing_right: int = 0
-
-
 
 # Internal references
 var _label: Label
@@ -77,6 +73,11 @@ var _current_chunk: int = -1
 var _is_revealing: bool = false
 var _cancel_reveal: bool = false
 var _block_node: Node = null
+
+# === SISTEMA DE NOMBRES DINÁMICOS ===
+# Diccionario para almacenar nombres personalizados asignados por código
+# Formato: {"nombre_personaje": "Nombre Mostrado"}
+var _custom_character_names: Dictionary = {}
 
 func _ready() -> void:
 	if label_path != NodePath(""):
@@ -125,11 +126,20 @@ func reset_for_reuse() -> void:
 	
 	if _label:
 		_label.text = ""
-
-# Método de compatibilidad para el launcher anterior
-func show_dialogue(text: String, speaker: String = "") -> void:
-	# Simplemente llama a play_dialog pero no espera
-	play_dialog(text, speaker)
+	
+	# Resetear animaciones si es necesario
+	if _anim:
+		_anim.stop()
+		# Si existe animación de "reset" o "idle", reproducirla
+		if _anim.has_animation("reset"):
+			_anim.play("reset")
+		elif _anim.has_animation("idle"):
+			_anim.play("idle")
+		elif _anim.has_animation(entry_animation):
+			# Reproducir animación de entrada desde el principio pero pausada
+			_anim.play(entry_animation)
+			_anim.seek(0.0)
+			_anim.stop()
 
 # ==============
 # MÉTODOS DE ALINEACIÓN
@@ -170,10 +180,6 @@ func _apply_speaker_alignment() -> void:
 	# Aplicar el nuevo stylebox
 	_rtl.add_theme_stylebox_override("normal", style_box)
 
-
-
-
-
 # Función auxiliar para envolver texto con BBCode de alineación horizontal
 func _wrap_text_with_alignment(text: String) -> String:
 	var wrapped_text = text
@@ -196,8 +202,6 @@ func set_text_alignment(alignment: TextHorizontalAlign) -> void:
 	text_alignment = alignment
 	_apply_text_alignment()
 
-
-
 # Método para configurar espaciados verticales personalizados
 func set_vertical_spacings(top: int) -> void:
 	spacing_top = max(0, top)
@@ -207,17 +211,39 @@ func set_vertical_spacings(top: int) -> void:
 # Public API
 # ==============
 
+# API local para nombres dinámicos a nivel de panel
+func set_character_name(character_key: String, display_name: String) -> void:
+	var key := character_key.strip_edges().to_lower()
+	var name := display_name.strip_edges()
+	if key != "":
+		if name != "":
+			_custom_character_names[key] = name
+		else:
+			_custom_character_names.erase(key)
+
+func get_character_name(character_key: String) -> String:
+	var key := character_key.strip_edges().to_lower()
+	return _custom_character_names.get(key, "")
+
+func clear_character_names() -> void:
+	_custom_character_names.clear()
+
 # Plays a dialog with optional speaker name.
 # Supports chunked text separated by chunk_delimiter. Returns when all chunks are finished.
+# Ahora soporta comandos @p:nombre_personaje en texto y speaker
 func play_dialog(text: String, speaker: String = "") -> void:
-	_pending_text = text
-	_pending_speaker = speaker
+	# Procesar comandos especiales en el texto y el speaker
+	var processed_text := _process_text_commands(text)
+	var processed_speaker := _process_speaker_command(speaker)
+	
+	_pending_text = processed_text
+	_pending_speaker = processed_speaker
 	# Prepare chunks
 	_chunks = PackedStringArray()
-	if chunk_delimiter != "" and text.find(chunk_delimiter) != -1:
-		_chunks = text.split(chunk_delimiter, false)
+	if chunk_delimiter != "" and processed_text.find(chunk_delimiter) != -1:
+		_chunks = processed_text.split(chunk_delimiter, false)
 	else:
-		_chunks = PackedStringArray([text])
+		_chunks = PackedStringArray([processed_text])
 	_current_chunk = -1
 
 	# Aplicar alineación horizontal a todos los chunks
@@ -226,7 +252,7 @@ func play_dialog(text: String, speaker: String = "") -> void:
 
 	# Label handling con alineación vertical
 	if _label:
-		_label.text = speaker
+		_label.text = processed_speaker
 		_label.visible = _should_show_label()
 	
 	# Aplicar la alineación vertical al RichTextLabel
@@ -238,7 +264,7 @@ func play_dialog(text: String, speaker: String = "") -> void:
 	if auto_play_entry:
 		await _play_entry()
 
-	dialog_started.emit(text, speaker)
+	dialog_started.emit(processed_text, processed_speaker)
 	# Show chunks
 	for i in range(_chunks.size()):
 		_current_chunk = i
@@ -304,6 +330,67 @@ func set_animations(entry: String, exit: String) -> void:
 # Internals
 # ==============
 
+# Procesa comandos especiales en el texto del diálogo
+# Actualmente soporta: @p:nombre_personaje
+func _process_text_commands(text: String) -> String:
+	var result := text
+	
+	# Buscar y reemplazar comandos @p:nombre_personaje
+	var regex := RegEx.new()
+	regex.compile("@p:([a-zA-Z0-9_ -áéíóúÁÉÍÓÚñÑ]+)")
+	
+	var matches := regex.search_all(result)
+	for match_obj in matches:
+		if match_obj.get_group_count() >= 1:
+			var character_key := match_obj.get_string(1).strip_edges().to_lower()
+			var replacement := _resolve_character_display_name(character_key)
+			result = result.replace(match_obj.get_string(0), replacement)
+	
+	return result
+
+# Procesa el nombre del speaker para resolver comandos @p:
+func _process_speaker_command(speaker: String) -> String:
+	if speaker.begins_with("@p:"):
+		var character_key := speaker.substr(3).strip_edges().to_lower()
+		return _resolve_character_display_name(character_key)
+	return speaker
+
+# Resuelve el nombre a mostrar para un personaje
+# Prioridad: 1) Nombre personalizado por código (local del panel), 2) Global FGGlobal, 3) Fallback capitalizado
+func _resolve_character_display_name(character_key: String) -> String:
+	var key := character_key.strip_edges().to_lower()
+	
+	# 1. Verificar si hay un nombre personalizado asignado por código (override local del panel)
+	if _custom_character_names.has(key):
+		return _custom_character_names[key]
+	
+	# 2. Usar la resolución global si existe (incluye nombres dinámicos + overrides del editor)
+	if typeof(FGGlobal) != TYPE_NIL and FGGlobal:
+		if FGGlobal.has_method("resolve_character_display_name"):
+			return FGGlobal.resolve_character_display_name(key)
+		else:
+			# Fallback manual a dialog_config.character_overrides
+			var cfg := FGGlobal.dialog_config if typeof(FGGlobal.dialog_config) == TYPE_DICTIONARY else {}
+			var overrides := cfg.get("character_overrides", {})
+			if typeof(overrides) == TYPE_DICTIONARY and overrides.keys().size() > 0:
+				for char_name in overrides.keys():
+					var cmp := str(char_name).strip_edges().to_lower()
+					if cmp == key:
+						var data = overrides[char_name]
+						if typeof(data) == TYPE_DICTIONARY:
+							var lang := str(FGGlobal.current_language).to_upper()
+							var names = data.get("names", {})
+							if typeof(names) == TYPE_DICTIONARY:
+								var n = str(names.get(lang, "")).strip_edges()
+								if n != "":
+									return n
+							var def = str(data.get("default_name", "")).strip_edges()
+							if def != "":
+								return def
+	
+	# 3. Fallback: devolver la clave original capitalizada
+	return character_key.capitalize()
+
 func _should_show_label() -> bool:
 	return show_speaker_label
 
@@ -359,7 +446,6 @@ func _reveal_text(text: String) -> void:
 	_rtl.visible_characters = total
 	_is_revealing = false
 	_apply_speaker_alignment()
-
 
 func _on_anim_finished(anim_name: StringName) -> void:
 	# Placeholder if extra handling needed

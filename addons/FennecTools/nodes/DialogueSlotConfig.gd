@@ -41,6 +41,13 @@ enum DialogueMode {
 @export_group("Panel Control")
 @export var reuse_single_panel: bool = false
 
+# === NUEVO: SISTEMA DE INSTANCIACIÓN DE PREGUNTAS/OBJETOS ===
+@export_group("Question & Object System")
+# Escena a instanciar (pregunta u objeto)
+@export var instance_scene: PackedScene
+# Desactivar avance automático cuando se instancia una escena
+@export var disable_auto_advance_when_instanced: bool = false
+
 # Método principal que construye los items según el modo seleccionado
 func build_items(context: Dictionary = {}) -> Array:
 	match mode:
@@ -98,3 +105,13 @@ func get_debug_info() -> String:
 			return "SEQUENCE: %d items %s" % [sequence_ids.size(), str(sequence_ids)]
 		_:
 			return "INVALID MODE"
+
+# NUEVO: Verificar si este slot instancia una escena
+func has_instance_scene() -> bool:
+	return instance_scene != null or question_scene != null
+
+# NUEVO: Obtener la escena a instanciar (prioriza instance_scene sobre question_scene)
+func get_instance_scene() -> PackedScene:
+	if instance_scene:
+		return instance_scene
+	return question_scene
