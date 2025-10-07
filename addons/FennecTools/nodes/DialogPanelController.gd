@@ -58,13 +58,21 @@ enum TextHorizontalAlign {
 @export var Margin_right: int = 0
 
 # === SOUND SETTINGS ===
-@export_group("Sound")
+@export_group("Sound Character and Voiceline")
 @export var sound_enabled: bool = false  # Global control to enable/disable sounds
-@export var external_sound_player: NodePath # ✅ NEW: To assign an external AudioStreamPlayer
-var _current_sound_config: Dictionary = {}
 
-# Audio player for text sounds
-var _text_sound_player: AudioStreamPlayer # ✅ This will be the player, it can be external or internal
+var character_sound_player: NodePath
+@export var character_sound_effect: AudioStream
+@export var character_sound_frequency: int = 3
+@export_range(0.5, 2.0, 0.1) var character_sound_pitch_min: float = 0.9
+@export_range(0.5, 2.0, 0.1) var character_sound_pitch_max: float = 1.1
+@export_range(0.0, 1.0, 0.1) var character_sound_volume: float = 0.7
+
+var voiceline_player: NodePath
+
+# Audio players
+var _character_sound_player: AudioStreamPlayer
+var _voiceline_player: AudioStreamPlayer
 var _char_count_since_last_sound: int = 0
 
 # Internal references
@@ -118,66 +126,66 @@ func _ready() -> void:
 # ==============
 
 func _setup_sound_system() -> void:
-	"""Configures the sound system"""
-	if external_sound_player != NodePath(""):
-		# Try to use the external node
-		_text_sound_player = get_node_or_null(external_sound_player)
-		if not (_text_sound_player and _text_sound_player is AudioStreamPlayer):
-			_create_internal_sound_player()
-	else:
-		# Create an internal one
-		_create_internal_sound_player()
+	"""Configures the sound system for both character sounds and voicelines."""
+	# Setup character sound player
+	if character_sound_player != NodePath(""):
+		_character_sound_player = get_node_or_null(character_sound_player)
+	if not is_instance_valid(_character_sound_player):
+		_character_sound_player = AudioStreamPlayer.new()
+		_character_sound_player.name = "CharacterSoundPlayer"
+		add_child(_character_sound_player)
+	_character_sound_player.process_mode = Node.PROCESS_MODE_ALWAYS
 
-func _create_internal_sound_player() -> void:
-	"""Creates an internal AudioStreamPlayer"""
-	_text_sound_player = AudioStreamPlayer.new()
-	_text_sound_player.name = "TextSoundPlayer"
-	add_child(_text_sound_player)
-	_text_sound_player.process_mode = Node.PROCESS_MODE_ALWAYS
+	# Setup voiceline player
+	if voiceline_player != NodePath(""):
+		_voiceline_player = get_node_or_null(voiceline_player)
+	if not is_instance_valid(_voiceline_player):
+		_voiceline_player = AudioStreamPlayer.new()
+		_voiceline_player.name = "VoicelinePlayer"
+		add_child(_voiceline_player)
+	_voiceline_player.process_mode = Node.PROCESS_MODE_ALWAYS
 
-func set_sound_config(config: Dictionary) -> void:
-	"""Configures the sound parameters from the DialogueLauncher"""
-	_current_sound_config = config
-
-func _play_text_sound() -> void:
-	"""Plays the text sound according to the current configuration"""
-	if not sound_enabled:
+func play_voiceline(voiceline_config: Dictionary) -> void:
+	if not sound_enabled or not _voiceline_player or not voiceline_config.has("stream"):
 		return
 	
-	if _current_sound_config.is_empty():
+	var stream = voiceline_config.get("stream")
+	if not stream is AudioStream:
 		return
-	
-	# ✅ NEW: Check if the player is available
-	if not _text_sound_player:
-		return
-	
-	var sound_effect: AudioStream = _current_sound_config.get("sound_effect")
-	if not sound_effect:
+
+	_voiceline_player.stream = stream
+	_voiceline_player.volume_db = linear_to_db(voiceline_config.get("volume", 0.7))
+	_voiceline_player.pitch_scale = randf_range(
+		voiceline_config.get("pitch_min", 0.9),
+		voiceline_config.get("pitch_max", 1.1)
+	)
+	_voiceline_player.play()
+
+func _play_character_sound() -> void:
+	"""Plays the character tick sound."""
+	if not sound_enabled or not _character_sound_player or not character_sound_effect:
 		return
 	
 	# Configure the audio player
-	_text_sound_player.stream = sound_effect
-	_text_sound_player.volume_db = linear_to_db(_current_sound_config.get("sound_volume", 0.7))
+	_character_sound_player.stream = character_sound_effect
+	_character_sound_player.volume_db = linear_to_db(character_sound_volume)
 	
 	# Apply random pitch variation
-	var pitch_min: float = _current_sound_config.get("sound_pitch_min", 0.9)
-	var pitch_max: float = _current_sound_config.get("sound_pitch_max", 1.1)
-	_text_sound_player.pitch_scale = randf_range(pitch_min, pitch_max)
+	_character_sound_player.pitch_scale = randf_range(character_sound_pitch_min, character_sound_pitch_max)
 	
 	# Play sound
-	_text_sound_player.play()
+	_character_sound_player.play()
 
-func _should_play_sound() -> bool:
-	"""Determines if the sound should be played based on the configured frequency"""
-	if not _current_sound_config.get("sound_enabled", false):
+func _should_play_character_sound() -> bool:
+	"""Determines if the character tick sound should be played."""
+	if not sound_enabled or not character_sound_effect:
 		return false
 	
-	var frequency: int = _current_sound_config.get("sound_frequency", 3)
-	if frequency <= 0:
+	if character_sound_frequency <= 0:
 		return false
 	
 	_char_count_since_last_sound += 1
-	if _char_count_since_last_sound >= frequency:
+	if _char_count_since_last_sound >= character_sound_frequency:
 		_char_count_since_last_sound = 0
 		return true
 	
@@ -214,7 +222,6 @@ func reset_for_reuse() -> void:
 	
 	# ✅ NEW: Reset sound system
 	_reset_sound_counter()
-	_current_sound_config = {}
 	
 	# Reset animations if necessary
 	if _anim:
@@ -533,9 +540,9 @@ func _reveal_text(text: String) -> void:
 		_rtl.visible_characters = i
 		i += 1
 		
-		# ✅ NEW: Play sound if applicable
-		if _should_play_sound():
-			_play_text_sound()
+		# ✅ MODIFIED: Play character sound if applicable
+		if _should_play_character_sound():
+			_play_character_sound()
 		
 		await get_tree().create_timer(tpc).timeout
 		_apply_speaker_alignment() # <-- Adjusts dynamically as it appears

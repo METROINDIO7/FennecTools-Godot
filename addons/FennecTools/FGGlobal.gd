@@ -104,6 +104,8 @@ var input_mappings_cache: Dictionary = {}
 # CHARACTER ANIMATION SYSTEM FOR DIALOGUE
 # ============================================================================
 
+
+
 # Function to find the CharacterController node by animation group
 func find_character_animation_node(character_group_name: String) -> Node:
 	"""Finds the CharacterController node that belongs to the specified group"""

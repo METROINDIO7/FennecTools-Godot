@@ -41,14 +41,13 @@ var character: String = ""
 # Target where it will be instantiated as a child (leave empty to use default)
 @export var instance_target: NodePath
 
-# === SOUND SETTINGS ===
-@export_group("Sound Settings", "sound_")
-@export var sound_enabled: bool = false
-@export var sound_effect: AudioStream
-@export var sound_frequency: int = 3  # How often it is played (in characters)
-@export_range(0.5, 2.0, 0.1) var sound_pitch_min: float = 0.9
-@export_range(0.5, 2.0, 0.1) var sound_pitch_max: float = 1.1
-@export_range(0.0, 1.0, 0.1) var sound_volume: float = 0.7
+# === VOICELINE AUDIO SETTINGS ===
+@export_group("Voiceline Audio", "voiceline_")
+@export var voiceline_enabled: bool = false
+@export var voiceline_stream: AudioStream
+@export_range(0.5, 2.0, 0.1) var voiceline_pitch_min: float = 0.9
+@export_range(0.5, 2.0, 0.1) var voiceline_pitch_max: float = 1.1
+@export_range(0.0, 1.0, 0.1) var voiceline_volume: float = 0.7
 
 
 # Main method that builds the items according to the selected mode
@@ -126,18 +125,28 @@ func get_instance_debug_info() -> String:
 		target_info = "target: " + str(instance_target)
 	return "Instance: " + instance_scene.resource_path.get_file() + " -> " + target_info
 
-# ✅ NEW: Check if it has sound configured
-func has_sound() -> bool:
-	return sound_enabled and sound_effect != null
+# ✅ NEW: Check if it has a voiceline configured
+func has_voiceline() -> bool:
+	return voiceline_enabled and voiceline_stream != null
 
-# ✅ NEW: Get sound debug information
-func get_sound_debug_info() -> String:
-	if not has_sound():
-		return "No sound"
-	return "Sound: %s (freq: %d, pitch: %.1f-%.1f, vol: %.1f)" % [
-		sound_effect.resource_path.get_file() if sound_effect else "null",
-		sound_frequency,
-		sound_pitch_min,
-		sound_pitch_max,
-		sound_volume
+# ✅ NEW: Get voiceline debug information
+func get_voiceline_debug_info() -> String:
+	if not has_voiceline():
+		return "No voiceline"
+	return "Voiceline: %s (pitch: %.1f-%.1f, vol: %.1f)" % [
+		voiceline_stream.resource_path.get_file() if voiceline_stream else "null",
+		voiceline_pitch_min,
+		voiceline_pitch_max,
+		voiceline_volume
 	]
+
+# ✅ NEW: Get a dictionary with the voiceline configuration
+func get_voiceline_config() -> Dictionary:
+	if not has_voiceline():
+		return {}
+	return {
+		"stream": voiceline_stream,
+		"volume": voiceline_volume,
+		"pitch_min": voiceline_pitch_min,
+		"pitch_max": voiceline_pitch_max
+	}

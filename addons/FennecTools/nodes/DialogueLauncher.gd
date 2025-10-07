@@ -195,18 +195,6 @@ func _setup_panel(controller: Node, slot: DialogueSlotConfig) -> void:
 	
 	if _has_property(controller, "auto_free_on_exit"):
 		controller.set("auto_free_on_exit", auto_free)
-	
-	# ✅ NEW: Configure sounds if the slot has sound configuration
-	if slot and slot.has_sound() and controller.has_method("set_sound_config"):
-		var sound_config = {
-			"sound_enabled": slot.sound_enabled,
-			"sound_effect": slot.sound_effect,
-			"sound_frequency": slot.sound_frequency,
-			"sound_pitch_min": slot.sound_pitch_min,
-			"sound_pitch_max": slot.sound_pitch_max,
-			"sound_volume": slot.sound_volume
-		}
-		controller.set_sound_config(sound_config)
 
 func _cleanup_current_instance():
 	"""Cleans up the current instance if it exists"""
@@ -471,6 +459,10 @@ func start() -> void:
 				# START: Start mouth animation BEFORE showing text
 				if _current_character_group != "":
 					start_character_talking(_current_character_group)
+				
+				# ✅ NEW: Play voiceline if configured
+				if slot.has_voiceline() and current_panel.has_method("play_voiceline"):
+					current_panel.play_voiceline(slot.get_voiceline_config())
 				
 				# Show dialogue
 				if current_panel.has_method("play_dialog"):
