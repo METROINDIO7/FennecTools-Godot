@@ -23,9 +23,39 @@ grow_vertical = 2
 
 [node name="InfoLabel" type="Label" parent="VBoxContainer"]
 layout_mode = 2
-text = "Fennec Tools - Loading..."
+text = "Fennec Tools v1.0 - Integrated development tools
+Loaded tabs: 5 | Conditionals: 3 | Languages: 2"
 horizontal_alignment = 1
 
 [node name="TabContainer" type="TabContainer" parent="VBoxContainer"]
 layout_mode = 2
 size_flags_vertical = 3
+current_tab = 0
+
+[node name="HBoxContainer" type="HBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+grow_horizontal = 2
+alignment = 2
+
+[node name="VSeparator" type="VSeparator" parent="HBoxContainer"]
+layout_mode = 2
+
+[node name="LinkButton2" type="LinkButton" parent="HBoxContainer"]
+modulate = Color(0, 1, 1, 1)
+layout_mode = 2
+text = "repository"
+uri = "https://github.com/METROINDIO7/FennecTools-Godot"
+
+[node name="VSeparator2" type="VSeparator" parent="HBoxContainer"]
+layout_mode = 2
+
+[node name="LinkButton" type="LinkButton" parent="HBoxContainer"]
+modulate = Color(0, 1, 1, 1)
+layout_mode = 2
+text = "documentation"
+uri = "https://my0-29.gitbook.io/fennectools-documentation"
+
+[node name="VSeparator3" type="VSeparator" parent="HBoxContainer"]
+layout_mode = 2
