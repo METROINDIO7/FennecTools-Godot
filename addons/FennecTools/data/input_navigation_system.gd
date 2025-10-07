@@ -123,7 +123,7 @@ func _handle_option_button(option_button: OptionButton) -> void:
 	var popup = option_button.get_popup()
 	if not popup:
 		return
-		
+	
 	# Almacenar selección actual
 	var current_selection = option_button.selected
 	
@@ -141,47 +141,94 @@ func _handle_option_button(option_button: OptionButton) -> void:
 	var current_item = current_selection
 	var item_count = popup.item_count
 	
+	# Variables para controlar el delay de las teclas presionadas
+	var input_delay = 0.15  # segundos entre cada movimiento cuando se mantiene presionada
+	var time_since_last_input = 0.0
+	var is_holding_key = false
+	
 	# Manejar navegación del popup hasta que se cierre
 	while popup.visible:
-		await get_tree().process_frame
+		var delta = get_process_delta_time()
+		time_since_last_input += delta
 		
-		# Navegar arriba/abajo en el popup
-		if FGGlobal.is_custom_action_just_pressed("up"):
-			current_item = (current_item - 1 + item_count) % item_count
-			# Saltar elementos deshabilitados
-			while current_item < item_count and popup.is_item_disabled(current_item):
-				current_item = (current_item - 1 + item_count) % item_count
-		elif FGGlobal.is_custom_action_just_pressed("down"):
-			current_item = (current_item + 1) % item_count
-			# Saltar elementos deshabilitados
-			while current_item < item_count and popup.is_item_disabled(current_item):
-				current_item = (current_item + 1) % item_count
-				
-		# Verificar tanto el sistema personalizado como ui_accept por defecto
+		# Verificar si alguna tecla de navegación está siendo presionada
+		var up_pressed = FGGlobal.is_custom_action_pressed("up")
+		var down_pressed = FGGlobal.is_custom_action_pressed("down")
 		var accept_pressed = FGGlobal.is_custom_action_just_pressed("accept") or Input.is_action_just_pressed("ui_accept")
 		var back_pressed = FGGlobal.is_custom_action_just_pressed("back") or Input.is_action_just_pressed("ui_cancel")
 		
+		# Navegar arriba
+		if (up_pressed and (FGGlobal.is_custom_action_just_pressed("up") or time_since_last_input >= input_delay)):
+			current_item = (current_item - 1 + item_count) % item_count
+			
+			# Saltar elementos deshabilitados
+			var attempts = 0
+			while attempts < item_count and popup.is_item_disabled(current_item):
+				current_item = (current_item - 1 + item_count) % item_count
+				attempts += 1
+			
+			# Resaltar visualmente el item actual
+			popup.set_focused_item(current_item)
+			
+			time_since_last_input = 0.0
+			is_holding_key = true
+			_play_navigation_sound()
+		
+		# Navegar abajo
+		elif (down_pressed and (FGGlobal.is_custom_action_just_pressed("down") or time_since_last_input >= input_delay)):
+			current_item = (current_item + 1) % item_count
+			
+			# Saltar elementos deshabilitados
+			var attempts = 0
+			while attempts < item_count and popup.is_item_disabled(current_item):
+				current_item = (current_item + 1) % item_count
+				attempts += 1
+			
+			# Resaltar visualmente el item actual
+			popup.set_focused_item(current_item)
+			
+			time_since_last_input = 0.0
+			is_holding_key = true
+			_play_navigation_sound()
+		
+		# Resetear el contador si no se está presionando ninguna tecla
+		if not up_pressed and not down_pressed:
+			is_holding_key = false
+			time_since_last_input = 0.0
+		
 		# Seleccionar el elemento
 		if accept_pressed:
-			# Cerrar el popup
-			popup.hide()
-			
-			# Seleccionar manualmente el elemento y forzar las señales
-			option_button.selected = current_item
-			
-			# Emitir manualmente la señal item_selected
-			if option_button.has_signal("item_selected"):
-				option_button.item_selected.emit(current_item)
+			# Verificar que el item no esté deshabilitado
+			if not popup.is_item_disabled(current_item):
+				# Cerrar el popup
+				popup.hide()
+				
+				# Seleccionar manualmente el elemento
+				option_button.selected = current_item
+				
+				# Emitir manualmente la señal item_selected
+				if option_button.has_signal("item_selected"):
+					option_button.item_selected.emit(current_item)
+				
+				print("[Navigation] OptionButton: Seleccionado item ", current_item)
 			
 			break
-			
+		
 		# Cancelar selección
 		if back_pressed:
 			popup.hide()
+			print("[Navigation] OptionButton: Cancelado")
 			break
+		
+		await get_tree().process_frame
 	
 	# Re-habilitar nuestro procesamiento normal
 	set_process(was_processing)
+	
+	# Restaurar el foco al option button
+	_update_focus()
+	
+
 
 
 func _update_focus() -> void:
