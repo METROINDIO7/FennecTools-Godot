@@ -1,4 +1,4 @@
-[gd_scene load_steps=7 format=3 uid="uid://c4852hpydxq"]
+[gd_scene load_steps=8 format=3 uid="uid://c4852hpydxq"]
 
 [ext_resource type="Script" uid="uid://8hasvkhb1k06" path="res://addons/FennecTools/nodes/DialogPanelController.gd" id="1_8sc5a"]
 
@@ -17,6 +17,12 @@ corner_radius_top_left = 50
 corner_radius_top_right = 50
 corner_radius_bottom_right = 50
 corner_radius_bottom_left = 50
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_8sc5a"]
+content_margin_left = 5.0
+content_margin_top = 0.0
+content_margin_right = 5.0
+content_margin_bottom = 5.0
 
 [sub_resource type="Animation" id="Animation_kw31l"]
 length = 0.001
@@ -86,10 +92,10 @@ label_path = NodePath("Label")
 richtext_path = NodePath("Panel/RichTextLabel")
 anim_player_path = NodePath("AnimationPlayer")
 text_alignment = 1
-spacing_top = 65
-spacing_bottom = 5
-spacing_left = 5
-spacing_right = 5
+Margin_top = 55
+Margin_bottom = 5
+Margin_left = 5
+Margin_right = 5
 metadata/_custom_type_script = "uid://8hasvkhb1k06"
 
 [node name="Panel" type="PanelContainer" parent="."]
@@ -103,6 +109,7 @@ theme_override_styles/panel = SubResource("StyleBoxFlat_8sc5a")
 
 [node name="RichTextLabel" type="RichTextLabel" parent="Panel"]
 layout_mode = 2
+theme_override_styles/normal = SubResource("StyleBoxEmpty_8sc5a")
 bbcode_enabled = true
 text = " [center]Elena, ¿has vuelto a hurgar donde no debías? Podría haber sido cualquier cosa. "
 visible_characters = 0

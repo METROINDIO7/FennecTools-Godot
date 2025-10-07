@@ -237,6 +237,19 @@ func _setup_panel(controller: Node, slot: DialogueSlotConfig) -> void:
 	
 	if _has_property(controller, "auto_free_on_exit"):
 		controller.set("auto_free_on_exit", auto_free)
+	
+	# ✅ NUEVO: Configurar sonidos si el slot tiene configuración de sonido
+	if slot and slot.has_sound() and controller.has_method("set_sound_config"):
+		var sound_config = {
+			"sound_enabled": slot.sound_enabled,
+			"sound_effect": slot.sound_effect,
+			"sound_frequency": slot.sound_frequency,
+			"sound_pitch_min": slot.sound_pitch_min,
+			"sound_pitch_max": slot.sound_pitch_max,
+			"sound_volume": slot.sound_volume
+		}
+		controller.set_sound_config(sound_config)
+		print("[DialogueLauncher] Sound config applied to panel: ", slot.get_sound_debug_info())
 
 func _cleanup_current_instance():
 	"""Limpia la instancia actual si existe"""
@@ -440,6 +453,8 @@ func start() -> void:
 		print("[DialogueLauncher] Slot info: ", slot.get_debug_info())
 		if slot.has_instance_scene():
 			print("[DialogueLauncher] Slot instance info: ", slot.get_instance_debug_info())
+		if slot.has_sound():
+			print("[DialogueLauncher] Slot sound info: ", slot.get_sound_debug_info())  # ✅ NUEVO
 		
 		# ✅ Manejar expresión del personaje
 		_current_character_group = slot.character_group_name
@@ -462,13 +477,8 @@ func start() -> void:
 					print("[DialogueLauncher] Instance has dialogue flow, starting it")
 					await _current_instance.start_dialogue_flow()
 				
-				# Control de avance automático
-				if slot.disable_auto_advance_when_instanced:
-					print("[DialogueLauncher] Auto-advance disabled, waiting for manual input")
-					await _await_advance_input()
-				else:
-					# Esperar un frame para que la instancia se establezca
-					await get_tree().process_frame
+				
+				await get_tree().process_frame
 			
 			# Si el slot solo tiene instancia (sin diálogos), continuar al siguiente
 			if not slot.is_valid() or slot.get_total_items() == 0:

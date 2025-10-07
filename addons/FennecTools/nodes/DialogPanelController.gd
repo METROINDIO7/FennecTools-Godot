@@ -40,7 +40,7 @@ signal dialogue_finished()
 @export var show_speaker_label: bool = true
 
 # === CONFIGURACIONES DE ALINEACIÓN ===
-@export_group("Text Alignment Settings")
+@export_group("Text Alignment and Margin")
 
 # Alineación horizontal para el texto (RichTextLabel)
 enum TextHorizontalAlign {
@@ -52,12 +52,20 @@ enum TextHorizontalAlign {
 
 @export var text_alignment: TextHorizontalAlign = TextHorizontalAlign.LEFT
 
-# Configuración adicional para el espaciado del StyleBoxEmpty
-@export_group("Vertical/Horizontal Spacing Settings")
-@export var spacing_top: int = 0
-@export var spacing_bottom: int = 0
-@export var spacing_left: int = 0
-@export var spacing_right: int = 0
+@export var Margin_top: int = 0
+@export var Margin_bottom: int = 0
+@export var Margin_left: int = 0
+@export var Margin_right: int = 0
+
+# === CONFIGURACIÓN DE SONIDOS ===
+@export_group("Sound")
+@export var sound_enabled: bool = false  # Control global para activar/desactivar sonidos
+@export var external_sound_player: NodePath # ✅ NUEVO: Para asignar un AudioStreamPlayer externo
+var _current_sound_config: Dictionary = {}
+
+# Audio player para sonidos de texto
+var _text_sound_player: AudioStreamPlayer # ✅ Este será el reproductor, puede ser externo o interno
+var _char_count_since_last_sound: int = 0
 
 # Internal references
 var _label: Label
@@ -101,6 +109,88 @@ func _ready() -> void:
 	# Conectar señal adicional para compatibilidad
 	if not dialog_completed.is_connected(_on_dialog_completed):
 		dialog_completed.connect(_on_dialog_completed)
+	
+	# ✅ NUEVO: Inicializar sistema de sonidos (ahora se hace después de que los nodos están listos)
+	call_deferred("_setup_sound_system")
+
+# ==============
+# SISTEMA DE SONIDOS
+# ==============
+
+func _setup_sound_system() -> void:
+	"""Configura el sistema de sonidos"""
+	if external_sound_player != NodePath(""):
+		# Intentar usar el nodo externo
+		_text_sound_player = get_node_or_null(external_sound_player)
+		if _text_sound_player and _text_sound_player is AudioStreamPlayer:
+			print("[DialogPanel] Using external sound player: ", _text_sound_player.name)
+		else:
+			print("[DialogPanel] WARNING: External sound player not found or not an AudioStreamPlayer, creating internal one")
+			_create_internal_sound_player()
+	else:
+		# Crear uno interno
+		_create_internal_sound_player()
+
+func _create_internal_sound_player() -> void:
+	"""Crea un AudioStreamPlayer interno"""
+	_text_sound_player = AudioStreamPlayer.new()
+	_text_sound_player.name = "TextSoundPlayer"
+	add_child(_text_sound_player)
+	_text_sound_player.process_mode = Node.PROCESS_MODE_ALWAYS
+	print("[DialogPanel] Created internal sound player")
+
+func set_sound_config(config: Dictionary) -> void:
+	"""Configura los parámetros de sonido desde el DialogueLauncher"""
+	_current_sound_config = config
+	print("[DialogPanel] Sound config set: ", config)
+
+func _play_text_sound() -> void:
+	"""Reproduce el sonido de texto según la configuración actual"""
+	if not sound_enabled:
+		return
+	
+	if _current_sound_config.is_empty():
+		return
+	
+	# ✅ NUEVO: Verificar si el reproductor está disponible
+	if not _text_sound_player:
+		return
+	
+	var sound_effect: AudioStream = _current_sound_config.get("sound_effect")
+	if not sound_effect:
+		return
+	
+	# Configurar el audio player
+	_text_sound_player.stream = sound_effect
+	_text_sound_player.volume_db = linear_to_db(_current_sound_config.get("sound_volume", 0.7))
+	
+	# Aplicar variación de pitch aleatoria
+	var pitch_min: float = _current_sound_config.get("sound_pitch_min", 0.9)
+	var pitch_max: float = _current_sound_config.get("sound_pitch_max", 1.1)
+	_text_sound_player.pitch_scale = randf_range(pitch_min, pitch_max)
+	
+	# Reproducir sonido
+	_text_sound_player.play()
+
+func _should_play_sound() -> bool:
+	"""Determina si debe reproducirse el sonido en base a la frecuencia configurada"""
+	if not _current_sound_config.get("sound_enabled", false):
+		return false
+	
+	var frequency: int = _current_sound_config.get("sound_frequency", 3)
+	if frequency <= 0:
+		return false
+	
+	_char_count_since_last_sound += 1
+	if _char_count_since_last_sound >= frequency:
+		_char_count_since_last_sound = 0
+		return true
+	
+	return false
+
+func _reset_sound_counter() -> void:
+	"""Reinicia el contador de caracteres para sonidos"""
+	_char_count_since_last_sound = 0
 
 # ==============
 # Compatibilidad con launcher anterior
@@ -126,6 +216,10 @@ func reset_for_reuse() -> void:
 	
 	if _label:
 		_label.text = ""
+	
+	# ✅ NUEVO: Resetear sistema de sonidos
+	_reset_sound_counter()
+	_current_sound_config = {}
 	
 	# Resetear animaciones si es necesario
 	if _anim:
@@ -168,14 +262,14 @@ func _apply_speaker_alignment() -> void:
 	var extra_space := rect_height - text_height
 	
 	# Ajuste dinámico SOLO para el top, usando el valor del usuario como preferencia
-	var top_margin := clampi(spacing_top, 0, max(0, extra_space))
+	var top_margin := clampi(Margin_top, 0, max(0, extra_space))
 	
 	# Crear StyleBoxEmpty con todos los márgenes configurados
 	var style_box = StyleBoxEmpty.new()
 	style_box.content_margin_top = top_margin
-	style_box.content_margin_bottom = spacing_bottom
-	style_box.content_margin_left = spacing_left
-	style_box.content_margin_right = spacing_right
+	style_box.content_margin_bottom = Margin_bottom
+	style_box.content_margin_left = Margin_left
+	style_box.content_margin_right = Margin_right
 	
 	# Aplicar el nuevo stylebox
 	_rtl.add_theme_stylebox_override("normal", style_box)
@@ -204,7 +298,7 @@ func set_text_alignment(alignment: TextHorizontalAlign) -> void:
 
 # Método para configurar espaciados verticales personalizados
 func set_vertical_spacings(top: int) -> void:
-	spacing_top = max(0, top)
+	Margin_top = max(0, top)
 	_apply_speaker_alignment()
 
 # ==============
@@ -429,6 +523,9 @@ func _reveal_text(text: String) -> void:
 	_rtl.text = text
 	_rtl.visible_characters = 0
 	
+	# ✅ NUEVO: Reiniciar contador de sonidos
+	_reset_sound_counter()
+	
 	var total := _total_chars()
 	if total <= 0:
 		_is_revealing = false
@@ -440,8 +537,14 @@ func _reveal_text(text: String) -> void:
 			break
 		_rtl.visible_characters = i
 		i += 1
+		
+		# ✅ NUEVO: Reproducir sonido si corresponde
+		if _should_play_sound():
+			_play_text_sound()
+		
 		await get_tree().create_timer(tpc).timeout
 		_apply_speaker_alignment() # <-- Ajusta dinámicamente mientras aparece
+	
 	# Final
 	_rtl.visible_characters = total
 	_is_revealing = false

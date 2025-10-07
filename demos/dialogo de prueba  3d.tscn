@@ -1,9 +1,11 @@
-[gd_scene load_steps=13 format=3 uid="uid://durf6pbtbrj4v"]
+[gd_scene load_steps=22 format=3 uid="uid://durf6pbtbrj4v"]
 
 [ext_resource type="Script" uid="uid://bt45v110li4dh" path="res://addons/FennecTools/nodes/DialogueLauncher.gd" id="1_kl2yw"]
 [ext_resource type="Script" uid="uid://d2ntn8vru5vta" path="res://demos/dialogo_de_prueba__3d.gd" id="1_m4gi8"]
 [ext_resource type="Script" uid="uid://du8yk53skbjc8" path="res://addons/FennecTools/nodes/DialogueSlotConfig.gd" id="3_m4gi8"]
 [ext_resource type="PackedScene" uid="uid://c4852hpydxq" path="res://demos/panel de dialogo gx.tscn" id="4_yw17p"]
+[ext_resource type="Script" uid="uid://bt3n6lbvogpi7" path="res://addons/FennecTools/nodes/CharacterController.gd" id="6_5aa2m"]
+[ext_resource type="Script" uid="uid://dgpjpkcemu56s" path="res://addons/FennecTools/nodes/ExpressionState.gd" id="7_26c4r"]
 
 [sub_resource type="Resource" id="Resource_kl2yw"]
 script = ExtResource("3_m4gi8")
@@ -21,12 +23,15 @@ metadata/_custom_type_script = "uid://du8yk53skbjc8"
 script = ExtResource("3_m4gi8")
 mode = 1
 sequence_ids = Array[int]([1])
+character_group_name = "miguel"
 metadata/_custom_type_script = "uid://du8yk53skbjc8"
 
 [sub_resource type="Resource" id="Resource_0evlg"]
 script = ExtResource("3_m4gi8")
 chain_start_id = 2
 chain_count = 2
+character_group_name = "miguel"
+expression_id = 1
 metadata/_custom_type_script = "uid://du8yk53skbjc8"
 
 [sub_resource type="Resource" id="Resource_ctttj"]
@@ -53,6 +58,88 @@ chain_start_id = 16
 chain_count = 4
 metadata/_custom_type_script = "uid://du8yk53skbjc8"
 
+[sub_resource type="Animation" id="Animation_fvivn"]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("AnimationPlayer/Panel:size")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector2(120, 1)]
+}
+
+[sub_resource type="Animation" id="Animation_bqs22"]
+resource_name = "mouth_open"
+length = 2.0
+loop_mode = 1
+step = 0.05
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("AnimationPlayer/Panel:size")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 1.98),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1, 1, 1, 1),
+"update": 0,
+"values": [Vector2(120, 1), Vector2(120, 20), Vector2(120, 1), Vector2(120, 20), Vector2(120, 1), Vector2(120, 20), Vector2(120, 1), Vector2(120, 20), Vector2(120, 1)]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_av5j0"]
+_data = {
+&"RESET": SubResource("Animation_fvivn"),
+&"mouth_open": SubResource("Animation_bqs22")
+}
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_naote"]
+bg_color = Color(1, 1, 1, 1)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+
+[sub_resource type="Animation" id="Animation_do007"]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("AnimationPlayer/Panel:modulate")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Color(1, 1, 1, 1)]
+}
+
+[sub_resource type="Animation" id="Animation_5aa2m"]
+resource_name = "happy"
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("AnimationPlayer/Panel:modulate")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 1),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [Color(1, 1, 1, 1), Color(0.30012485, 0.264427, 1, 1)]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_wsrfe"]
+_data = {
+&"RESET": SubResource("Animation_do007"),
+&"happy": SubResource("Animation_5aa2m")
+}
+
 [node name="Node3D" type="Control"]
 layout_mode = 3
 anchors_preset = 15
@@ -61,6 +148,14 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_m4gi8")
+
+[node name="Control" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 
 [node name="DialogueLauncher" type="Node" parent="."]
 process_mode = 3
@@ -84,5 +179,45 @@ offset_left = 314.0
 offset_top = 45.0
 offset_right = 354.0
 offset_bottom = 68.0
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
+libraries = {
+&"": SubResource("AnimationLibrary_av5j0")
+}
+
+[node name="Panel" type="Panel" parent="AnimationPlayer"]
+offset_left = 494.0
+offset_top = 242.0
+offset_right = 614.0
+offset_bottom = 243.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_naote")
+
+[node name="CharacterController" type="Node" parent="."]
+script = ExtResource("6_5aa2m")
+character_group_name = "miguel"
+mouth_targets_plays = Array[NodePath]([NodePath("../AnimationPlayer")])
+mouth_closed_animation = "RESET"
+metadata/_custom_type_script = "uid://bt3n6lbvogpi7"
+
+[node name="ExpressionStates" type="Node" parent="CharacterController"]
+
+[node name="default" type="Node" parent="CharacterController/ExpressionStates"]
+script = ExtResource("7_26c4r")
+metadata/_custom_type_script = "uid://dgpjpkcemu56s"
+
+[node name="happy" type="Node" parent="CharacterController/ExpressionStates"]
+script = ExtResource("7_26c4r")
+state_id = 1
+state_name = "Happy"
+animation_players = Array[NodePath]([NodePath("../../../AnimationPlayer2")])
+animation_names = Array[String](["happy"])
+play_all_animations = true
+metadata/_custom_type_script = "uid://dgpjpkcemu56s"
+
+[node name="AnimationPlayer2" type="AnimationPlayer" parent="."]
+libraries = {
+&"": SubResource("AnimationLibrary_wsrfe")
+}
+autoplay = "RESET"
 
 [connection signal="pressed" from="Button" to="." method="_on_button_pressed"]

@@ -41,6 +41,15 @@ var character: String = ""
 # Target donde se instanciará como hijo (dejar vacío para usar default)
 @export var instance_target: NodePath
 
+# === CONFIGURACIÓN DE SONIDOS ===
+@export_group("Sound Settings", "sound_")
+@export var sound_enabled: bool = false
+@export var sound_effect: AudioStream
+@export var sound_frequency: int = 3  # Cada cuántos caracteres se reproduce
+@export_range(0.5, 2.0, 0.1) var sound_pitch_min: float = 0.9
+@export_range(0.5, 2.0, 0.1) var sound_pitch_max: float = 1.1
+@export_range(0.0, 1.0, 0.1) var sound_volume: float = 0.7
+
 
 # Método principal que construye los items según el modo seleccionado
 func build_items(context: Dictionary = {}) -> Array:
@@ -116,3 +125,19 @@ func get_instance_debug_info() -> String:
 	if instance_target != NodePath(""):
 		target_info = "target: " + str(instance_target)
 	return "Instance: " + instance_scene.resource_path.get_file() + " -> " + target_info
+
+# ✅ NUEVO: Verificar si tiene sonido configurado
+func has_sound() -> bool:
+	return sound_enabled and sound_effect != null
+
+# ✅ NUEVO: Obtener información de debug del sonido
+func get_sound_debug_info() -> String:
+	if not has_sound():
+		return "No sound"
+	return "Sound: %s (freq: %d, pitch: %.1f-%.1f, vol: %.1f)" % [
+		sound_effect.resource_path.get_file() if sound_effect else "null",
+		sound_frequency,
+		sound_pitch_min,
+		sound_pitch_max,
+		sound_volume
+	]

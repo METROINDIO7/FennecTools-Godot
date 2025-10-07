@@ -19,7 +19,10 @@ corner_radius_bottom_right = 50
 corner_radius_bottom_left = 50
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_xp3pm"]
+content_margin_left = 5.0
 content_margin_top = 0.0
+content_margin_right = 5.0
+content_margin_bottom = 5.0
 
 [sub_resource type="Animation" id="Animation_kw31l"]
 length = 0.001
@@ -89,10 +92,12 @@ label_path = NodePath("Label")
 richtext_path = NodePath("Panel/RichTextLabel")
 anim_player_path = NodePath("AnimationPlayer")
 text_alignment = 1
-spacing_top = 65
-spacing_bottom = 5
-spacing_left = 5
-spacing_right = 5
+Margin_top = 55
+Margin_bottom = 5
+Margin_left = 5
+Margin_right = 5
+sound_enabled = true
+external_sound_player = null
 metadata/_custom_type_script = "uid://8hasvkhb1k06"
 
 [node name="Panel" type="PanelContainer" parent="."]
@@ -126,3 +131,5 @@ offset_right = 206.0
 offset_bottom = 502.0
 text = "10101"
 vertical_alignment = 1
+
+[node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="."]
