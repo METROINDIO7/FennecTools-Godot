@@ -2,7 +2,7 @@
 
 ![Godot 4.x](https://img.shields.io/badge/Godot-4.x-%23478cbf?logo=godot-engine)
 ![License](https://img.shields.io/github/license/METROINDIO7/FennecTools-Godot)
-
+![Documentation](https://my0-29.gitbook.io/fennectools-documentation)
 **FennecTools** is a comprehensive plugin for Godot 4 that provides an integrated set of tools to streamline your game development. It centralizes common systems like dialogues, conditionals, translations, input control, and task organization.
 
 ## 🚀 Features
@@ -35,7 +35,7 @@ Create a Dialogue: Use the Dialogue System to create a conversation and launch i
 
 📚 Documentation
 For complete documentation, including API reference and tutorials, visit the GitBook documentation.
-(https://my0-29.gitbook.io/fennectools-documentation)
+
 
 🤝 Contributing
 Contributions are welcome! Please feel free to submit issues and pull requests.
