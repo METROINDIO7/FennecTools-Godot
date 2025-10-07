@@ -38,13 +38,13 @@ grow_vertical = 2
 [node name="TitleLabel" type="Label" parent="VBoxContainer/HeaderPanel/HBoxContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
-text = "📋 Tablero Kanban - Fennec Tools"
+text = "📋 Kanban Board - Fennec Tools"
 horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="StatsLabel" type="Label" parent="VBoxContainer/HeaderPanel/HBoxContainer"]
 layout_mode = 2
-text = "Tareas: 0 | Columnas: 3"
+text = "Tasks: 0 | Columns: 3"
 horizontal_alignment = 2
 vertical_alignment = 1
 
@@ -66,38 +66,38 @@ grow_vertical = 2
 
 [node name="FilterLabel" type="Label" parent="VBoxContainer/FilterPanel/HBoxContainer"]
 layout_mode = 2
-text = "🔍 Filtros:"
+text = "🔍 Filters:"
 vertical_alignment = 1
 
 [node name="FilterAssignee" type="LineEdit" parent="VBoxContainer/FilterPanel/HBoxContainer"]
 custom_minimum_size = Vector2(150, 0)
 layout_mode = 2
-placeholder_text = "Filtrar por asignado..."
+placeholder_text = "Filter by assignee..."
 
 [node name="FilterStatus" type="OptionButton" parent="VBoxContainer/FilterPanel/HBoxContainer"]
 custom_minimum_size = Vector2(150, 0)
 layout_mode = 2
 selected = 0
 item_count = 4
-popup/item_0/text = "Todos los estados"
+popup/item_0/text = "All statuses"
 popup/item_0/id = -1
-popup/item_1/text = "Por Hacer"
+popup/item_1/text = "To Do"
 popup/item_1/id = 1
-popup/item_2/text = "En Progreso"
+popup/item_2/text = "In Progress"
 popup/item_2/id = 2
-popup/item_3/text = "Completado"
+popup/item_3/text = "Completed"
 popup/item_3/id = 3
 
 [node name="ClearFiltersButton" type="Button" parent="VBoxContainer/FilterPanel/HBoxContainer"]
 layout_mode = 2
-text = "✖️ Limpiar"
+text = "✖️ Clear"
 
 [node name="VSeparator" type="VSeparator" parent="VBoxContainer/FilterPanel/HBoxContainer"]
 layout_mode = 2
 
 [node name="RefreshButton" type="Button" parent="VBoxContainer/FilterPanel/HBoxContainer"]
 layout_mode = 2
-text = "🔄 Actualizar"
+text = "🔄 Refresh"
 
 [node name="ColumnManagement" type="Panel" parent="VBoxContainer"]
 custom_minimum_size = Vector2(0, 50)
@@ -117,13 +117,13 @@ grow_vertical = 2
 
 [node name="ColumnLabel" type="Label" parent="VBoxContainer/ColumnManagement/HBoxContainer"]
 layout_mode = 2
-text = "📂 Gestión de Columnas:"
+text = "📂 Column Management:"
 vertical_alignment = 1
 
 [node name="ColumnNameInput" type="LineEdit" parent="VBoxContainer/ColumnManagement/HBoxContainer"]
 custom_minimum_size = Vector2(200, 0)
 layout_mode = 2
-placeholder_text = "Nombre de nueva columna..."
+placeholder_text = "New column name..."
 
 [node name="ColorLabel" type="Label" parent="VBoxContainer/ColumnManagement/HBoxContainer"]
 layout_mode = 2
@@ -137,7 +137,7 @@ placeholder_text = "#9B59B6"
 
 [node name="AddColumnButton" type="Button" parent="VBoxContainer/ColumnManagement/HBoxContainer"]
 layout_mode = 2
-text = "➕ Agregar Columna"
+text = "➕ Add Column"
 
 [node name="MainContent" type="HBoxContainer" parent="VBoxContainer"]
 layout_mode = 2
@@ -171,7 +171,7 @@ grow_vertical = 2
 
 [node name="DetailTitleLabel" type="Label" parent="VBoxContainer/MainContent/TaskDetailPanel/VBoxContainer"]
 layout_mode = 2
-text = "📝 Detalles de la Tarea"
+text = "📝 Task Details"
 horizontal_alignment = 1
 
 [node name="HSeparator" type="HSeparator" parent="VBoxContainer/MainContent/TaskDetailPanel/VBoxContainer"]
@@ -179,20 +179,20 @@ layout_mode = 2
 
 [node name="TitleLabel" type="Label" parent="VBoxContainer/MainContent/TaskDetailPanel/VBoxContainer"]
 layout_mode = 2
-text = "Título:"
+text = "Title:"
 
 [node name="DetailTitle" type="LineEdit" parent="VBoxContainer/MainContent/TaskDetailPanel/VBoxContainer"]
 layout_mode = 2
-placeholder_text = "Título de la tarea..."
+placeholder_text = "Task title..."
 
 [node name="DescriptionLabel" type="Label" parent="VBoxContainer/MainContent/TaskDetailPanel/VBoxContainer"]
 layout_mode = 2
-text = "Descripción:"
+text = "Description:"
 
 [node name="DetailDescription" type="TextEdit" parent="VBoxContainer/MainContent/TaskDetailPanel/VBoxContainer"]
 custom_minimum_size = Vector2(0, 150)
 layout_mode = 2
-placeholder_text = "Descripción detallada de la tarea..."
+placeholder_text = "Detailed task description..."
 
 [node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer/MainContent/TaskDetailPanel/VBoxContainer"]
 layout_mode = 2
@@ -203,11 +203,11 @@ size_flags_horizontal = 3
 
 [node name="AssigneeLabel" type="Label" parent="VBoxContainer/MainContent/TaskDetailPanel/VBoxContainer/HBoxContainer/VBoxContainer"]
 layout_mode = 2
-text = "👤 Asignado a:"
+text = "👤 Assigned to:"
 
 [node name="DetailAssignee" type="LineEdit" parent="VBoxContainer/MainContent/TaskDetailPanel/VBoxContainer/HBoxContainer/VBoxContainer"]
 layout_mode = 2
-placeholder_text = "Nombre del responsable..."
+placeholder_text = "Assignee's name..."
 
 [node name="VBoxContainer2" type="VBoxContainer" parent="VBoxContainer/MainContent/TaskDetailPanel/VBoxContainer/HBoxContainer"]
 layout_mode = 2
@@ -215,7 +215,7 @@ size_flags_horizontal = 3
 
 [node name="DueDateLabel" type="Label" parent="VBoxContainer/MainContent/TaskDetailPanel/VBoxContainer/HBoxContainer/VBoxContainer2"]
 layout_mode = 2
-text = "📅 Fecha límite:"
+text = "📅 Due date:"
 
 [node name="DetailDueDate" type="LineEdit" parent="VBoxContainer/MainContent/TaskDetailPanel/VBoxContainer/HBoxContainer/VBoxContainer2"]
 layout_mode = 2
@@ -230,14 +230,14 @@ layout_mode = 2
 [node name="SaveButton" type="Button" parent="VBoxContainer/MainContent/TaskDetailPanel/VBoxContainer/ButtonContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
-text = "💾 Guardar"
+text = "💾 Save"
 
 [node name="CancelButton" type="Button" parent="VBoxContainer/MainContent/TaskDetailPanel/VBoxContainer/ButtonContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
-text = "❌ Cancelar"
+text = "❌ Cancel"
 
 [node name="DeleteButton" type="Button" parent="VBoxContainer/MainContent/TaskDetailPanel/VBoxContainer/ButtonContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
-text = "🗑️ Eliminar"
+text = "🗑️ Delete"

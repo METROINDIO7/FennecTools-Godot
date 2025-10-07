@@ -40,7 +40,7 @@ grow_vertical = 2
 
 [node name="Header" type="Label" parent="MainVBox"]
 layout_mode = 2
-text = "Sistema de Diálogos"
+text = "Dialogue System"
 horizontal_alignment = 1
 
 [node name="HSeparator" type="HSeparator" parent="MainVBox"]
@@ -61,7 +61,7 @@ size_flags_vertical = 0
 [node name="CharacterLabel" type="Label" parent="MainVBox/FiltersPanel/FiltersVBox/CharacterAndLanguageRow"]
 layout_mode = 2
 size_flags_vertical = 0
-text = "Personaje:"
+text = "Character:"
 
 [node name="CharacterOption" type="OptionButton" parent="MainVBox/FiltersPanel/FiltersVBox/CharacterAndLanguageRow"]
 layout_mode = 2
@@ -69,27 +69,27 @@ size_flags_horizontal = 3
 size_flags_vertical = 0
 selected = 0
 item_count = 5
-popup/item_0/text = "Todos"
+popup/item_0/text = "All"
 popup/item_0/id = 0
-popup/item_1/text = "Ayudante"
+popup/item_1/text = "Helper"
 popup/item_1/id = 1
-popup/item_2/text = "Narrador"
+popup/item_2/text = "Narrator"
 popup/item_2/id = 2
-popup/item_3/text = "Protagonista"
+popup/item_3/text = "Protagonist"
 popup/item_3/id = 3
-popup/item_4/text = "Vendedor"
+popup/item_4/text = "Seller"
 popup/item_4/id = 4
 
 [node name="GroupFilterLabel" type="Label" parent="MainVBox/FiltersPanel/FiltersVBox/CharacterAndLanguageRow"]
 layout_mode = 2
 size_flags_vertical = 0
-text = "Filtro Grupo:"
+text = "Group Filter:"
 
 [node name="GroupFilterInput" type="LineEdit" parent="MainVBox/FiltersPanel/FiltersVBox/CharacterAndLanguageRow"]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 0
-placeholder_text = "Buscar por grupo..."
+placeholder_text = "Search by group..."
 
 [node name="ClearGroupFilterButton" type="Button" parent="MainVBox/FiltersPanel/FiltersVBox/CharacterAndLanguageRow"]
 custom_minimum_size = Vector2(30, 0)
@@ -105,18 +105,18 @@ size_flags_vertical = 0
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 0
-placeholder_text = "Nuevo personaje"
+placeholder_text = "New character"
 
 [node name="AddCharacterButton" type="Button" parent="MainVBox/FiltersPanel/FiltersVBox/AddCharacterRow"]
 layout_mode = 2
 size_flags_vertical = 0
-text = "Agregar Personaje"
+text = "Add Character"
 
 [node name="LanguageCheckboxToggleButton" type="Button" parent="MainVBox/FiltersPanel/FiltersVBox/AddCharacterRow"]
 layout_mode = 2
 size_flags_vertical = 0
 toggle_mode = true
-text = "▶ Columnas visibles"
+text = "▶ Visible columns"
 
 [node name="DialogueTableScroll" type="ScrollContainer" parent="MainVBox"]
 layout_mode = 2
@@ -156,7 +156,7 @@ size_flags_vertical = 0
 [node name="CharacterLabel" type="Label" parent="MainVBox/EditPanel/EditVBox/BasicEditRow"]
 layout_mode = 2
 size_flags_vertical = 0
-text = "Personaje:"
+text = "Character:"
 
 [node name="CharacterNameInput" type="OptionButton" parent="MainVBox/EditPanel/EditVBox/BasicEditRow"]
 layout_mode = 2
@@ -164,24 +164,24 @@ size_flags_horizontal = 3
 size_flags_vertical = 0
 selected = 0
 item_count = 4
-popup/item_0/text = "Ayudante"
+popup/item_0/text = "Helper"
 popup/item_0/id = 0
-popup/item_1/text = "Narrador"
+popup/item_1/text = "Narrator"
 popup/item_1/id = 1
-popup/item_2/text = "Protagonista"
+popup/item_2/text = "Protagonist"
 popup/item_2/id = 2
-popup/item_3/text = "Vendedor"
+popup/item_3/text = "Seller"
 popup/item_3/id = 3
 
 [node name="AddButton" type="Button" parent="MainVBox/EditPanel/EditVBox/BasicEditRow"]
 layout_mode = 2
 size_flags_vertical = 0
-text = "Agregar"
+text = "Add"
 
 [node name="DeleteButton" type="Button" parent="MainVBox/EditPanel/EditVBox/BasicEditRow"]
 layout_mode = 2
 size_flags_vertical = 0
-text = "Eliminar"
+text = "Delete"
 
 [node name="VSeparator" type="VSeparator" parent="MainVBox/EditPanel/EditVBox/BasicEditRow"]
 layout_mode = 2
@@ -190,18 +190,18 @@ size_flags_vertical = 0
 [node name="MoveUpButton" type="Button" parent="MainVBox/EditPanel/EditVBox/BasicEditRow"]
 layout_mode = 2
 size_flags_vertical = 0
-text = "↑ Subir"
+text = "↑ Move Up"
 
 [node name="MoveDownButton" type="Button" parent="MainVBox/EditPanel/EditVBox/BasicEditRow"]
 layout_mode = 2
 size_flags_vertical = 0
-text = "↓ Bajar"
+text = "↓ Move Down"
 
 [node name="ConfigButton" type="Button" parent="MainVBox/EditPanel/EditVBox/BasicEditRow"]
 layout_mode = 2
 size_flags_vertical = 0
 toggle_mode = true
-text = "⚙ Configurar Paneles y Nombres"
+text = "⚙ Configure Panels and Names"
 
 [node name="MoodGroupRow" type="HBoxContainer" parent="MainVBox/EditPanel/EditVBox"]
 layout_mode = 2
@@ -210,7 +210,7 @@ size_flags_vertical = 0
 [node name="MoodLabel" type="Label" parent="MainVBox/EditPanel/EditVBox/MoodGroupRow"]
 layout_mode = 2
 size_flags_vertical = 0
-text = "Estado/Mood:"
+text = "Mood:"
 
 [node name="MoodOption" type="OptionButton" parent="MainVBox/EditPanel/EditVBox/MoodGroupRow"]
 layout_mode = 2
@@ -310,23 +310,23 @@ popup/item_43/id = 43
 [node name="ApplyMoodButton" type="Button" parent="MainVBox/EditPanel/EditVBox/MoodGroupRow"]
 layout_mode = 2
 size_flags_vertical = 0
-text = "Aplicar Mood"
+text = "Apply Mood"
 
 [node name="GroupLabel" type="Label" parent="MainVBox/EditPanel/EditVBox/MoodGroupRow"]
 layout_mode = 2
 size_flags_vertical = 0
-text = "Grupo:"
+text = "Group:"
 
 [node name="GroupInput" type="LineEdit" parent="MainVBox/EditPanel/EditVBox/MoodGroupRow"]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 0
-placeholder_text = "Nombre del grupo (opcional)"
+placeholder_text = "Group name (optional)"
 
 [node name="ApplyGroupButton" type="Button" parent="MainVBox/EditPanel/EditVBox/MoodGroupRow"]
 layout_mode = 2
 size_flags_vertical = 0
-text = "Aplicar Grupo"
+text = "Apply Group"
 
 [node name="OverlayConfig" type="Control" parent="."]
 visible = false
@@ -374,12 +374,12 @@ size_flags_vertical = 0
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 0
-text = "Configuración de Paneles y Nombres"
+text = "Panel and Name Configuration"
 
 [node name="CloseButton" type="Button" parent="OverlayConfig/CenterContainer/OverlayPanel/OverlayVBox/HeaderRow"]
 layout_mode = 2
 size_flags_vertical = 0
-text = "Cerrar"
+text = "Close"
 
 [node name="ConfigContainer" type="VBoxContainer" parent="OverlayConfig/CenterContainer/OverlayPanel/OverlayVBox"]
 layout_mode = 2
@@ -393,19 +393,19 @@ size_flags_vertical = 0
 [node name="Label" type="Label" parent="OverlayConfig/CenterContainer/OverlayPanel/OverlayVBox/ConfigContainer/DefaultPanelRow"]
 layout_mode = 2
 size_flags_vertical = 0
-text = "Panel por defecto:"
+text = "Default panel:"
 
 [node name="DefaultPanelInput" type="LineEdit" parent="OverlayConfig/CenterContainer/OverlayPanel/OverlayVBox/ConfigContainer/DefaultPanelRow"]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 0
-text = "res://demos/panel de dialogo.tscn"
+text = "res://demos/dialog panel.tscn"
 placeholder_text = "res://path/to/dialog_panel.tscn"
 
 [node name="SaveConfigButton" type="Button" parent="OverlayConfig/CenterContainer/OverlayPanel/OverlayVBox/ConfigContainer/DefaultPanelRow"]
 layout_mode = 2
 size_flags_vertical = 0
-text = "Guardar Config"
+text = "Save Config"
 
 [node name="OverrideRow" type="HBoxContainer" parent="OverlayConfig/CenterContainer/OverlayPanel/OverlayVBox/ConfigContainer"]
 layout_mode = 2
@@ -414,20 +414,20 @@ size_flags_vertical = 0
 [node name="Label" type="Label" parent="OverlayConfig/CenterContainer/OverlayPanel/OverlayVBox/ConfigContainer/OverrideRow"]
 layout_mode = 2
 size_flags_vertical = 0
-text = "Override personaje:"
+text = "Override character:"
 
 [node name="OverrideCharacterOption" type="OptionButton" parent="OverlayConfig/CenterContainer/OverlayPanel/OverlayVBox/ConfigContainer/OverrideRow"]
 layout_mode = 2
 size_flags_vertical = 0
 selected = 0
 item_count = 4
-popup/item_0/text = "Ayudante"
+popup/item_0/text = "Helper"
 popup/item_0/id = 0
-popup/item_1/text = "Narrador"
+popup/item_1/text = "Narrator"
 popup/item_1/id = 1
-popup/item_2/text = "Protagonista"
+popup/item_2/text = "Protagonist"
 popup/item_2/id = 2
-popup/item_3/text = "Vendedor"
+popup/item_3/text = "Seller"
 popup/item_3/id = 3
 
 [node name="OverridePanelInput" type="LineEdit" parent="OverlayConfig/CenterContainer/OverlayPanel/OverlayVBox/ConfigContainer/OverrideRow"]
@@ -441,12 +441,12 @@ layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 0
 text = "Alex"
-placeholder_text = "Nombre por defecto (fallback)"
+placeholder_text = "Default name (fallback)"
 
 [node name="SaveOverrideButton" type="Button" parent="OverlayConfig/CenterContainer/OverlayPanel/OverlayVBox/ConfigContainer/OverrideRow"]
 layout_mode = 2
 size_flags_vertical = 0
-text = "Guardar Override"
+text = "Save Override"
 
 [node name="NamesScrollContainer" type="ScrollContainer" parent="OverlayConfig/CenterContainer/OverlayPanel/OverlayVBox/ConfigContainer"]
 custom_minimum_size = Vector2(600, 200)
@@ -474,7 +474,7 @@ size_flags_vertical = 0
 [node name="Title" type="Label" parent="OverlayConfig/CenterContainer/OverlayPanel/OverlayVBox/CharacterManagement"]
 layout_mode = 2
 size_flags_vertical = 0
-text = "Gestión de Personajes"
+text = "Character Management"
 
 [node name="ManagementRow" type="HBoxContainer" parent="OverlayConfig/CenterContainer/OverlayPanel/OverlayVBox/CharacterManagement"]
 layout_mode = 2
@@ -494,17 +494,17 @@ size_flags_vertical = 0
 [node name="RenameInput" type="LineEdit" parent="OverlayConfig/CenterContainer/OverlayPanel/OverlayVBox/CharacterManagement/ManagementRow/ActionsVBox"]
 layout_mode = 2
 size_flags_vertical = 0
-placeholder_text = "Nuevo nombre"
+placeholder_text = "New name"
 
 [node name="RenameButton" type="Button" parent="OverlayConfig/CenterContainer/OverlayPanel/OverlayVBox/CharacterManagement/ManagementRow/ActionsVBox"]
 layout_mode = 2
 size_flags_vertical = 0
-text = "Renombrar"
+text = "Rename"
 
 [node name="DeleteCharacterButton" type="Button" parent="OverlayConfig/CenterContainer/OverlayPanel/OverlayVBox/CharacterManagement/ManagementRow/ActionsVBox"]
 layout_mode = 2
 size_flags_vertical = 0
-text = "Eliminar"
+text = "Delete"
 
 [node name="LanguageCheckboxPanel" type="PanelContainer" parent="."]
 visible = false

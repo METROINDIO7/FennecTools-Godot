@@ -11,32 +11,32 @@ const ExpressionState = preload("res://addons/FennecTools/nodes/ExpressionState.
 var main_view
 
 func _enter_tree():
-	# Agregar el autoload si no existe
+	# Add autoload if it doesn't exist
 	if not ProjectSettings.has_setting("autoload/FGGlobal"):
 		add_autoload_singleton("FGGlobal", "res://addons/FennecTools/FGGlobal.gd")
 	
-	# Registrar el NodeGrouper como nodo personalizado
+	# Register NodeGrouper as custom node
 	add_custom_type(
 		"NodeGrouper",
 		"Node", 
 		NodeGrouper,
 		preload("res://addons/FennecTools/icons/node_grouper_icon.svg")
 	)
-	# Registrar DialogPanelController
+	# Register DialogPanelController
 	add_custom_type(
 		"DialogPanelController",
 		"Control",
 		DialogPanelController,
 		preload("res://addons/FennecTools/icons/minimal_speech_play_icon.svg")
 	)
-	# Registrar DialogueLauncher
+	# Register DialogueLauncher
 	add_custom_type(
 		"DialogueLauncher",
 		"Node",
 		DialogueLauncher,
 		preload("res://addons/FennecTools/icons/flow_branch_node_icon.svg")
 	)
-	# Registrar CharacterController
+	# Register CharacterController
 	add_custom_type(
 		"CharacterController",
 		"Node",
@@ -58,7 +58,7 @@ func _exit_tree():
 	if is_instance_valid(main_view):
 		main_view.queue_free()
 	
-	# Remover los nodos personalizados
+	# Remove custom nodes
 	remove_custom_type("DialogueCodeSequence")
 	remove_custom_type("DialogueCodeChain")
 	remove_custom_type("DialogueSlotConfig")
@@ -67,7 +67,7 @@ func _exit_tree():
 	remove_custom_type("DialogPanelController")
 	remove_custom_type("NodeGrouper")
 	
-	# Opcional: remover autoload (comentado para mantener datos)
+	# Optional: remove autoload (commented to keep data)
 	# remove_autoload_singleton("FGGlobal")
 
 func _has_main_screen() -> bool:

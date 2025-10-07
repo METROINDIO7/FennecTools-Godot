@@ -1,7 +1,7 @@
 @tool
 extends Control
 
-# Referencias correctas basadas en el archivo .tscn
+# Correct references based on the .tscn file
 @onready var add_language_input: LineEdit = $VBoxContainer/LanguageContainer/AddLanguageInput
 @onready var add_language_button: Button = $VBoxContainer/LanguageContainer/AddLanguageButton
 @onready var delete_language_button: Button = $VBoxContainer/LanguageContainer/DeleteLanguageButton
@@ -20,7 +20,7 @@ extends Control
 @onready var delete_button: Button = $VBoxContainer/ButtonContainer/DeleteButton
 
 var current_languages: Array = ["es", "en"]
-var selected_update_group: String = "traducir"  # Valor por defecto
+var selected_update_group: String = "translate"  # Default value
 
 func _ready():
 	load_translation_data()
@@ -31,13 +31,13 @@ func _ready():
 func setup_ui():
 	update_language_options()
 	setup_translation_tree()
-	# Cargar el grupo guardado desde FGGlobal
+	# Load the saved group from FGGlobal
 	if FGGlobal and FGGlobal.current_target_group:
 		selected_update_group = FGGlobal.current_target_group
 		group_target_input.text = selected_update_group
 	else:
 		group_target_input.text = selected_update_group
-	group_target_input.placeholder_text = "Escribe el nombre del grupo (ej: ui, pp, player)"
+	group_target_input.placeholder_text = "Enter the group name (e.g., ui, pp, player)"
 
 func connect_signals():
 	add_language_button.pressed.connect(_on_add_language_pressed)
@@ -49,7 +49,7 @@ func connect_signals():
 	translation_tree.item_edited.connect(_on_cell_edited)
 	group_target_input.text_submitted.connect(_on_group_target_submitted)
 	apply_to_group_button.pressed.connect(_on_apply_to_group_pressed)
-	# Conectar también el cambio de texto para guardar automáticamente
+	# Also connect the text change to save automatically
 	group_target_input.text_changed.connect(_on_group_target_changed)
 
 func clear_inputs():
@@ -67,15 +67,12 @@ func _on_add_language_pressed():
 		refresh_display()
 		save_translation_data()
 		add_language_input.text = ""
-		print("[TranslationManager] Idioma agregado: ", new_lang)
 
 func _on_delete_language_pressed():
 	if current_languages.size() <= 1:
-		print("[TranslationManager] Error: No se puede eliminar el último idioma")
 		return
 	
 	if not FGGlobal:
-		print("[TranslationManager] Error: FGGlobal no disponible")
 		return
 	
 	# Create a temporary container for language selection
@@ -83,7 +80,7 @@ func _on_delete_language_pressed():
 	temp_container.name = "DeleteLanguageContainer"
 	
 	var label = Label.new()
-	label.text = "Selecciona el idioma a eliminar:"
+	label.text = "Select the language to delete:"
 	temp_container.add_child(label)
 	
 	var option_button = OptionButton.new()
@@ -94,7 +91,7 @@ func _on_delete_language_pressed():
 	var button_container = HBoxContainer.new()
 	
 	var delete_btn = Button.new()
-	delete_btn.text = "Eliminar"
+	delete_btn.text = "Delete"
 	delete_btn.pressed.connect(func():
 		var selected_lang = current_languages[option_button.selected]
 		_delete_language(selected_lang)
@@ -103,7 +100,7 @@ func _on_delete_language_pressed():
 	button_container.add_child(delete_btn)
 	
 	var cancel_btn = Button.new()
-	cancel_btn.text = "Cancelar"
+	cancel_btn.text = "Cancel"
 	cancel_btn.pressed.connect(func():
 		temp_container.queue_free()
 	)
@@ -124,39 +121,37 @@ func _delete_language(lang_to_delete: String):
 		setup_translation_tree()
 		refresh_display()
 		save_translation_data()
-		print("[TranslationManager] Idioma eliminado: ", lang_to_delete)
 	else:
-		print("[TranslationManager] Error: Idioma no encontrado: ", lang_to_delete)
+		pass
 
-# Nueva función para manejar cambios en tiempo real
+# New function to handle real-time changes
 func _on_group_target_changed(new_text: String):
 	selected_update_group = new_text.strip_edges()
 	if selected_update_group.is_empty():
-		selected_update_group = "traducir"  # Valor por defecto
+		selected_update_group = "translate"  # Default value
 	
-	# Actualizar FGGlobal inmediatamente
+	# Update FGGlobal immediately
 	if FGGlobal:
 		FGGlobal.set_translation_target_group(selected_update_group)
 	
-	# Guardar datos para persistencia
+	# Save data for persistence
 	save_translation_data()
 
 func _on_group_target_submitted(new_text: String):
 	selected_update_group = new_text.strip_edges()
 	if selected_update_group.is_empty():
-		selected_update_group = "traducir"  # Valor por defecto
+		selected_update_group = "translate"  # Default value
 		group_target_input.text = selected_update_group
 	
 	if FGGlobal:
 		FGGlobal.set_translation_target_group(selected_update_group)
 	
 	save_translation_data()
-	print("[TranslationManager] Target group updated to: ", selected_update_group)
 
 func _on_apply_to_group_pressed():
 	var group_name = group_target_input.text.strip_edges()
 	if group_name.is_empty():
-		group_name = "traducir"  # Valor por defecto
+		group_name = "translate"  # Default value
 		group_target_input.text = group_name
 	
 	selected_update_group = group_name
@@ -165,7 +160,6 @@ func _on_apply_to_group_pressed():
 		FGGlobal.update_language()
 	
 	save_translation_data()
-	print("[TranslationManager] Applied translations to group: ", group_name)
 
 func setup_translation_tree():
 	translation_tree.set_columns(current_languages.size() + 1)  # +1 for key column
@@ -178,20 +172,17 @@ func setup_translation_tree():
 
 func _validate_and_apply_to_group():
 	if selected_update_group == "":
-		selected_update_group = "traducir"  # Valor por defecto
+		selected_update_group = "translate"  # Default value
 	
 	var nodes = get_tree().get_nodes_in_group(selected_update_group)
 	if nodes.size() == 0:
-		print("[TranslationManager] Advertencia: No se encontraron nodos en el grupo '", selected_update_group, "'")
-		print("[TranslationManager] Asegúrate de que el grupo existe y tiene nodos asignados")
 		return
 	
-	print("[TranslationManager] Aplicando traducciones a ", nodes.size(), " nodos en grupo '", selected_update_group, "'")
 	for node in nodes:
 		if node.has_method("update_language"):
 			node.update_language()
 		else:
-			print("[TranslationManager] Nodo ", node.name, " no tiene método update_language()")
+			pass
 
 func _on_cell_edited():
 	var selected = translation_tree.get_selected()
@@ -214,7 +205,6 @@ func _on_cell_edited():
 func refresh_display():
 	translation_tree.clear()
 	if not FGGlobal:
-		print("[TranslationManager] FGGlobal no disponible")
 		return
 		
 	var root = translation_tree.create_item()
@@ -250,7 +240,6 @@ func _on_item_selected():
 
 func _on_add_translation_pressed():
 	if not FGGlobal:
-		print("[TranslationManager] Error: FGGlobal no disponible")
 		return
 		
 	var key = key_input.text.strip_edges()
@@ -258,7 +247,6 @@ func _on_add_translation_pressed():
 	var selected_lang = current_languages[language_option.selected] if language_option.selected < current_languages.size() else "es"
 	
 	if key == "" or value == "":
-		print("[TranslationManager] Error: Clave y valor no pueden estar vacíos")
 		return
 	
 	if not FGGlobal.translations.has(selected_lang):
@@ -269,7 +257,6 @@ func _on_add_translation_pressed():
 	refresh_display()
 	update_language_nodes()
 	clear_inputs()
-	print("[TranslationManager] Traducción agregada: ", key, " -> ", value)
 
 func _on_edit_translation_pressed():
 	_on_add_translation_pressed()
@@ -280,7 +267,6 @@ func _on_delete_translation_pressed():
 		
 	var key = key_input.text.strip_edges()
 	if key == "":
-		print("[TranslationManager] Error: No hay clave seleccionada")
 		return
 	
 	for lang in FGGlobal.translations:
@@ -291,7 +277,6 @@ func _on_delete_translation_pressed():
 	refresh_display()
 	update_language_nodes()
 	clear_inputs()
-	print("[TranslationManager] Traducción eliminada: ", key)
 
 func update_language_nodes():
 	_validate_and_apply_to_group()
@@ -307,20 +292,18 @@ func save_translation_data():
 		var data = {
 			"translations": FGGlobal.translations,
 			"selected_group": selected_update_group,
-			"target_group": selected_update_group,  # Duplicamos para compatibilidad
+			"target_group": selected_update_group,  # We duplicate for compatibility
 			"current_languages": current_languages
 		}
 		file.store_string(JSON.stringify(data))
 		file.close()
 		
-		# También actualizar FGGlobal para asegurar sincronización
+		# Also update FGGlobal to ensure synchronization
 		if FGGlobal:
 			FGGlobal.current_target_group = selected_update_group
 			FGGlobal.save_translations()
-		
-		print("[TranslationManager] Datos guardados en: ", translation_path)
 	else:
-		print("[TranslationManager] Error: No se pudo crear archivo: ", translation_path)
+		pass
 
 func load_translation_data():
 	var translation_path = "res://addons/FennecTools/data/fennec_translations.json"
@@ -333,31 +316,27 @@ func load_translation_data():
 			if result and FGGlobal:
 				FGGlobal.translations = result.get("translations", {})
 				
-				# Cargar el grupo objetivo con múltiples fuentes de respaldo
+				# Load the target group with multiple backup sources
 				selected_update_group = result.get("selected_group", 
-					result.get("target_group", "traducir"))
+					result.get("target_group", "translate"))
 				
-				# Cargar idiomas guardados
+				# Load saved languages
 				var saved_languages = result.get("current_languages", [])
 				if saved_languages.size() > 0:
 					current_languages = saved_languages
 				elif FGGlobal.translations.size() > 0:
 					current_languages = FGGlobal.translations.keys()
 				
-				# Sincronizar con FGGlobal
+				# Synchronize with FGGlobal
 				FGGlobal.current_target_group = selected_update_group
-				
-				print("[TranslationManager] Datos cargados desde: ", translation_path)
-				print("[TranslationManager] Grupo objetivo: ", selected_update_group)
 			else:
-				print("[TranslationManager] Error parseando JSON o FGGlobal no disponible")
+				pass
 		else:
-			print("[TranslationManager] Error leyendo archivo: ", translation_path)
+			pass
 	else:
-		# Si no existe el archivo, usar valores por defecto y sincronizar con FGGlobal
+		# If the file does not exist, use default values and synchronize with FGGlobal
 		if FGGlobal and FGGlobal.current_target_group:
 			selected_update_group = FGGlobal.current_target_group
-		print("[TranslationManager] Archivo no existe, usando valores por defecto: ", translation_path)
 
 func ensure_data_directory():
 	var dir = DirAccess.open("res://addons/FennecTools/")

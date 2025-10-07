@@ -1,57 +1,57 @@
 @tool
 extends Resource
 class_name DialogueSlotConfig
-# Recurso de configuración unificado para DialogueLauncher
-# Permite definir tanto secuencias (SEQUENCE) como cadenas (CHAIN) en un solo recurso
+# Unified configuration resource for DialogueLauncher
+# Allows defining both sequences (SEQUENCE) and chains (CHAIN) in a single resource
 enum DialogueMode {
-	CHAIN, # Genera IDs consecutivos desde start_id por count elementos
-	SEQUENCE # Usa lista específica de IDs
+	CHAIN, # Generates consecutive IDs from start_id for count elements
+	SEQUENCE # Uses a specific list of IDs
 }
-# === CONFIGURACIÓN DEL MODO ===
+# === MODE SETTINGS ===
 @export var mode: DialogueMode = DialogueMode.CHAIN
-# === CONFIGURACIÓN CHAIN ===
+# === CHAIN SETTINGS ===
 @export_group("Chain Mode", "chain")
 @export var chain_start_id: int = 1
 @export var chain_count: int = 1
-# === CONFIGURACIÓN SEQUENCE ===
+# === SEQUENCE SETTINGS ===
 @export_group("Sequence Mode", "sequence")
 @export var sequence_ids: Array[int] = []
-# === CONFIGURACIÓN GENERAL ===
+# === GENERAL SETTINGS ===
 @export_group("Character & Presentation")
 var character: String = ""
 @export var character_group_name: String = "" 
 @export var panel_override: PackedScene
-# ✅ CAMBIO: Expression ahora es un ID numérico en lugar de string
+# ✅ CHANGE: Expression is now a numeric ID instead of a string
 @export var expression_id: int = -1  # -1 = no expression, 0+ = expression slot index
 
-# === CONFIGURACIÓN DE REPRODUCCIÓN ===
+# === PLAYBACK SETTINGS ===
 @export_group("Playback Settings")
 @export var typewriter_cps: float = 40.0
 @export var pre_entry_delay: float = 0.0
 @export var between_chunks_delay: float = 0.3
 @export var exit_delay: float = 0.0
 @export var auto_free_on_exit: bool = true
-# === CONTROL DE PANEL ===
+# === PANEL CONTROL ===
 @export_group("Panel Control")
 @export var reuse_single_panel: bool = false
-# === NUEVO: SISTEMA DE INSTANCIACIÓN DE PREGUNTAS/OBJETOS ===
+# === NEW: QUESTION/OBJECT INSTANTIATION SYSTEM ===
 @export_group("Question & Object System")
-# Escena a instanciar (pregunta u objeto)
+# Scene to instantiate (question or object)
 @export var instance_scene: PackedScene
-# Target donde se instanciará como hijo (dejar vacío para usar default)
+# Target where it will be instantiated as a child (leave empty to use default)
 @export var instance_target: NodePath
 
-# === CONFIGURACIÓN DE SONIDOS ===
+# === SOUND SETTINGS ===
 @export_group("Sound Settings", "sound_")
 @export var sound_enabled: bool = false
 @export var sound_effect: AudioStream
-@export var sound_frequency: int = 3  # Cada cuántos caracteres se reproduce
+@export var sound_frequency: int = 3  # How often it is played (in characters)
 @export_range(0.5, 2.0, 0.1) var sound_pitch_min: float = 0.9
 @export_range(0.5, 2.0, 0.1) var sound_pitch_max: float = 1.1
 @export_range(0.0, 1.0, 0.1) var sound_volume: float = 0.7
 
 
-# Método principal que construye los items según el modo seleccionado
+# Main method that builds the items according to the selected mode
 func build_items(context: Dictionary = {}) -> Array:
 	match mode:
 		DialogueMode.CHAIN:
@@ -61,7 +61,7 @@ func build_items(context: Dictionary = {}) -> Array:
 		_:
 			return []
 
-# Construye items para modo CHAIN (IDs consecutivos)
+# Builds items for CHAIN mode (consecutive IDs)
 func build_chain_items() -> Array:
 	var items: Array = []
 	var n = max(0, chain_count)
@@ -71,7 +71,7 @@ func build_chain_items() -> Array:
 		items.append(item)
 	return items
 
-# Construye items para modo SEQUENCE (IDs específicos)
+# Builds items for SEQUENCE mode (specific IDs)
 func build_sequence_items() -> Array:
 	var items: Array = []
 	for id_val in sequence_ids:
@@ -79,7 +79,7 @@ func build_sequence_items() -> Array:
 		items.append(item)
 	return items
 
-# Método helper para obtener el total de items sin construir el array completo
+# Helper method to get the total number of items without building the full array
 func get_total_items() -> int:
 	match mode:
 		DialogueMode.CHAIN:
@@ -89,7 +89,7 @@ func get_total_items() -> int:
 		_:
 			return 0
 
-# Método helper para validar la configuración
+# Helper method to validate the configuration
 func is_valid() -> bool:
 	match mode:
 		DialogueMode.CHAIN:
@@ -99,7 +99,7 @@ func is_valid() -> bool:
 		_:
 			return false
 
-# Método helper para obtener información de depuración
+# Helper method to get debugging information
 func get_debug_info() -> String:
 	match mode:
 		DialogueMode.CHAIN:
@@ -109,15 +109,15 @@ func get_debug_info() -> String:
 		_:
 			return "INVALID MODE"
 
-# ✅ NUEVO: Verificar si tiene expresión configurada
+# ✅ NEW: Check if it has a configured expression
 func has_expression() -> bool:
 	return expression_id >= 0
 
-# ✅ NUEVO: Verificar si tiene escena para instanciar
+# ✅ NEW: Check if it has a scene to instantiate
 func has_instance_scene() -> bool:
 	return instance_scene != null
 
-# ✅ NUEVO: Obtener información de debug de la instancia
+# ✅ NEW: Get instance debug information
 func get_instance_debug_info() -> String:
 	if not has_instance_scene():
 		return "No instance scene"
@@ -126,11 +126,11 @@ func get_instance_debug_info() -> String:
 		target_info = "target: " + str(instance_target)
 	return "Instance: " + instance_scene.resource_path.get_file() + " -> " + target_info
 
-# ✅ NUEVO: Verificar si tiene sonido configurado
+# ✅ NEW: Check if it has sound configured
 func has_sound() -> bool:
 	return sound_enabled and sound_effect != null
 
-# ✅ NUEVO: Obtener información de debug del sonido
+# ✅ NEW: Get sound debug information
 func get_sound_debug_info() -> String:
 	if not has_sound():
 		return "No sound"

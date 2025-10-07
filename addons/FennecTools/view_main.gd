@@ -20,12 +20,11 @@ func load_view_scenes():
 	var dir = DirAccess.open(view_path)
 	
 	if not dir:
-		print("[ViewMain] No se pudo acceder al directorio: ", view_path)
 		return
 	
 	var files = dir.get_files()
 	
-	# Filtrar y ordenar archivos .tscn
+	# Filter and sort .tscn files
 	var tscn_files = []
 	for file in files:
 		if file.ends_with(".tscn"):
@@ -41,32 +40,26 @@ func load_view_scenes():
 			loaded_scenes.append(scene)
 			var clean_name = file_name.get_basename().replace("_", " ").capitalize()
 			scene_names.append(clean_name)
-			print("[ViewMain] Cargada escena: ", clean_name)
-		else:
-			print("[ViewMain] Error cargando escena: ", scene_path)
 
 func setup_tabs():
-	# Limpiar tabs existentes
+	# Clean existing tabs
 	for child in tab_container.get_children():
 		child.queue_free()
 	
-	# Agregar tabs dinámicamente
+	# Add tabs dynamically
 	for i in range(loaded_scenes.size()):
 		var scene_instance = loaded_scenes[i].instantiate()
 		if scene_instance:
 			scene_instance.name = scene_names[i]
 			tab_container.add_child(scene_instance)
-			print("[ViewMain] Tab agregado: ", scene_names[i])
-		else:
-			print("[ViewMain] Error instanciando escena: ", scene_names[i])
 
 func update_info():
-	var info_text = "Fennec Tools v1.0 - Herramientas de desarrollo integradas\n"
-	info_text += "Tabs cargados: " + str(scene_names.size())
+	var info_text = "Fennec Tools v1.0 - Integrated development tools\n"
+	info_text += "Loaded tabs: " + str(scene_names.size())
 	
-	# Acceso directo a FGGlobal (autoload)
+	# Direct access to FGGlobal (autoload)
 	if FGGlobal:
-		info_text += " | Condicionales: " + str(FGGlobal.condicionales.size())
-		info_text += " | Idiomas: " + str(FGGlobal.translations.keys().size())
+		info_text += " | Conditionals: " + str(FGGlobal.conditionals.size())
+		info_text += " | Languages: " + str(FGGlobal.translations.keys().size())
 	
 	info_label.text = info_text

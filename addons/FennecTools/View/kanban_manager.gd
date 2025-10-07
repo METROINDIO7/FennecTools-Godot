@@ -2,8 +2,8 @@
 extends Control
 
 # ============================================================================
-# FENNEC TOOLS - KANBAN BOARD MANAGER MEJORADO
-# Sistema de gestión de tareas tipo Kanban con drag & drop y filtros corregidos
+# FENNEC TOOLS - ENHANCED KANBAN BOARD MANAGER
+# Kanban-style task management system with drag & drop and corrected filters
 # ============================================================================
 
 @onready var columns_container: HBoxContainer = $VBoxContainer/MainContent/ScrollContainer/ColumnsContainer
@@ -16,10 +16,10 @@ extends Control
 @onready var detail_cancel_btn: Button = $VBoxContainer/MainContent/TaskDetailPanel/VBoxContainer/ButtonContainer/CancelButton
 @onready var detail_delete_btn: Button = $VBoxContainer/MainContent/TaskDetailPanel/VBoxContainer/ButtonContainer/DeleteButton
 
-# Nuevo: Selector de columna en el panel de detalles
+# New: Column selector in the detail panel
 @onready var detail_column_selector: OptionButton
 
-# Filtros
+# Filters
 @onready var filter_assignee: LineEdit = $VBoxContainer/FilterPanel/HBoxContainer/FilterAssignee
 @onready var filter_status: OptionButton = $VBoxContainer/FilterPanel/HBoxContainer/FilterStatus
 @onready var filter_clear_btn: Button = $VBoxContainer/FilterPanel/HBoxContainer/ClearFiltersButton
@@ -27,12 +27,12 @@ extends Control
 # Stats
 @onready var stats_label: Label = $VBoxContainer/HeaderPanel/HBoxContainer/StatsLabel
 
-# Gestión de columnas
+# Column Management
 @onready var add_column_btn: Button = $VBoxContainer/ColumnManagement/HBoxContainer/AddColumnButton
 @onready var column_name_input: LineEdit = $VBoxContainer/ColumnManagement/HBoxContainer/ColumnNameInput
 @onready var column_color_input: LineEdit = $VBoxContainer/ColumnManagement/HBoxContainer/ColumnColorInput
 
-# Variables del sistema
+# System variables
 var kanban_data_path: String = "res://addons/FennecTools/data/fennec_kanban_data.json"
 var kanban_data: Dictionary = {
 	"columns": [],
@@ -45,20 +45,20 @@ var current_editing_task: Dictionary = {}
 var task_cards: Array[Control] = []
 var column_panels: Array[Panel] = []
 
-# Variables para drag & drop
+# Drag & drop variables
 var dragging_task: Control = null
 var drag_preview: Control = null
 var drag_offset: Vector2 = Vector2.ZERO
 
-# Colores por defecto mejorados
+# Improved default colors
 var default_colors: Array[Color] = [
-	Color("#3498DB"),    # Por hacer - Azul
-	Color("#F39C12"),    # En progreso - Naranja
-	Color("#2ECC71")     # Completado - Verde
+	Color("#3498DB"),    # To Do - Blue
+	Color("#F39C12"),    # In Progress - Orange
+	Color("#2ECC71")     # Completed - Green
 ]
 
 # ============================================================================
-# INICIALIZACIÓN
+# INITIALIZATION
 # ============================================================================
 
 func _ready():
@@ -71,24 +71,24 @@ func _ready():
 	task_detail_panel.visible = false
 
 func setup_default_columns():
-	"""Configura las columnas por defecto si no existen"""
+	"""Sets up default columns if they don't exist"""
 	if kanban_data.columns.is_empty():
 		kanban_data.columns = [
 			{
 				"id": 1,
-				"name": "Por Hacer",
+				"name": "To Do",
 				"color": default_colors[0],
 				"order": 0
 			},
 			{
 				"id": 2, 
-				"name": "En Progreso",
+				"name": "In Progress",
 				"color": default_colors[1],
 				"order": 1
 			},
 			{
 				"id": 3,
-				"name": "Completado", 
+				"name": "Completed", 
 				"color": default_colors[2],
 				"order": 2
 			}
@@ -96,16 +96,16 @@ func setup_default_columns():
 		kanban_data.next_column_id = 4
 
 func create_detail_column_selector():
-	"""Crea el selector de columna en el panel de detalles"""
+	"""Creates the column selector in the details panel"""
 	var container = $VBoxContainer/MainContent/TaskDetailPanel/VBoxContainer/HBoxContainer
 	
-	# Agregar contenedor para el selector de estado
+	# Add container for the status selector
 	var state_vbox = VBoxContainer.new()
 	state_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	container.add_child(state_vbox)
 	
 	var state_label = Label.new()
-	state_label.text = "Estado:"
+	state_label.text = "Status:"
 	state_vbox.add_child(state_label)
 	
 	detail_column_selector = OptionButton.new()
@@ -113,7 +113,7 @@ func create_detail_column_selector():
 	state_vbox.add_child(detail_column_selector)
 
 func setup_ui_connections():
-	"""Conecta las señales de la interfaz"""
+	"""Connects the interface signals"""
 	detail_save_btn.pressed.connect(_on_save_task)
 	detail_cancel_btn.pressed.connect(_on_cancel_edit)
 	detail_delete_btn.pressed.connect(_on_delete_task)
@@ -125,30 +125,30 @@ func setup_ui_connections():
 	filter_status.item_selected.connect(_on_filter_changed)
 
 func setup_filters():
-	"""Configura los filtros disponibles"""
+	"""Configures the available filters"""
 	filter_status.clear()
-	filter_status.add_item("Todos los estados", -1)  # Índice 0, ID -1
+	filter_status.add_item("All statuses", -1)  # Index 0, ID -1
 	
-	# Configurar también el selector de columna en detalles
+	# Also configure the column selector in details
 	if detail_column_selector:
 		detail_column_selector.clear()
 	
-	# Agregar columnas con sus IDs reales
+	# Add columns with their real IDs
 	for column in kanban_data.columns:
 		filter_status.add_item(column.name, column.id)  # Índices 1+, IDs reales
 		if detail_column_selector:
 			detail_column_selector.add_item(column.name, column.id)
 	
-	# Asegurar que "Todos los estados" esté seleccionado por defecto
+	# Ensure "All statuses" is selected by default
 	filter_status.selected = 0
 
 
 # ============================================================================
-# GESTIÓN DE DATOS
+# DATA MANAGEMENT
 # ============================================================================
 
 func load_kanban_data():
-	"""Carga los datos del Kanban desde JSON"""
+	"""Loads Kanban data from JSON"""
 	if FileAccess.file_exists(kanban_data_path):
 		var file = FileAccess.open(kanban_data_path, FileAccess.READ)
 		if file:
@@ -162,7 +162,7 @@ func load_kanban_data():
 				var loaded_data = json.data
 				if loaded_data.has("columns"):
 					kanban_data.columns = loaded_data.columns
-					# Convertir strings de color a Color objects
+					# Convert color strings to Color objects
 					for column in kanban_data.columns:
 						if column.has("color") and column.color is String:
 							column.color = Color(column.color)
@@ -172,18 +172,14 @@ func load_kanban_data():
 					kanban_data.next_task_id = loaded_data.next_task_id
 				if loaded_data.has("next_column_id"):
 					kanban_data.next_column_id = loaded_data.next_column_id
-				
-				print("[KanbanManager] Datos cargados: ", kanban_data.tasks.size(), " tareas, ", kanban_data.columns.size(), " columnas")
-			else:
-				print("[KanbanManager] Error parseando JSON: ", json.error_string)
 	else:
-		print("[KanbanManager] Archivo de datos no existe, usando valores por defecto")
+		pass # Data file does not exist, using default values
 
 func save_kanban_data():
-	"""Guarda los datos del Kanban en JSON"""
+	"""Saves Kanban data to JSON"""
 	var file = FileAccess.open(kanban_data_path, FileAccess.WRITE)
 	if file:
-		# Crear copia para guardar, convirtiendo Colors a strings
+		# Create a copy to save, converting Colors to strings
 		var save_data = kanban_data.duplicate(true)
 		for column in save_data.columns:
 			if column.has("color") and column.color is Color:
@@ -192,25 +188,24 @@ func save_kanban_data():
 		var json_string = JSON.stringify(save_data)
 		file.store_string(json_string)
 		file.close()
-		print("[KanbanManager] Datos guardados exitosamente")
 	else:
-		print("[KanbanManager] Error guardando datos")
+		pass # Error saving data
 
 # ============================================================================
-# GESTIÓN DE COLUMNAS
+# COLUMN MANAGEMENT
 # ============================================================================
 
 func create_column_panel(column_data: Dictionary) -> Panel:
-	"""Crea un panel visual para una columna"""
+	"""Creates a visual panel for a column"""
 	var column_panel = Panel.new()
 	column_panel.custom_minimum_size = Vector2(320, 400)
 	column_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	
-	# Aplicar color de fondo mejorado
+	# Apply improved background color
 	var style_box = StyleBoxFlat.new()
 	var base_color = column_data.color if column_data.color is Color else Color(column_data.color)
 	style_box.bg_color = base_color
-	style_box.bg_color.a = 0.15  # Transparencia más sutil
+	style_box.bg_color.a = 0.15  # More subtle transparency
 	style_box.corner_radius_top_left = 12
 	style_box.corner_radius_top_right = 12
 	style_box.corner_radius_bottom_left = 12
@@ -227,11 +222,11 @@ func create_column_panel(column_data: Dictionary) -> Panel:
 	vbox.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	vbox.add_theme_constant_override("separation", 8)
 	
-	# Header de la columna
+	# Column header
 	var header = create_column_header(column_data)
 	vbox.add_child(header)
 	
-	# Contenedor de tareas con drag & drop
+	# Task container with drag & drop
 	var scroll = ScrollContainer.new()
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	vbox.add_child(scroll)
@@ -242,9 +237,9 @@ func create_column_panel(column_data: Dictionary) -> Panel:
 	tasks_container.add_theme_constant_override("separation", 8)
 	scroll.add_child(tasks_container)
 	
-	# Botón para agregar tarea
+	# Button to add task
 	var add_task_btn = Button.new()
-	add_task_btn.text = "+ Agregar Tarea"
+	add_task_btn.text = "+ Add Task"
 	add_task_btn.modulate = Color.WHITE
 	var btn_style = StyleBoxFlat.new()
 	btn_style.bg_color = base_color
@@ -263,11 +258,11 @@ func create_column_panel(column_data: Dictionary) -> Panel:
 
 
 func create_column_header(column_data: Dictionary) -> Control:
-	"""Crea el header de una columna con título y opciones"""
+	"""Creates a column header with title and options"""
 	var header = HBoxContainer.new()
 	header.add_theme_constant_override("separation", 8)
 	
-	# Indicador de color
+	# Color indicator
 	var color_indicator = Panel.new()
 	color_indicator.custom_minimum_size = Vector2(4, 24)
 	var color_style = StyleBoxFlat.new()
@@ -284,7 +279,7 @@ func create_column_header(column_data: Dictionary) -> Control:
 	title_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	header.add_child(title_label)
 	
-	# Contador de tareas
+	# Task counter
 	var count = get_task_count_for_column(column_data.id)
 	var count_label = Label.new()
 	count_label.text = "(" + str(count) + ")"
@@ -292,20 +287,20 @@ func create_column_header(column_data: Dictionary) -> Control:
 	count_label.add_theme_color_override("font_color", Color.GRAY)
 	header.add_child(count_label)
 	
-	# CORRECCIÓN: Mostrar botón de eliminar para TODAS las columnas, pero deshabilitado para las por defecto
+	# FIX: Show delete button for ALL columns, but disabled for default ones
 	var delete_btn = Button.new()
 	delete_btn.text = "×"
 	delete_btn.flat = true
 	delete_btn.custom_minimum_size = Vector2(28, 28)
 	delete_btn.add_theme_font_size_override("font_size", 18)
 	
-	if column_data.id <= 3:  # Columnas por defecto
+	if column_data.id <= 3:  # Default columns
 		delete_btn.disabled = true
-		delete_btn.tooltip_text = "No se pueden eliminar las columnas por defecto"
+		delete_btn.tooltip_text = "Default columns cannot be deleted"
 		delete_btn.add_theme_color_override("font_color", Color.GRAY)
-	else:  # Columnas personalizadas
+	else:  # Custom columns
 		delete_btn.add_theme_color_override("font_color", Color.RED)
-		delete_btn.tooltip_text = "Eliminar columna (las tareas se moverán a 'Por Hacer')"
+		delete_btn.tooltip_text = "Delete column (tasks will be moved to 'To Do')"
 		delete_btn.pressed.connect(_on_delete_column.bind(column_data.id))
 	
 	header.add_child(delete_btn)
@@ -314,7 +309,7 @@ func create_column_header(column_data: Dictionary) -> Control:
 
 
 func get_task_count_for_column(column_id: int) -> int:
-	"""Obtiene el número de tareas en una columna"""
+	"""Gets the number of tasks in a column"""
 	var count = 0
 	for task in kanban_data.tasks:
 		if task.has("column_id") and task.column_id == column_id and task_matches_filters(task):
@@ -322,10 +317,10 @@ func get_task_count_for_column(column_id: int) -> int:
 	return count
 
 func _on_add_column():
-	"""Agrega una nueva columna personalizada"""
+	"""Adds a new custom column"""
 	var column_name = column_name_input.text.strip_edges()
 	if column_name.is_empty():
-		column_name = "Nueva Columna"
+		column_name = "New Column"
 	
 	var column_color = parse_hex_color(column_color_input.text)
 	
@@ -346,16 +341,16 @@ func _on_add_column():
 	refresh_board()
 
 func _on_delete_column(column_id: int):
-	"""Elimina una columna personalizada"""
-	if column_id <= 3:  # No permitir eliminar columnas por defecto
+	"""Deletes a custom column"""
+	if column_id <= 3:  # Do not allow deleting default columns
 		return
 	
-	# Mover tareas de esta columna a "Por Hacer"
+	# Move tasks from this column to "To Do"
 	for task in kanban_data.tasks:
 		if task.has("column_id") and task.column_id == column_id:
-			task.column_id = 1  # Por Hacer
+			task.column_id = 1  # To Do
 	
-	# Eliminar columna
+	# Delete column
 	for i in range(kanban_data.columns.size()):
 		if kanban_data.columns[i].id == column_id:
 			kanban_data.columns.remove_at(i)
@@ -366,20 +361,20 @@ func _on_delete_column(column_id: int):
 	refresh_board()
 
 func parse_hex_color(hex_string: String) -> Color:
-	"""Convierte un código hexadecimal a Color"""
+	"""Converts a hexadecimal code to Color"""
 	hex_string = hex_string.strip_edges()
 	if hex_string.is_empty():
-		return Color("#9B59B6")  # Color púrpura por defecto
+		return Color("#9B59B6")  # Default purple color
 	
-	# Remover # si existe
+	# Remove # if it exists
 	if hex_string.begins_with("#"):
 		hex_string = hex_string.substr(1)
 	
-	# Validar longitud y caracteres
+	# Validate length and characters
 	if hex_string.length() != 6:
 		return Color("#9B59B6")
 	
-	# Verificar que solo contenga caracteres hexadecimales
+	# Verify that it only contains hexadecimal characters
 	for char in hex_string:
 		if not char.to_lower() in "0123456789abcdef":
 			return Color("#9B59B6")
@@ -387,16 +382,16 @@ func parse_hex_color(hex_string: String) -> Color:
 	return Color("#" + hex_string)
 
 # ============================================================================
-# GESTIÓN DE TAREAS CON DRAG & DROP
+# TASK MANAGEMENT WITH DRAG & DROP
 # ============================================================================
 
 func create_task_card(task_data: Dictionary) -> Control:
-	"""Crea una tarjeta visual para una tarea con capacidad de drag & drop"""
+	"""Creates a visual card for a task with drag & drop capability"""
 	var card = Panel.new()
 	card.custom_minimum_size = Vector2(290, 100)
 	card.mouse_filter = Control.MOUSE_FILTER_PASS
 	
-	# Estilo de la tarjeta mejorado
+	# Improved card style
 	var style_box = StyleBoxFlat.new()
 	style_box.bg_color = Color.WHITE
 	style_box.corner_radius_top_left = 8
@@ -408,11 +403,11 @@ func create_task_card(task_data: Dictionary) -> Control:
 	style_box.border_width_top = 3
 	style_box.border_width_bottom = 3
 	
-	# Color del borde según columna
+	# Border color according to column
 	var border_color = get_column_color(task_data.column_id)
 	style_box.border_color = border_color
 	
-	# Sombra sutil
+	# Subtle shadow
 	style_box.shadow_color = Color.BLACK
 	style_box.shadow_color.a = 0.1
 	style_box.shadow_size = 2
@@ -424,7 +419,7 @@ func create_task_card(task_data: Dictionary) -> Control:
 	vbox.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	vbox.add_theme_constant_override("separation", 6)
 	
-	# Título de la tarea
+	# Task title
 	var title_label = Label.new()
 	title_label.text = task_data.title
 	title_label.add_theme_font_size_override("font_size", 14)
@@ -433,7 +428,7 @@ func create_task_card(task_data: Dictionary) -> Control:
 	title_label.vertical_alignment = VERTICAL_ALIGNMENT_TOP
 	vbox.add_child(title_label)
 	
-	# Descripción corta si existe
+	# Short description if it exists
 	if not task_data.description.is_empty():
 		var desc_label = Label.new()
 		var short_desc = task_data.description.substr(0, 50)
@@ -445,11 +440,11 @@ func create_task_card(task_data: Dictionary) -> Control:
 		desc_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		vbox.add_child(desc_label)
 	
-	# Información adicional
+	# Additional information
 	var info_container = HBoxContainer.new()
 	vbox.add_child(info_container)
 	
-	# Asignado a
+	# Assigned to
 	if not task_data.assignee.is_empty():
 		var assignee_label = Label.new()
 		assignee_label.text = "👤 " + task_data.assignee
@@ -457,7 +452,7 @@ func create_task_card(task_data: Dictionary) -> Control:
 		assignee_label.add_theme_color_override("font_color", Color.DIM_GRAY)
 		info_container.add_child(assignee_label)
 	
-	# Fecha de vencimiento
+	# Due date
 	if not task_data.due_date.is_empty():
 		var due_label = Label.new()
 		due_label.text = "📅 " + task_data.due_date
@@ -465,76 +460,76 @@ func create_task_card(task_data: Dictionary) -> Control:
 		due_label.add_theme_color_override("font_color", Color.DIM_GRAY)
 		info_container.add_child(due_label)
 	
-	# Configurar drag & drop y click
+	# Configure drag & drop and click
 	card.set_meta("task_id", task_data.id)
 	card.set_meta("task_data", task_data)
 	card.set_meta("draggable", true)
 	
-	# Conectar eventos de mouse para drag & drop
+	# Connect mouse events for drag & drop
 	card.gui_input.connect(_on_task_card_input.bind(card))
 	
 	return card
 
 func get_column_color(column_id: int) -> Color:
-	"""Obtiene el color de una columna por su ID"""
+	"""Gets the color of a column by its ID"""
 	for column in kanban_data.columns:
 		if column.id == column_id:
 			return column.color if column.color is Color else Color(column.color)
 	return Color.GRAY
 
 func _on_task_card_input(event: InputEvent, card: Control):
-	"""Maneja la entrada de mouse en las tarjetas de tareas"""
+	"""Handles mouse input on task cards"""
 	if event is InputEventMouseButton:
 		if event.button_index == MOUSE_BUTTON_LEFT:
 			if event.pressed:
 				if event.double_click:
-					# Doble click para editar
+					# Double click to edit
 					var task_data = card.get_meta("task_data")
 					edit_task(task_data)
 				else:
-					# Iniciar drag
+					# Start drag
 					start_drag(card, event.position)
 			else:
-				# Finalizar drag
+				# End drag
 				end_drag(event.global_position)
 	elif event is InputEventMouseMotion and dragging_task != null:
-		# Actualizar posición del drag
+		# Update drag position
 		update_drag(event.global_position)
 
 func start_drag(card: Control, local_position: Vector2):
-	"""Inicia el arrastre de una tarjeta"""
+	"""Starts dragging a card"""
 	dragging_task = card
 	drag_offset = local_position
 	
-	# Crear preview visual
+	# Create visual preview
 	create_drag_preview(card)
 	
-	# Cambiar z-index para que aparezca encima
+	# Change z-index to appear on top
 	card.z_index = 100
 	card.modulate.a = 0.7
 
 func create_drag_preview(card: Control):
-	"""Crea una vista previa visual del elemento que se está arrastrando"""
+	"""Creates a visual preview of the element being dragged"""
 	drag_preview = card.duplicate()
 	get_viewport().add_child(drag_preview)
 	drag_preview.modulate = Color(1, 1, 1, 0.8)
 	drag_preview.z_index = 1000
 
 func update_drag(global_position: Vector2):
-	"""Actualiza la posición del drag preview"""
+	"""Updates the position of the drag preview"""
 	if drag_preview:
 		drag_preview.global_position = global_position - drag_offset
 
 func end_drag(global_position: Vector2):
-	"""Finaliza el arrastre y maneja el drop"""
+	"""Ends the drag and handles the drop"""
 	if dragging_task == null:
 		return
 	
-	# Restaurar apariencia original
+	# Restore original appearance
 	dragging_task.z_index = 0
 	dragging_task.modulate.a = 1.0
 	
-	# Encontrar columna de destino
+	# Find target column
 	var target_column = find_column_at_position(global_position)
 	if target_column != null:
 		var task_data = dragging_task.get_meta("task_data")
@@ -542,10 +537,10 @@ func end_drag(global_position: Vector2):
 		var new_column_id = target_column.get_meta("column_id")
 		
 		if old_column_id != new_column_id:
-			# Cambiar columna de la tarea
+			# Change task column
 			move_task_to_column(task_data.id, new_column_id)
 	
-	# Limpiar drag
+	# Clear drag
 	if drag_preview:
 		drag_preview.queue_free()
 		drag_preview = null
@@ -553,7 +548,7 @@ func end_drag(global_position: Vector2):
 	dragging_task = null
 
 func find_column_at_position(global_position: Vector2) -> Panel:
-	"""Encuentra la columna en una posición global específica"""
+	"""Finds the column at a specific global position"""
 	for column_panel in column_panels:
 		var rect = Rect2(column_panel.global_position, column_panel.size)
 		if rect.has_point(global_position):
@@ -561,7 +556,7 @@ func find_column_at_position(global_position: Vector2) -> Panel:
 	return null
 
 func move_task_to_column(task_id: int, new_column_id: int):
-	"""Mueve una tarea a una nueva columna"""
+	"""Moves a task to a new column"""
 	for task in kanban_data.tasks:
 		if task.id == task_id:
 			task.column_id = new_column_id
@@ -569,13 +564,12 @@ func move_task_to_column(task_id: int, new_column_id: int):
 	
 	save_kanban_data()
 	refresh_board()
-	print("[KanbanManager] Tarea ", task_id, " movida a columna ", new_column_id)
 
 func _on_add_task(column_id: int):
-	"""Agrega una nueva tarea a una columna específica"""
+	"""Adds a new task to a specific column"""
 	var new_task = {
 		"id": kanban_data.next_task_id,
-		"title": "Nueva Tarea",
+		"title": "New Task",
 		"description": "",
 		"assignee": "",
 		"due_date": "",
@@ -586,11 +580,11 @@ func _on_add_task(column_id: int):
 	kanban_data.tasks.append(new_task)
 	kanban_data.next_task_id += 1
 	
-	# Abrir editor para la nueva tarea
+	# Open editor for the new task
 	edit_task(new_task)
 
 func edit_task(task_data: Dictionary):
-	"""Abre el panel de edición para una tarea"""
+	"""Opens the editing panel for a task"""
 	current_editing_task = task_data
 	
 	detail_title.text = task_data.title
@@ -598,7 +592,7 @@ func edit_task(task_data: Dictionary):
 	detail_assignee.text = task_data.assignee
 	detail_due_date.text = task_data.due_date
 	
-	# Configurar selector de columna
+	# Configure column selector
 	for i in range(detail_column_selector.get_item_count()):
 		if detail_column_selector.get_item_id(i) == task_data.column_id:
 			detail_column_selector.selected = i
@@ -607,7 +601,7 @@ func edit_task(task_data: Dictionary):
 	task_detail_panel.visible = true
 
 func _on_save_task():
-	"""Guarda los cambios de la tarea actual"""
+	"""Saves the changes of the current task"""
 	if current_editing_task.is_empty():
 		return
 	
@@ -616,87 +610,87 @@ func _on_save_task():
 	current_editing_task.assignee = detail_assignee.text
 	current_editing_task.due_date = detail_due_date.text
 	
-	# Actualizar columna si cambió
+	# Update column if it changed
 	if detail_column_selector.selected >= 0:
 		var new_column_id = detail_column_selector.get_item_id(detail_column_selector.selected)
 		current_editing_task.column_id = new_column_id
 	
 	save_kanban_data()
 	task_detail_panel.visible = false
-	current_editing_task.clear()
+	current_editing_task = {}
 	refresh_board()
 
 func _on_cancel_edit():
-	"""Cancela la edición actual"""
+	"""Cancels the current edit"""
 	task_detail_panel.visible = false
-	current_editing_task.clear()
+	current_editing_task = {}
 
 func _on_delete_task():
-	"""Elimina la tarea actual"""
+	"""Deletes the current task"""
 	if current_editing_task.is_empty():
 		return
 	
 	for i in range(kanban_data.tasks.size()):
-		if kanban_data.tasks[i].id == current_editing_task.id:
+		if kanban_data.tasks[i].get("id") == current_editing_task.get("id"):
 			kanban_data.tasks.remove_at(i)
 			break
 	
 	save_kanban_data()
 	task_detail_panel.visible = false
-	current_editing_task.clear()
+	current_editing_task = {}
 	refresh_board()
 
 # ============================================================================
-# SISTEMA DE FILTROS CORREGIDO
+# CORRECTED FILTER SYSTEM
 # ============================================================================
 
 func _on_filter_changed(value = null):
-	"""Aplica los filtros actuales"""
+	"""Applies the current filters"""
 	refresh_board()
 
 func _on_clear_filters():
-	"""Limpia todos los filtros"""
+	"""Clears all filters"""
 	filter_assignee.text = ""
 	filter_status.selected = 0
 	refresh_board()
 
 func task_matches_filters(task_data: Dictionary) -> bool:
-	"""Verifica si una tarea coincide con los filtros actuales"""
+	"""Checks if a task matches the current filters"""
 	if not task_data.has("assignee") or not task_data.has("column_id"):
 		return false
 	
-	# Filtro por asignado
+	# Filter by assignee
 	var assignee_filter = filter_assignee.text.strip_edges().to_lower()
 	if not assignee_filter.is_empty():
 		var task_assignee = str(task_data.assignee).to_lower()
 		if not task_assignee.contains(assignee_filter):
 			return false
 	
-	# CORRECCIÓN: Filtro por estado/columna - Arreglado para "Todos los estados"
+	# FIX: Filter by status/column - Fixed for "All statuses"
 	var status_filter_index = filter_status.selected
-	if status_filter_index > 0:  # 0 = "Todos los estados", índices > 0 son estados específicos
+	if status_filter_index > 0:  # 0 = "All statuses", indices > 0 are specific statuses
 		var status_filter_id = filter_status.get_item_id(status_filter_index)
 		var task_column_id = int(task_data.column_id)
 		if task_column_id != status_filter_id:
 			return false
-	# Si status_filter_index == 0, no aplicamos filtro (mostrar todos)
+	# If status_filter_index == 0, we don't apply a filter (show all)
 	
 	return true
 
 # ============================================================================
-# ACTUALIZACIÓN DE LA INTERFAZ
+# INTERFACE UPDATE
 # ============================================================================
 
 func refresh_board():
-	"""Actualiza toda la visualización del tablero"""
-	# Limpiar columnas existentes
+	"""Updates the entire board display"""
+	# Clear existing columns
 	for child in columns_container.get_children():
 		child.queue_free()
 	
 	column_panels.clear()
 	task_cards.clear()
 	
-	# Crear columnas
+	# Create columns
 	kanban_data.columns.sort_custom(func(a, b): return a.order < b.order)
 	
 	for column_data in kanban_data.columns:
@@ -704,7 +698,7 @@ func refresh_board():
 		columns_container.add_child(column_panel)
 		column_panels.append(column_panel)
 		
-		# Agregar tareas a la columna
+		# Add tasks to the column
 		var tasks_container = column_panel.find_child("TasksContainer", true, false)
 		
 		if tasks_container != null:
@@ -714,13 +708,13 @@ func refresh_board():
 					tasks_container.add_child(task_card)
 					task_cards.append(task_card)
 		else:
-			print("[KanbanManager] ERROR: No se pudo encontrar TasksContainer en columna ", column_data.name)
+			pass # ERROR: Could not find TasksContainer in column
 	
-	# Actualizar estadísticas
+	# Update statistics
 	update_stats_display()
 
 func update_stats_display():
-	"""Actualiza el display de estadísticas"""
+	"""Updates the statistics display"""
 	var total_tasks = 0
 	var visible_tasks = 0
 	
@@ -729,25 +723,25 @@ func update_stats_display():
 		if task_matches_filters(task):
 			visible_tasks += 1
 	
-	var stats_text = "Tareas: %d" % visible_tasks
+	var stats_text = "Tasks: %d" % visible_tasks
 	if visible_tasks != total_tasks:
-		stats_text += " de %d" % total_tasks
-	stats_text += " | Columnas: %d" % kanban_data.columns.size()
+		stats_text += " of %d" % total_tasks
+	stats_text += " | Columns: %d" % kanban_data.columns.size()
 	
 	if stats_label:
 		stats_label.text = stats_text
 
 # ============================================================================
-# INTEGRACIÓN CON FGGLOBAL Y UTILIDADES
+# INTEGRATION WITH FGGLOBAL AND UTILITIES
 # ============================================================================
 
 func _notification(what):
-	"""Maneja notificaciones del sistema"""
+	"""Handles system notifications"""
 	if what == NOTIFICATION_WM_CLOSE_REQUEST:
 		save_kanban_data()
 
 func get_kanban_stats() -> Dictionary:
-	"""Obtiene estadísticas del Kanban para integración con FGGlobal"""
+	"""Gets Kanban statistics for integration with FGGlobal"""
 	var stats = {
 		"total_tasks": kanban_data.tasks.size(),
 		"columns": kanban_data.columns.size(),
@@ -764,41 +758,39 @@ func get_kanban_stats() -> Dictionary:
 				count += 1
 		stats.tasks_by_column[column.name] = count
 	
-	# Estadísticas adicionales
+	# Additional statistics
 	for task in kanban_data.tasks:
 		if not task.assignee.is_empty():
 			stats.tasks_with_assignee += 1
 		if not task.due_date.is_empty():
 			stats.tasks_with_due_date += 1
-			# Aquí podrías agregar lógica para detectar tareas vencidas
+			# Here you could add logic to detect overdue tasks
 	
 	return stats
 
 func export_kanban_data() -> String:
-	"""Exporta los datos del Kanban como JSON string"""
+	"""Exports Kanban data as a JSON string"""
 	var export_data = kanban_data.duplicate(true)
-	# Convertir Colors a strings para exportación
+	# Convert Colors to strings for export
 	for column in export_data.columns:
 		if column.has("color") and column.color is Color:
 			column.color = column.color.to_html()
 	return JSON.stringify(export_data)
 
 func import_kanban_data(json_data: String) -> bool:
-	"""Importa datos del Kanban desde JSON string"""
+	"""Imports Kanban data from a JSON string"""
 	var json = JSON.new()
 	var parse_result = json.parse(json_data)
 	
 	if parse_result != OK:
-		print("[KanbanManager] Error importando datos: ", json.error_string)
 		return false
 	
 	var imported_data = json.data
 	if not imported_data.has("columns") or not imported_data.has("tasks"):
-		print("[KanbanManager] Datos importados no tienen la estructura correcta")
 		return false
 	
 	kanban_data = imported_data
-	# Convertir strings de color a Color objects
+	# Convert color strings to Color objects
 	for column in kanban_data.columns:
 		if column.has("color") and column.color is String:
 			column.color = Color(column.color)
@@ -806,15 +798,14 @@ func import_kanban_data(json_data: String) -> bool:
 	save_kanban_data()
 	setup_filters()
 	refresh_board()
-	print("[KanbanManager] Datos importados exitosamente")
 	return true
 
 # ============================================================================
-# FUNCIONES DE UTILIDAD ADICIONALES
+# ADDITIONAL UTILITY FUNCTIONS
 # ============================================================================
 
 func get_tasks_by_assignee(assignee: String) -> Array:
-	"""Obtiene todas las tareas asignadas a una persona específica"""
+	"""Gets all tasks assigned to a specific person"""
 	var assigned_tasks = []
 	for task in kanban_data.tasks:
 		if task.has("assignee") and task.assignee.to_lower() == assignee.to_lower():
@@ -822,7 +813,7 @@ func get_tasks_by_assignee(assignee: String) -> Array:
 	return assigned_tasks
 
 func get_tasks_by_due_date(date: String) -> Array:
-	"""Obtiene todas las tareas con una fecha de vencimiento específica"""
+	"""Gets all tasks with a specific due date"""
 	var due_tasks = []
 	for task in kanban_data.tasks:
 		if task.has("due_date") and task.due_date == date:
@@ -830,25 +821,25 @@ func get_tasks_by_due_date(date: String) -> Array:
 	return due_tasks
 
 func get_column_by_id(column_id: int) -> Dictionary:
-	"""Obtiene una columna por su ID"""
+	"""Gets a column by its ID"""
 	for column in kanban_data.columns:
 		if column.id == column_id:
 			return column
 	return {}
 
 func get_task_by_id(task_id: int) -> Dictionary:
-	"""Obtiene una tarea por su ID"""
+	"""Gets a task by its ID"""
 	for task in kanban_data.tasks:
 		if task.id == task_id:
 			return task
 	return {}
 
 # ============================================================================
-# FUNCIONES PARA MEJORAR LA EXPERIENCIA DE USUARIO
+# FUNCTIONS TO IMPROVE USER EXPERIENCE
 # ============================================================================
 
 func _input(event):
-	"""Maneja eventos globales de entrada"""
+	"""Handles global input events"""
 	if event is InputEventKey and event.pressed:
 		if event.keycode == KEY_ESCAPE:
 			if task_detail_panel.visible:
@@ -858,15 +849,15 @@ func _input(event):
 				_on_save_task()
 
 func _ready_post():
-	"""Configuración adicional después de _ready"""
-	# Conectar señal de redimensionado para ajustar columnas
+	"""Additional configuration after _ready"""
+	# Connect resize signal to adjust columns
 	get_viewport().size_changed.connect(_on_viewport_resized)
 
 func _on_viewport_resized():
-	"""Ajusta el layout cuando cambia el tamaño de la ventana"""
+	"""Adjusts the layout when the window size changes"""
 	if columns_container:
-		# Ajustar tamaño mínimo de columnas basado en el ancho disponible
-		var available_width = get_viewport().size.x - 40  # Margen
+		# Adjust minimum column size based on available width
+		var available_width = get_viewport().size.x - 40  # Margin
 		var column_count = kanban_data.columns.size()
 		if column_count > 0:
 			var min_column_width = max(300, available_width / column_count - 20)
@@ -874,17 +865,17 @@ func _on_viewport_resized():
 				column_panel.custom_minimum_size.x = min_column_width
 
 # ============================================================================
-# FUNCIONES DE VALIDACIÓN Y LIMPIEZA
+# VALIDATION AND CLEANUP FUNCTIONS
 # ============================================================================
 
 func validate_data():
-	"""Valida y limpia los datos del Kanban"""
+	"""Validates and cleans Kanban data"""
 	var cleaned = false
 	
-	# Verificar que todas las tareas tengan column_id válido
+	# Verify that all tasks have a valid column_id
 	for task in kanban_data.tasks:
 		if not task.has("column_id"):
-			task.column_id = 1  # Asignar a "Por Hacer"
+			task.column_id = 1  # Assign to "To Do"
 			cleaned = true
 		else:
 			var column_exists = false
@@ -893,10 +884,10 @@ func validate_data():
 					column_exists = true
 					break
 			if not column_exists:
-				task.column_id = 1  # Mover a "Por Hacer" si la columna no existe
+				task.column_id = 1  # Move to "To Do" if the column does not exist
 				cleaned = true
 	
-	# Verificar que todas las columnas tengan propiedades requeridas
+	# Verify that all columns have required properties
 	for column in kanban_data.columns:
 		if not column.has("order"):
 			column.order = kanban_data.columns.find(column)
@@ -907,8 +898,7 @@ func validate_data():
 	
 	if cleaned:
 		save_kanban_data()
-		print("[KanbanManager] Datos limpiados y corregidos")
 
-# Llamar validación al inicio
+# Call validation at startup
 func _ready_final():
 	validate_data()

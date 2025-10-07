@@ -23,7 +23,7 @@ grow_vertical = 2
 
 [node name="Label" type="Label" parent="VBoxContainer"]
 layout_mode = 2
-text = "Gestor de Traducciones"
+text = "Translation Manager"
 horizontal_alignment = 1
 
 [node name="LanguageContainer" type="HBoxContainer" parent="VBoxContainer"]
@@ -32,32 +32,32 @@ layout_mode = 2
 [node name="AddLanguageInput" type="LineEdit" parent="VBoxContainer/LanguageContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
-placeholder_text = "Código de idioma (ej: fr, de, pt)"
+placeholder_text = "Language code (e.g., fr, de, pt)"
 
 [node name="AddLanguageButton" type="Button" parent="VBoxContainer/LanguageContainer"]
 layout_mode = 2
-text = "Agregar Idioma"
+text = "Add Language"
 
 [node name="DeleteLanguageButton" type="Button" parent="VBoxContainer/LanguageContainer"]
 layout_mode = 2
-text = "Eliminar Idioma"
+text = "Delete Language"
 
 [node name="NodeGroupsContainer" type="HBoxContainer" parent="VBoxContainer"]
 layout_mode = 2
 
 [node name="Label2" type="Label" parent="VBoxContainer/NodeGroupsContainer"]
 layout_mode = 2
-text = "Grupo de nodos a actualizar:"
+text = "Node group to update:"
 
 [node name="GroupTargetInput" type="LineEdit" parent="VBoxContainer/NodeGroupsContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
-text = "traducir"
-placeholder_text = "Escribe el nombre del grupo (ej: ui, pp, player)"
+text = "translate"
+placeholder_text = "Enter group name (e.g., ui, pp, player)"
 
 [node name="ApplyToGroupButton" type="Button" parent="VBoxContainer/NodeGroupsContainer"]
 layout_mode = 2
-text = "Aplicar al Grupo"
+text = "Apply to Group"
 
 [node name="ScrollContainer" type="ScrollContainer" parent="VBoxContainer"]
 layout_mode = 2
@@ -84,24 +84,24 @@ popup/item_1/id = 1
 
 [node name="KeyInput" type="LineEdit" parent="VBoxContainer/EditContainer"]
 layout_mode = 2
-placeholder_text = "Clave de traducción"
+placeholder_text = "Translation key"
 
 [node name="ValueInput" type="TextEdit" parent="VBoxContainer/EditContainer"]
 custom_minimum_size = Vector2(0, 40)
 layout_mode = 2
-placeholder_text = "Texto traducido..."
+placeholder_text = "Translated text..."
 
 [node name="ButtonContainer" type="HBoxContainer" parent="VBoxContainer"]
 layout_mode = 2
 
 [node name="AddButton" type="Button" parent="VBoxContainer/ButtonContainer"]
 layout_mode = 2
-text = "Agregar"
+text = "Add"
 
 [node name="EditButton" type="Button" parent="VBoxContainer/ButtonContainer"]
 layout_mode = 2
-text = "Editar"
+text = "Edit"
 
 [node name="DeleteButton" type="Button" parent="VBoxContainer/ButtonContainer"]
 layout_mode = 2
-text = "Eliminar"
+text = "Delete"

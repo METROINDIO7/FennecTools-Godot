@@ -1,7 +1,7 @@
 @tool
 extends Node
 
-# Character Controller con sistema de estados de expresión basado en nodos hijos
+# Character Controller with an expression state system based on child nodes
 
 @export var character_group_name: String = ""
 
@@ -28,7 +28,7 @@ extends Node
 @export_group("Performance")
 @export var enable_node_caching: bool = true
 
-# Estados y cache
+# States and cache
 var _expression_states: Dictionary = {}  # state_id -> ExpressionState
 var _current_state_id: int = -1
 var _node_cache: Dictionary = {}
@@ -38,12 +38,11 @@ var _mouth_task_running: bool = false
 func _ready() -> void:
 	if character_group_name != "":
 		add_to_group(character_group_name)
-		print("[CharacterController] Added to group: ", character_group_name)
 	
 	_rebuild_caches()
 	_setup_expression_states()
 	
-	# Activar estado por defecto
+	# Activate default state
 	if default_state_id in _expression_states:
 		set_expression_state(default_state_id)
 
@@ -56,7 +55,7 @@ func _rebuild_caches() -> void:
 	
 	_node_cache.clear()
 	
-	# Cachear nodos de boca
+	# Cache mouth nodes
 	for path in mouth_targets_mesh:
 		if path != NodePath(""):
 			var node = get_node_or_null(path)
@@ -87,28 +86,24 @@ func _setup_expression_states() -> void:
 	
 	var container = get_node_or_null(states_container_path)
 	if not container:
-		# Buscar automáticamente el contenedor
+		# Automatically search for the container
 		container = _find_expression_states_container()
 	
 	if not container:
-		print("[CharacterController] No expression states container found")
 		return
-	
-	print("[CharacterController] Setting up expression states from container: ", container.name)
 	
 	for child in container.get_children():
 		if child is ExpressionState:
 			var state = child as ExpressionState
 			_expression_states[state.state_id] = state
-			print("[CharacterController] Registered expression state: ID=", state.state_id, " Name=", state.state_name)
 
 func _find_expression_states_container() -> Node:
-	# Buscar por nombre
+	# Search by name
 	var container = get_node_or_null("ExpressionStates")
 	if container:
 		return container
 	
-	# Buscar cualquier hijo que tenga nodos ExpressionState
+	# Search for any child that has ExpressionState nodes
 	for child in get_children():
 		for grandchild in child.get_children():
 			if grandchild is ExpressionState:
@@ -117,39 +112,33 @@ func _find_expression_states_container() -> Node:
 	return null
 
 func set_expression_state(state_id: int) -> void:
-	print("[CharacterController] Setting expression state: ", state_id)
-	
 	if state_id == _current_state_id:
-		print("[CharacterController] State already active: ", state_id)
 		return
 	
-	# Desactivar estado actual
+	# Deactivate current state
 	if _current_state_id in _expression_states:
 		var current_state = _expression_states[_current_state_id]
 		current_state.deactivate()
 	
-	# Activar nuevo estado
+	# Activate new state
 	if state_id in _expression_states:
 		var new_state = _expression_states[state_id]
 		new_state.activate()
 		_current_state_id = state_id
-		print("[CharacterController] State activated: ", new_state.state_name)
 	else:
-		print("[CharacterController] State ID not found: ", state_id)
-		# Intentar estado por defecto
+		# Try default state
 		if default_state_id in _expression_states and state_id != default_state_id:
 			set_expression_state(default_state_id)
 
-# ✅ COMPATIBILIDAD CRÍTICA: Este es el método que llama DialogueLauncher
+# ✅ CRITICAL COMPATIBILITY: This is the method called by DialogueLauncher
 func set_expression_by_id(expression_id: int) -> void:
-	print("[CharacterController] set_expression_by_id called with: ", expression_id)
 	set_expression_state(expression_id)
 
-# ✅ MÉTODO CRÍTICO: Verificar si una expresión existe
+# ✅ CRITICAL METHOD: Check if an expression exists
 func has_expression_index(expression_id: int) -> bool:
 	return expression_id in _expression_states
 
-# ✅ MÉTODO ADICIONAL: Para compatibilidad con FGGlobal
+# ✅ ADDITIONAL METHOD: For compatibility with FGGlobal
 func has_expression_state(state_id: int) -> bool:
 	return state_id in _expression_states
 
@@ -161,7 +150,7 @@ func get_current_state_name() -> String:
 		return _expression_states[_current_state_id].state_name
 	return ""
 
-# ✅ Compatibilidad con DialogueLauncher
+# ✅ Compatibility with DialogueLauncher
 func get_current_expression_name() -> String:
 	return get_current_state_name()
 
@@ -177,17 +166,15 @@ func get_expression_states_info() -> Array:
 	return info
 
 # =====================
-# Mouth System - IMPORTANTE: Funciona independientemente de las expresiones
+# Mouth System - IMPORTANT: Works independently of expressions
 # =====================
 func start_talking() -> void:
-	print("[CharacterController] Start talking called")
 	_talking = true
 	if not _mouth_task_running:
 		_mouth_task_running = true
 		_mouth_loop()
 
 func stop_talking() -> void:
-	print("[CharacterController] Stop talking called")
 	_talking = false
 
 func _mouth_loop() -> void:
@@ -222,8 +209,8 @@ func _animate_mouth_2d(open: bool) -> void:
 			var anim_name = mouth_open_animation if open else mouth_closed_animation
 			
 			if anim_player.has_animation(anim_name):
-				# IMPORTANTE: No interrumpir animaciones de expresión
-				# Solo reproducir si no está reproduciendo una animación de expresión
+				# IMPORTANT: Do not interrupt expression animations
+				# Only play if an expression animation is not already playing
 				if not _is_playing_expression_animation(anim_player):
 					anim_player.play(anim_name)
 		
@@ -235,13 +222,13 @@ func _animate_mouth_2d(open: bool) -> void:
 				sprite.play(anim_name)
 
 func _is_playing_expression_animation(anim_player: AnimationPlayer) -> bool:
-	# Verificar si el AnimationPlayer está siendo usado por alguna expresión activa
+	# Check if the AnimationPlayer is being used by any active expression
 	if _current_state_id in _expression_states:
 		var current_state = _expression_states[_current_state_id]
 		for path in current_state.animation_players:
 			var node = get_node_or_null(path)
 			if node == anim_player and anim_player.is_playing():
-				# Si está reproduciendo y no es una animación de boca, es de expresión
+				# If it is playing and it is not a mouth animation, it is an expression
 				var current_anim = anim_player.current_animation
 				if current_anim != mouth_open_animation and current_anim != mouth_closed_animation:
 					return true
@@ -286,7 +273,6 @@ func _set_blend_shape_on_mesh(mesh_instance: MeshInstance3D, index: int, value: 
 		if value:
 			_refresh_states = false
 			_setup_expression_states()
-			print("[CharacterController] Expression states refreshed")
 
 # =====================
 # Public API
@@ -311,11 +297,11 @@ func remove_expression_state(state_id: int) -> void:
 		_expression_states.erase(state_id)
 		state.queue_free()
 		
-		# Si eliminamos el estado activo, resetear
+		# If we delete the active state, reset
 		if _current_state_id == state_id:
 			_current_state_id = -1
 
-# ✅ PROPIEDADES PARA COMPATIBILIDAD
+# ✅ PROPERTIES FOR COMPATIBILITY
 var default_expression_index: int:
 	get:
 		return default_state_id

@@ -25,7 +25,7 @@ grow_vertical = 2
 
 [node name="TitleLabel" type="Label" parent="VBoxContainer"]
 layout_mode = 2
-text = "Control de Entrada Personalizable"
+text = "Customizable Input Control"
 horizontal_alignment = 1
 
 [node name="EnabledContainer" type="HBoxContainer" parent="VBoxContainer"]
@@ -34,7 +34,7 @@ layout_mode = 2
 [node name="EnabledLabel" type="Label" parent="VBoxContainer/EnabledContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
-text = "Activar Sistema de Control:"
+text = "Enable Control System:"
 
 [node name="EnabledCheckBox" type="CheckBox" parent="VBoxContainer/EnabledContainer"]
 layout_mode = 2
@@ -49,13 +49,13 @@ layout_mode = 2
 [node name="GroupLabel" type="Label" parent="VBoxContainer/GroupContainer"]
 custom_minimum_size = Vector2(150, 0)
 layout_mode = 2
-text = "Grupo de Nodos:"
+text = "Node Group:"
 
 [node name="GroupLineEdit" type="LineEdit" parent="VBoxContainer/GroupContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
 text = "player"
-placeholder_text = "interactuable"
+placeholder_text = "interactable"
 
 [node name="HSeparator5" type="HSeparator" parent="VBoxContainer"]
 layout_mode = 2
@@ -63,7 +63,7 @@ layout_mode = 2
 [node name="MappingsLabel" type="Label" parent="VBoxContainer"]
 layout_mode = 2
 size_flags_vertical = 1
-text = "Mapeo de Entradas:"
+text = "Input Mappings:"
 
 [node name="VBoxContainer_ScrollContainer#MappingsContainer" type="VBoxContainer" parent="VBoxContainer"]
 layout_mode = 2
@@ -76,7 +76,7 @@ layout_mode = 2
 [node name="VBoxContainer_ScrollContainer_MappingsContainer_UpContainer#UpLabel" type="Label" parent="VBoxContainer/VBoxContainer_ScrollContainer#MappingsContainer/VBoxContainer_ScrollContainer_MappingsContainer#UpContainer"]
 custom_minimum_size = Vector2(100, 0)
 layout_mode = 2
-text = "Arriba:"
+text = "Up:"
 
 [node name="VBoxContainer_ScrollContainer_MappingsContainer_UpContainer#UpLineEdit" type="LineEdit" parent="VBoxContainer/VBoxContainer_ScrollContainer#MappingsContainer/VBoxContainer_ScrollContainer_MappingsContainer#UpContainer"]
 layout_mode = 2
@@ -90,7 +90,7 @@ layout_mode = 2
 [node name="VBoxContainer_ScrollContainer_MappingsContainer_DownContainer#DownLabel" type="Label" parent="VBoxContainer/VBoxContainer_ScrollContainer#MappingsContainer/VBoxContainer_ScrollContainer_MappingsContainer#DownContainer"]
 custom_minimum_size = Vector2(100, 0)
 layout_mode = 2
-text = "Abajo:"
+text = "Down:"
 
 [node name="VBoxContainer_ScrollContainer_MappingsContainer_DownContainer#DownLineEdit" type="LineEdit" parent="VBoxContainer/VBoxContainer_ScrollContainer#MappingsContainer/VBoxContainer_ScrollContainer_MappingsContainer#DownContainer"]
 layout_mode = 2
@@ -104,7 +104,7 @@ layout_mode = 2
 [node name="VBoxContainer_ScrollContainer_MappingsContainer_LeftContainer#LeftLabel" type="Label" parent="VBoxContainer/VBoxContainer_ScrollContainer#MappingsContainer/VBoxContainer_ScrollContainer_MappingsContainer#LeftContainer"]
 custom_minimum_size = Vector2(100, 0)
 layout_mode = 2
-text = "Izquierda:"
+text = "Left:"
 
 [node name="VBoxContainer_ScrollContainer_MappingsContainer_LeftContainer#LeftLineEdit" type="LineEdit" parent="VBoxContainer/VBoxContainer_ScrollContainer#MappingsContainer/VBoxContainer_ScrollContainer_MappingsContainer#LeftContainer"]
 layout_mode = 2
@@ -118,7 +118,7 @@ layout_mode = 2
 [node name="VBoxContainer_ScrollContainer_MappingsContainer_RightContainer#RightLabel" type="Label" parent="VBoxContainer/VBoxContainer_ScrollContainer#MappingsContainer/VBoxContainer_ScrollContainer_MappingsContainer#RightContainer"]
 custom_minimum_size = Vector2(100, 0)
 layout_mode = 2
-text = "Derecha:"
+text = "Right:"
 
 [node name="VBoxContainer_ScrollContainer_MappingsContainer_RightContainer#RightLineEdit" type="LineEdit" parent="VBoxContainer/VBoxContainer_ScrollContainer#MappingsContainer/VBoxContainer_ScrollContainer_MappingsContainer#RightContainer"]
 layout_mode = 2
@@ -132,7 +132,7 @@ layout_mode = 2
 [node name="VBoxContainer_ScrollContainer_MappingsContainer_AcceptContainer#AcceptLabel" type="Label" parent="VBoxContainer/VBoxContainer_ScrollContainer#MappingsContainer/VBoxContainer_ScrollContainer_MappingsContainer#AcceptContainer"]
 custom_minimum_size = Vector2(100, 0)
 layout_mode = 2
-text = "Aceptar:"
+text = "Accept:"
 
 [node name="VBoxContainer_ScrollContainer_MappingsContainer_AcceptContainer#AcceptLineEdit" type="LineEdit" parent="VBoxContainer/VBoxContainer_ScrollContainer#MappingsContainer/VBoxContainer_ScrollContainer_MappingsContainer#AcceptContainer"]
 layout_mode = 2
@@ -146,7 +146,7 @@ layout_mode = 2
 [node name="VBoxContainer_ScrollContainer_MappingsContainer_BackContainer#BackLabel" type="Label" parent="VBoxContainer/VBoxContainer_ScrollContainer#MappingsContainer/VBoxContainer_ScrollContainer_MappingsContainer#BackContainer"]
 custom_minimum_size = Vector2(100, 0)
 layout_mode = 2
-text = "Retroceder:"
+text = "Back:"
 
 [node name="VBoxContainer_ScrollContainer_MappingsContainer_BackContainer#BackLineEdit" type="LineEdit" parent="VBoxContainer/VBoxContainer_ScrollContainer#MappingsContainer/VBoxContainer_ScrollContainer_MappingsContainer#BackContainer"]
 layout_mode = 2
@@ -163,22 +163,22 @@ layout_mode = 2
 [node name="SaveButton" type="Button" parent="VBoxContainer/ButtonsContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
-text = "Guardar Configuración"
+text = "Save Configuration"
 
 [node name="ResetButton" type="Button" parent="VBoxContainer/ButtonsContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
-text = "Restaurar Valores por Defecto"
+text = "Restore Defaults"
 
 [node name="TestButton" type="Button" parent="VBoxContainer/ButtonsContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
-text = "Probar Configuración"
+text = "Test Configuration"
 
 [node name="HSeparator4" type="HSeparator" parent="VBoxContainer"]
 layout_mode = 2
 
 [node name="StatusLabel" type="Label" parent="VBoxContainer"]
 layout_mode = 2
-text = "Estado: Sistema ACTIVADO"
+text = "Status: System ENABLED"
 horizontal_alignment = 1

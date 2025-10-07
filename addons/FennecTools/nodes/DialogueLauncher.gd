@@ -26,7 +26,7 @@ signal finished()
 @export var advance_action_name: String = "accept"
 
 @export_group("Instance Settings")
-@export var default_instance_parent_path: NodePath  # Renombrado para claridad
+@export var default_instance_parent_path: NodePath  # Renamed for clarity
 
 var _cancelled: bool = false
 var _input_consumed: bool = false
@@ -37,99 +37,62 @@ func _ready():
 	process_mode = Node.PROCESS_MODE_ALWAYS
 
 func find_character_animation_node(character_group_name: String) -> Node:
-	print("[DialogueLauncher] find_character_animation_node called for group: ", character_group_name)
-	
 	if character_group_name.is_empty():
-		print("[DialogueLauncher] Group name is empty")
 		return null
 	
 	var nodes_in_group = get_tree().get_nodes_in_group(character_group_name)
-	print("[DialogueLauncher] Found ", nodes_in_group.size(), " nodes in group: ", character_group_name)
 	
 	for node in nodes_in_group:
-		print("[DialogueLauncher] Checking node: ", node.name, " (", node.get_class(), ")")
 		if node is Node and node.has_method("set_expression_by_id"):
-			print("[DialogueLauncher] Found valid CharacterController: ", node.name)
 			return node
-		else:
-			print("[DialogueLauncher] Node doesn't have set_expression_by_id method")
 	
-	print("[DialogueLauncher] No valid CharacterController found in group")
 	return null
 
 func animate_character_for_dialogue(character_group_name: String, expression_id: int) -> bool:
-	"""✅ CAMBIO: Ahora usa expression_id numérico en lugar de nombre"""
-	print("[DialogueLauncher] animate_character_for_dialogue called - Group: ", character_group_name, " Expression ID: ", expression_id)
-	
+	"""✅ CHANGE: Now uses numeric expression_id instead of name"""
 	if character_group_name.is_empty():
-		print("[DialogueLauncher] ERROR: character_group_name is empty")
 		return false
 	
-	# expression_id = -1 significa no expresión
+	# expression_id = -1 means no expression
 	if expression_id < 0:
-		print("[DialogueLauncher] No expression to set (expression_id = -1)")
 		return false
 
-	print("[DialogueLauncher] Looking for character in group: ", character_group_name)
-	
 	var character_node = find_character_animation_node(character_group_name)
 	if character_node:
-		print("[DialogueLauncher] Character node found: ", character_node.name)
-		
-		# Verificar si el índice de expresión existe
+		# Check if the expression index exists
 		if character_node.has_method("has_expression_index"):
 			var has_expression = character_node.has_expression_index(expression_id)
-			print("[DialogueLauncher] Character has expression index ", expression_id, ": ", has_expression)
 			
 			if has_expression:
-				print("[DialogueLauncher] Setting expression ID: ", expression_id)
 				character_node.set_expression_by_id(expression_id)
-				print("[DialogueLauncher] Expression ID '", expression_id, "' applied to character group: ", character_group_name)
 				return true
 			else:
-				print("[DialogueLauncher] Warning: Expression ID '", expression_id, "' not found in character")
-				# Intentar con expresión por defecto
+				# Try with default expression
 				if character_node.has_method("set_expression_by_id"):
 					var default_index = character_node.default_expression_index
-					print("[DialogueLauncher] Trying default expression index: ", default_index)
 					
 					if default_index >= 0 and character_node.has_expression_index(default_index):
 						character_node.set_expression_by_id(default_index)
-						print("[DialogueLauncher] Using default expression index: '", default_index, "'")
 						return true
-					else:
-						print("[DialogueLauncher] Default expression index also not available")
-		else:
-			print("[DialogueLauncher] Character doesn't have has_expression_index method")
 	else:
-		print("[DialogueLauncher] ERROR: No character found in group: ", character_group_name)
 		return false
 	
-	print("[DialogueLauncher] Failed to set expression")
 	return false
 
 func start_character_talking(character_group_name: String) -> bool:
-	print("[DialogueLauncher] start_character_talking called for group: ", character_group_name)
-	
 	var character_node = find_character_animation_node(character_group_name)
 	if character_node and character_node.has_method("start_talking"):
 		character_node.start_talking()
-		print("[DialogueLauncher] Started talking for: ", character_group_name)
 		return true
 	
-	print("[DialogueLauncher] Failed to start talking for: ", character_group_name)
 	return false
 
 func stop_character_talking(character_group_name: String) -> bool:
-	print("[DialogueLauncher] stop_character_talking called for group: ", character_group_name)
-	
 	var character_node = find_character_animation_node(character_group_name)
 	if character_node and character_node.has_method("stop_talking"):
 		character_node.stop_talking()
-		print("[DialogueLauncher] Stopped talking for: ", character_group_name)
 		return true
 	
-	print("[DialogueLauncher] Failed to stop talking for: ", character_group_name)
 	return false
 
 func _get_panel_scene_reference(panel_node: Node) -> PackedScene:
@@ -150,27 +113,22 @@ func _get_panel_parent() -> Node:
 	return get_parent() if get_parent() else self
 
 func _get_instance_parent(slot: DialogueSlotConfig) -> Node:
-	"""Obtiene el nodo padre para instanciar basado en la configuración del slot"""
+	"""Gets the parent node to instantiate based on the slot's configuration"""
 	
-	# 1. Primero intenta usar el target específico del slot
+	# 1. First try to use the slot's specific target
 	if slot and slot.instance_target != NodePath(""):
 		var target_node = get_node_or_null(slot.instance_target)
 		if target_node:
-			print("[DialogueLauncher] Using slot-specific instance target: ", target_node.name)
 			return target_node
-		else:
-			print("[DialogueLauncher] WARNING: Slot instance target not found: ", slot.instance_target)
 	
-	# 2. Fallback al target global del DialogueLauncher
+	# 2. Fallback to the DialogueLauncher's global target
 	if default_instance_parent_path != NodePath(""):
 		var global_target = get_node_or_null(default_instance_parent_path)
 		if global_target:
-			print("[DialogueLauncher] Using global instance parent: ", global_target.name)
 			return global_target
 	
-	# 3. Fallback final al padre del panel
+	# 3. Final fallback to the panel's parent
 	var panel_parent = _get_panel_parent()
-	print("[DialogueLauncher] Using panel parent as instance parent: ", panel_parent.name)
 	return panel_parent
 
 func _resolve_panel_scene_path(override_path: String) -> String:
@@ -238,7 +196,7 @@ func _setup_panel(controller: Node, slot: DialogueSlotConfig) -> void:
 	if _has_property(controller, "auto_free_on_exit"):
 		controller.set("auto_free_on_exit", auto_free)
 	
-	# ✅ NUEVO: Configurar sonidos si el slot tiene configuración de sonido
+	# ✅ NEW: Configure sounds if the slot has sound configuration
 	if slot and slot.has_sound() and controller.has_method("set_sound_config"):
 		var sound_config = {
 			"sound_enabled": slot.sound_enabled,
@@ -249,14 +207,11 @@ func _setup_panel(controller: Node, slot: DialogueSlotConfig) -> void:
 			"sound_volume": slot.sound_volume
 		}
 		controller.set_sound_config(sound_config)
-		print("[DialogueLauncher] Sound config applied to panel: ", slot.get_sound_debug_info())
 
 func _cleanup_current_instance():
-	"""Limpia la instancia actual si existe"""
+	"""Cleans up the current instance if it exists"""
 	if _current_instance and is_instance_valid(_current_instance):
-		print("[DialogueLauncher] Cleaning up current instance: ", _current_instance.name)
-		
-		# Si la instancia tiene método de limpieza, usarlo
+		# If the instance has a cleanup method, use it
 		if _current_instance.has_method("cleanup_before_removal"):
 			_current_instance.cleanup_before_removal()
 		elif _current_instance.has_method("queue_free"):
@@ -267,34 +222,29 @@ func _cleanup_current_instance():
 		_current_instance = null
 
 func _handle_slot_instance(slot: DialogueSlotConfig) -> bool:
-	"""Maneja la instanciación de objetos para un slot"""
+	"""Handles object instantiation for a slot"""
 	if not slot or not slot.instance_scene:
 		return false
 	
-	print("[DialogueLauncher] Instantiating scene from slot: ", slot.get_instance_debug_info())
 	_cleanup_current_instance()
 	
 	var instance_parent = _get_instance_parent(slot)
 	if not instance_parent:
-		print("[DialogueLauncher] ERROR: No instance parent found")
 		return false
 	
-	# Instanciar la escena
+	# Instantiate the scene
 	_current_instance = slot.instance_scene.instantiate()
 	if not _current_instance:
-		print("[DialogueLauncher] ERROR: Failed to instantiate scene")
 		return false
 	
 	instance_parent.add_child(_current_instance)
 	
-	# Opcional: Si es CanvasItem y quieres posición específica, pero ahora el target maneja esto
+	# Optional: If it's a CanvasItem and you want a specific position, but now the target handles this
 	if _current_instance is CanvasItem and instance_parent is CanvasItem:
-		# Por defecto en (0,0) relativo al padre, que es lo que queremos
-		print("[DialogueLauncher] Instance is CanvasItem, position: ", _current_instance.position)
+		# Default at (0,0) relative to the parent, which is what we want
+		pass
 	
-	print("[DialogueLauncher] Successfully instantiated: ", _current_instance.name, " as child of: ", instance_parent.name)
-	
-	# Si la instancia tiene método de inicialización, llamarlo
+	# If the instance has an initialization method, call it
 	if _current_instance.has_method("initialize_for_dialogue"):
 		_current_instance.initialize_for_dialogue()
 	
@@ -421,19 +371,16 @@ func _calculate_total_items() -> int:
 	return total
 
 func start() -> void:
-	print("[DialogueLauncher] ===== STARTING DIALOGUE LAUNCHER =====")
 	_cancelled = false
 	_input_consumed = false
 	
 	var parent = _get_panel_parent()
 	
 	if slots.size() == 0:
-		print("[DialogueLauncher] No slots configured")
 		finished.emit()
 		return
 	
 	var total := _calculate_total_items()
-	print("[DialogueLauncher] Total items to process: ", total)
 	started.emit(total)
 	
 	var global_index := 0
@@ -441,57 +388,39 @@ func start() -> void:
 	
 	for slot_idx in range(slots.size()):
 		if _cancelled:
-			print("[DialogueLauncher] Dialogue cancelled at slot ", slot_idx)
 			break
 			
 		var slot = slots[slot_idx]
 		if not slot or not slot.is_valid():
-			print("[DialogueLauncher] Slot ", slot_idx, " is invalid, skipping")
 			continue
 		
-		print("[DialogueLauncher] Processing slot ", slot_idx)
-		print("[DialogueLauncher] Slot info: ", slot.get_debug_info())
-		if slot.has_instance_scene():
-			print("[DialogueLauncher] Slot instance info: ", slot.get_instance_debug_info())
-		if slot.has_sound():
-			print("[DialogueLauncher] Slot sound info: ", slot.get_sound_debug_info())  # ✅ NUEVO
-		
-		# ✅ Manejar expresión del personaje
+		# ✅ Handle character expression
 		_current_character_group = slot.character_group_name
 		var slot_expression_id = slot.expression_id
 		
 		if _current_character_group != "" and slot_expression_id >= 0:
-			var success = animate_character_for_dialogue(_current_character_group, slot_expression_id)
-			print("[DialogueLauncher] Expression set: ", success)
+			animate_character_for_dialogue(_current_character_group, slot_expression_id)
 		
-		# ✅ NUEVO: Manejar instanciación de objetos (ANTES del diálogo)
+		# ✅ NEW: Handle object instantiation (BEFORE the dialogue)
 		if slot.instance_scene:
-			print("[DialogueLauncher] Slot has instance_scene, attempting to instantiate")
 			var instance_success = _handle_slot_instance(slot)
 			
 			if instance_success:
-				print("[DialogueLauncher] Instance created successfully")
-				
-				# Si la instancia tiene su propio flujo de diálogo, manejarlo aquí
+				# If the instance has its own dialogue flow, handle it here
 				if _current_instance and _current_instance.has_method("start_dialogue_flow"):
-					print("[DialogueLauncher] Instance has dialogue flow, starting it")
 					await _current_instance.start_dialogue_flow()
-				
 				
 				await get_tree().process_frame
 			
-			# Si el slot solo tiene instancia (sin diálogos), continuar al siguiente
+			# If the slot only has an instance (without dialogues), continue to the next one
 			if not slot.is_valid() or slot.get_total_items() == 0:
-				print("[DialogueLauncher] Slot is instance-only, continuing to next slot")
 				continue
 		
-		# ✅ Continuar con el procesamiento normal de diálogos
+		# ✅ Continue with normal dialogue processing
 		var items = slot.build_items()
-		print("[DialogueLauncher] Slot has ", items.size(), " items")
 		
 		for item_idx in range(items.size()):
 			if _cancelled:
-				print("[DialogueLauncher] Dialogue cancelled at item ", item_idx)
 				break
 				
 			var item = items[item_idx]
@@ -500,22 +429,17 @@ func start() -> void:
 			if id < 0:
 				continue
 			
-			print("[DialogueLauncher] Starting item ", global_index, " with ID: ", id)
 			item_started.emit(global_index, id)
 			
 			var effective_char = slot.character if slot.character.strip_edges() != "" else _get_character_for_id(id)
 			if effective_char.strip_edges() == "":
 				effective_char = character_name
 			
-			print("[DialogueLauncher] Effective character: ", effective_char)
-			
 			var panel_scene_needed: PackedScene = null
 			if slot.panel_override:
 				panel_scene_needed = slot.panel_override
-				print("[DialogueLauncher] Using panel override")
 			else:
 				panel_scene_needed = _fallback_panel_for_character(effective_char)
-				print("[DialogueLauncher] Using fallback panel")
 			
 			var need_new_panel = true
 			
@@ -525,10 +449,8 @@ func start() -> void:
 					need_new_panel = false
 					if current_panel.has_method("reset_for_reuse"):
 						current_panel.reset_for_reuse()
-					print("[DialogueLauncher] Reusing existing panel")
 			
 			if need_new_panel:
-				print("[DialogueLauncher] Need new panel")
 				if current_panel and is_instance_valid(current_panel):
 					if current_panel.has_method("request_exit"):
 						await current_panel.request_exit()
@@ -539,11 +461,6 @@ func start() -> void:
 					current_panel = panel_scene_needed.instantiate()
 					if current_panel:
 						parent.add_child(current_panel)
-						print("[DialogueLauncher] New panel instantiated: ", current_panel.name)
-					else:
-						print("[DialogueLauncher] Failed to instantiate panel")
-				else:
-					print("[DialogueLauncher] No panel scene available")
 			
 			if current_panel:
 				_setup_panel(current_panel, slot)
@@ -551,80 +468,65 @@ func start() -> void:
 				var text = _get_text_for_id(id, effective_char)
 				var display_name = _resolve_display_speaker_name(effective_char)
 				
-				print("[DialogueLauncher] Displaying text: ", text.substr(0, 50) + "..." if text.length() > 50 else text)
-				
-				# INICIO: Iniciar animación de boca ANTES de mostrar texto
+				# START: Start mouth animation BEFORE showing text
 				if _current_character_group != "":
-					print("[DialogueLauncher] Starting character talking")
 					start_character_talking(_current_character_group)
 				
-				# Mostrar diálogo
+				# Show dialogue
 				if current_panel.has_method("play_dialog"):
-					print("[DialogueLauncher] Calling play_dialog on panel")
 					await current_panel.play_dialog(text, display_name)
 				elif current_panel.has_method("show_dialogue"):
-					print("[DialogueLauncher] Calling show_dialogue on panel")
 					current_panel.show_dialogue(text, display_name)
 					if current_panel.has_signal("dialogue_finished"):
 						await current_panel.dialogue_finished
 					elif current_panel.has_signal("dialog_completed"):
 						await current_panel.dialog_completed
-				else:
-					print("[DialogueLauncher] Panel doesn't have expected dialogue methods")
 				
-				# FIN: Detener animación de boca DESPUÉS de que termine el texto
+				# END: Stop mouth animation AFTER the text finishes
 				if _current_character_group != "":
-					print("[DialogueLauncher] Stopping character talking")
 					stop_character_talking(_current_character_group)
 				
 				var is_last_item = (slot_idx == slots.size() - 1) and (item_idx == items.size() - 1)
-				print("[DialogueLauncher] Is last item: ", is_last_item)
 				
 				if not _cancelled:
-					print("[DialogueLauncher] Awaiting between dialogue advance")
 					await _await_between_dialogue_advance(is_last_item)
 				
 				var should_exit_panel = is_last_item
 				
 				if should_exit_panel and current_panel and current_panel.has_method("request_exit"):
-					print("[DialogueLauncher] Requesting panel exit")
 					await current_panel.request_exit()
 				elif should_exit_panel and current_panel:
-					print("[DialogueLauncher] Queue freeing panel")
 					current_panel.queue_free()
 					current_panel = null
 				
 				item_finished.emit(global_index, id)
 				global_index += 1
-				print("[DialogueLauncher] Item finished, global index: ", global_index)
 	
-	# Limpieza final
+	# Final cleanup
 	if current_panel and is_instance_valid(current_panel):
-		print("[DialogueLauncher] Cleaning up final panel")
 		if current_panel.has_method("request_exit"):
 			await current_panel.request_exit()
 		current_panel.queue_free()
 		current_panel = null
 
-	# ✅ Limpiar instancia actual
+	# ✅ Clean up current instance
 	_cleanup_current_instance()
 
 	_current_character_group = ""
 	
-	print("[DialogueLauncher] ===== DIALOGUE LAUNCHER FINISHED =====")
 	finished.emit()
 
-# Función para obtener la expresión actual de un personaje
+# Function to get the current expression of a character
 func get_character_current_expression(character_group_name: String) -> String:
-	"""Obtiene la expresión actual del personaje especificado"""
+	"""Gets the current expression of the specified character"""
 	var character_node = find_character_animation_node(character_group_name)
 	if character_node and character_node.has_method("get_current_expression_name"):
 		return character_node.get_current_expression_name()
 	return ""
 
-# Función para verificar si un personaje existe
+# Function to check if a character exists
 func has_character_animation_node(character_group_name: String) -> bool:
-	"""Verifica si existe un CharacterController para el grupo especificado"""
+	"""Checks if a CharacterController exists for the specified group"""
 	return find_character_animation_node(character_group_name) != null
 
 func _get_character_controller() -> Node:

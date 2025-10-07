@@ -1,24 +1,24 @@
 @tool
 extends Control
 
-# === REFERENCIAS UI DESDE TSCN ===
+# === UI REFERENCES FROM TSCN ===
 
-# === REFERENCIAS UI - FILTROS ===
+# === UI REFERENCES - FILTERS ===
 @onready var character_option: OptionButton = $MainVBox/FiltersPanel/FiltersVBox/CharacterAndLanguageRow/CharacterOption
 @onready var group_filter_input: LineEdit = $MainVBox/FiltersPanel/FiltersVBox/CharacterAndLanguageRow/GroupFilterInput
 @onready var clear_group_filter_btn: Button = $MainVBox/FiltersPanel/FiltersVBox/CharacterAndLanguageRow/ClearGroupFilterButton
 @onready var add_character_input: LineEdit = $MainVBox/FiltersPanel/FiltersVBox/AddCharacterRow/AddCharacterInput
 @onready var add_character_button: Button = $MainVBox/FiltersPanel/FiltersVBox/AddCharacterRow/AddCharacterButton
 
-# === REFERENCIAS UI - PANEL DE IDIOMAS ===
+# === UI REFERENCES - LANGUAGE PANEL ===
 @onready var language_toggle_button: Button = $"MainVBox/FiltersPanel/FiltersVBox/AddCharacterRow/LanguageCheckboxToggleButton"
 @onready var checkbox_panel: PanelContainer = $"LanguageCheckboxPanel"
 @onready var checkbox_grid: GridContainer = $"LanguageCheckboxPanel/LanguageCheckboxGrid"
 
-# === REFERENCIAS UI - TABLA ===
+# === UI REFERENCES - TABLE ===
 @onready var dialogue_table: Tree = $MainVBox/DialogueTableScroll/DialogueTable
 
-# === REFERENCIAS UI - EDICIÓN ===
+# === UI REFERENCES - EDITING ===
 @onready var character_name_input: OptionButton = $MainVBox/EditPanel/EditVBox/BasicEditRow/CharacterNameInput
 @onready var add_button: Button = $MainVBox/EditPanel/EditVBox/BasicEditRow/AddButton
 @onready var delete_button: Button = $MainVBox/EditPanel/EditVBox/BasicEditRow/DeleteButton
@@ -29,7 +29,7 @@ extends Control
 @onready var group_input: LineEdit = $MainVBox/EditPanel/EditVBox/MoodGroupRow/GroupInput
 @onready var apply_group_button: Button = $MainVBox/EditPanel/EditVBox/MoodGroupRow/ApplyGroupButton
 
-# === REFERENCIAS UI - OVERLAY CONFIG ===
+# === UI REFERENCES - OVERLAY CONFIG ===
 @onready var toggle_config_button: Button = $MainVBox/EditPanel/EditVBox/BasicEditRow/ConfigButton
 @onready var overlay_layer: Control = $OverlayConfig
 
@@ -46,13 +46,13 @@ extends Control
 @onready var rename_button: Button = $OverlayConfig/CenterContainer/OverlayPanel/OverlayVBox/CharacterManagement/ManagementRow/ActionsVBox/RenameButton
 @onready var delete_character_button: Button = $OverlayConfig/CenterContainer/OverlayPanel/OverlayVBox/CharacterManagement/ManagementRow/ActionsVBox/DeleteCharacterButton
 
-# === VARIABLES DE ESTADO ===
+# === STATE VARIABLES ===
 var available_characters: Array = []
 var current_languages: Array = ["ES", "EN"]
 var language_checkboxes: Dictionary = {}
 var visible_language_columns: Array = []
 
-# === VARIABLES DE CONFIGURACIÓN ===
+# === CONFIGURATION VARIABLES ===
 var config_file_path := "res://addons/FennecTools/data/fennec_dialogue_config.json"
 var config_data: Dictionary = {"default_panel_scene": "", "character_overrides": {}, "characters": []}
 
@@ -90,11 +90,10 @@ var mood_names: Array = [
 	"threatening", "comforting", "breathless", "drunk", "sick", "cold", "hot"
 ]
 
-# === INICIALIZACIÓN ===
+# === INITIALIZATION ===
 func _ready():
-	# Verificar que los nodos críticos existen
+	# Verify critical nodes exist
 	if not _verify_critical_nodes():
-		push_error("Faltan nodos críticos en la escena")
 		return
 	
 	_populate_mood_options()
@@ -119,7 +118,6 @@ func _verify_critical_nodes() -> bool:
 	
 	for node in critical_nodes:
 		if not node:
-			push_error("Nodo crítico no encontrado: " + str(node))
 			return false
 	return true
 
@@ -143,16 +141,16 @@ func _setup_names_tree():
 	if not names_tree:
 		return
 		
-	names_tree.set_column_title(0, "Idioma")
-	names_tree.set_column_title(1, "Nombre")
+	names_tree.set_column_title(0, "Language")
+	names_tree.set_column_title(1, "Name")
 	names_tree.set_column_expand(0, false)
 	names_tree.set_column_custom_minimum_width(0, 140)
 	names_tree.set_column_expand(1, true)
 	names_tree.set_column_custom_minimum_width(1, 450)
 
-# === CONECTAR SEÑALES ===
+# === CONNECT SIGNALS ===
 func _connect_signals():
-	# Verificar que los nodos existen antes de conectar
+	# Verify nodes exist before connecting
 	if add_character_button:
 		add_character_button.pressed.connect(_on_add_character_pressed)
 	if character_option:
@@ -200,9 +198,9 @@ func _connect_signals():
 func _on_language_panel_toggled(pressed: bool):
 	if checkbox_panel and language_toggle_button:
 		checkbox_panel.visible = pressed
-		language_toggle_button.text = ("▼ Columnas visibles" if pressed else "▶ Columnas visibles")
+		language_toggle_button.text = ("▼ Visible columns" if pressed else "▶ Visible columns")
 
-# === CONFIGURACIÓN DE COLUMNAS ===
+# === COLUMN CONFIGURATION ===
 func _configure_column_sizes():
 	if not dialogue_table:
 		return
@@ -217,19 +215,19 @@ func _configure_column_sizes():
 			dialogue_table.set_column_expand(i, true)
 			dialogue_table.set_column_custom_minimum_width(i, 200)
 
-# === FILTROS DE IDIOMA ===
+# === LANGUAGE FILTERS ===
 func _setup_language_checkboxes():
 	if not checkbox_grid:
 		return
 		
-	# Limpiar checkboxes existentes
+	# Clear existing checkboxes
 	for child in checkbox_grid.get_children():
 		child.queue_free()
 	
 	language_checkboxes.clear()
 	visible_language_columns.clear()
 	
-	# Crear checkbox para cada idioma
+	# Create checkbox for each language
 	for lang in current_languages:
 		var checkbox = CheckBox.new()
 		checkbox.text = lang
@@ -238,9 +236,6 @@ func _setup_language_checkboxes():
 		checkbox_grid.add_child(checkbox)
 		language_checkboxes[lang] = checkbox
 		visible_language_columns.append(lang)
-	
-
-
 
 func _on_language_checkbox_toggled(pressed: bool, lang: String):
 	if pressed and lang not in visible_language_columns:
@@ -265,7 +260,7 @@ func refresh_display():
 	dialogue_table.clear()
 	var root := dialogue_table.create_item()
 	
-	# Determinar idiomas a mostrar
+	# Determine languages to show
 	var display_languages: Array
 	if visible_language_columns.size() > 0:
 		display_languages = visible_language_columns.duplicate()
@@ -274,7 +269,7 @@ func refresh_display():
 	else:
 		display_languages = ["ES"] # Fallback
 	
-	# Agrupar diálogos
+	# Group dialogues
 	var groups: Dictionary = {}
 	for d in FGGlobal.dialog_data:
 		var dialog_entry: Dictionary = d as Dictionary
@@ -292,18 +287,18 @@ func refresh_display():
 		var texts_dict: Dictionary = group_entry["texts"] as Dictionary
 		texts_dict[lang] = text
 	
-	# Aplicar filtros
+	# Apply filters
 	var filter_char := ""
 	if character_option and character_option.item_count > 0:
 		var ftxt := character_option.get_item_text(character_option.selected)
-		if ftxt != "Todos":
+		if ftxt != "All":
 			filter_char = ftxt
 	
 	var filter_group := ""
 	if group_filter_input:
 		filter_group = group_filter_input.text.strip_edges().to_lower()
 	
-	# Ordenar
+	# Sort
 	var keys := groups.keys()
 	keys.sort_custom(func(a, b):
 		var ea: Dictionary = groups[a]
@@ -324,17 +319,17 @@ func refresh_display():
 		else:
 			return id_a < id_b)
 	
-	# Configurar columnas
+	# Configure columns
 	var cols := 2 + display_languages.size()
 	dialogue_table.set_columns(cols)
 	dialogue_table.set_column_title(0, "ID")
-	dialogue_table.set_column_title(1, "Personaje")
+	dialogue_table.set_column_title(1, "Character")
 	for i in range(display_languages.size()):
 		dialogue_table.set_column_title(2 + i, display_languages[i])
 	
 	_configure_column_sizes()
 	
-	# Mostrar datos
+	# Show data
 	var current_group := ""
 	for key in keys:
 		var entry: Dictionary = groups[key] as Dictionary
@@ -346,10 +341,10 @@ func refresh_display():
 		if filter_group != "" and filter_group not in entry_group:
 			continue
 		
-		# MOSTRAR TODOS LOS DIÁLOGOS, INCLUYENDO LOS VACÍOS
-		# Eliminamos la verificación de texto visible para que aparezcan los diálogos vacíos
+		# SHOW ALL DIALOGUES, INCLUDING EMPTY ONES
+		# We remove the visible text check so empty dialogues appear
 		
-		# Separador de grupo
+		# Group separator
 		entry_group = str(entry.get("group", ""))
 		if entry_group != "" and entry_group != current_group:
 			var group_item := dialogue_table.create_item(root)
@@ -366,7 +361,7 @@ func refresh_display():
 		item.set_text(0, str(entry["id"]))
 		item.set_text(1, str(entry["character"]))
 		
-		# Aplicar color según mood
+		# Apply color according to mood
 		var mood := str(entry.get("mood", "neutral"))
 		if mood_colors.has(mood):
 			var mood_color = mood_colors[mood]
@@ -385,7 +380,7 @@ func _get_contrasting_text_color(background_color: Color) -> Color:
 	var luminance = 0.299 * background_color.r + 0.587 * background_color.g + 0.114 * background_color.b
 	return Color.BLACK if luminance > 0.6 else Color.WHITE
 
-# === EDICIÓN ===
+# === EDITING ===
 func _on_dialogue_selected():
 	if not dialogue_table:
 		return
@@ -451,7 +446,7 @@ func _on_cell_edited():
 			break
 	FGGlobal.save_dialog_data()
 
-# === BOTONES DE EDICIÓN ===
+# === EDIT BUTTONS ===
 func _on_add_dialogue_pressed():
 	if not FGGlobal or not character_name_input or character_name_input.item_count == 0:
 		return
@@ -462,13 +457,12 @@ func _on_add_dialogue_pressed():
 		
 	var new_id := _next_id_for_character(character_name)
 	
-	# Crear diálogo para todos los idiomas actuales
+	# Create dialogue for all current languages
 	for lang in current_languages:
 		_ensure_dialog_entry(new_id, character_name, lang)
 		
 	FGGlobal.save_dialog_data()
 	refresh_display()
-	print("[DialogueSystem] Diálogo creado con ID ", new_id, " para todos los idiomas")
 
 func _on_delete_dialogue_pressed():
 	if not FGGlobal:
@@ -489,7 +483,6 @@ func _on_delete_dialogue_pressed():
 	_reorganize_all_ids()
 	FGGlobal.save_dialog_data()
 	refresh_display()
-	print("[DialogueSystem] Diálogo eliminado y IDs reorganizados")
 
 func _on_move_up_pressed():
 	if not FGGlobal:
@@ -579,7 +572,7 @@ func _ensure_dialog_entry(id_val: int, character: String, lang: String) -> int:
 			str(dialog_entry.get("language", "")).to_upper() == lang_u):
 			return i
 	
-	# Crear nueva entrada para este idioma
+	# Create new entry for this language
 	var new_dialogue := {
 		"id": id_val, 
 		"character": character, 
@@ -672,7 +665,7 @@ func _select_table_row_by_id(id_val: int):
 			break
 		item = item.get_next()
 
-# === PERSONAJES ===
+# === CHARACTERS ===
 func _on_add_character_pressed():
 	var new_character := ""
 	if add_character_input:
@@ -692,21 +685,21 @@ func _on_add_character_pressed():
 			add_character_input.text = ""
 
 func _refresh_available_characters():
-	# Usar personajes base del TSCN
-	var base_characters = ["Ayudante", "Narrador", "Protagonista", "Vendedor"]
+	# Use base characters from TSCN
+	var base_characters = ["Helper", "Narrator", "Protagonist", "Seller"]
 	var chars := {}
 	
-	# Incluir personajes base
+	# Include base characters
 	for c in base_characters:
 		chars[c] = true
 	
-	# Incluir personajes persistidos en config
+	# Include persisted characters in config
 	var persisted := config_data.get("characters", [])
 	if typeof(persisted) == TYPE_ARRAY:
 		for c in persisted:
 			chars[str(c)] = true
 	
-	# Incluir personajes usados en diálogos
+	# Include characters used in dialogues
 	if FGGlobal:
 		for d in FGGlobal.dialog_data:
 			var name := str(d.get("character", "")).strip_edges()
@@ -721,12 +714,12 @@ func _update_character_options():
 	if not character_option or not override_character_option or not character_name_input:
 		return
 		
-	var current_filter := character_option.get_item_text(character_option.selected) if character_option.item_count > 0 else "Todos"
+	var current_filter := character_option.get_item_text(character_option.selected) if character_option.item_count > 0 else "All"
 	var current_override := override_character_option.get_item_text(override_character_option.selected) if override_character_option.item_count > 0 else ""
 	var current_edit_char := character_name_input.get_item_text(character_name_input.selected) if character_name_input.item_count > 0 else ""
 	
 	character_option.clear()
-	character_option.add_item("Todos")
+	character_option.add_item("All")
 	for ch in available_characters:
 		character_option.add_item(ch)
 	
@@ -1021,6 +1014,6 @@ func _save_config_file():
 		f.store_string(JSON.stringify(config_data, "\t"))
 		f.close()
 
-# === SEÑALES ADICIONALES ===
+# === ADDITIONAL SIGNALS ===
 func _on_character_filter_selected(index: int):
 	refresh_display()
