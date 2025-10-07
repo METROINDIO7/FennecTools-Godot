@@ -6,7 +6,7 @@ const NodeGrouper = preload("res://addons/FennecTools/nodes/NodeGrouper.gd")
 const DialogPanelController = preload("res://addons/FennecTools/nodes/DialogPanelController.gd")
 const DialogueLauncher = preload("res://addons/FennecTools/nodes/DialogueLauncher.gd")
 const CharacterController = preload("res://addons/FennecTools/nodes/CharacterController.gd")
-const DialogueSlotConfig = preload("res://addons/FennecTools/nodes/DialogueSlotConfig.gd")
+const ExpressionState = preload("res://addons/FennecTools/nodes/ExpressionState.gd")
 
 var main_view
 
@@ -43,14 +43,12 @@ func _enter_tree():
 		CharacterController,
 		preload("res://addons/FennecTools/icons/character_bust_animationtree_icon.svg")
 	)
-	# Registrar recursos de diálogo
 	add_custom_type(
-		"DialogueSlotConfig",
+		"ExpressionState",
 		"Resource",
-		DialogueSlotConfig,
+		ExpressionState,
 		preload("res://addons/FennecTools/icons/flow_branch_node_icon.svg")
 	)
-	
 	
 	main_view = MainView.instantiate()
 	EditorInterface.get_editor_main_screen().add_child(main_view)

@@ -50,12 +50,12 @@ var dynamic_character_names: Dictionary = {}
 # ============================================================================
 # SISTEMA DE CONFIGURACIÓN (heredado de tu código original)
 # ============================================================================
-var current_volume = 0.0
-var current_music = 0.0
-var current_sound = 0.0
-var fov = 45
-var pantalla = false
-var shadows_enabled = true
+var Audio_Master = 0.0
+var Audio_Music = 0.0
+var Audio_Sounds = 0.0
+var FOV = 45
+var Full_screen = false
+var Shadows = true
 
 # ============================================================================
 # SEÑALES PARA COMUNICACIÓN ENTRE MÓDULOS
@@ -96,166 +96,107 @@ var custom_actions_created: Dictionary = {}
 var custom_input_json_path: String = "res://addons/FennecTools/data/fennec_custom_inputs.json"
 var input_mappings_cache: Dictionary = {}
 
-# Función para guardar mapeos en JSON
-func save_custom_input_mappings():
-	"""Guarda los mapeos de entrada personalizados en JSON"""
-	ensure_directories()
+# ============================================================================
+# SISTEMA DE ANIMACIÓN DE PERSONAJES POR DIÁLOGO
+# ============================================================================
+
+# Función para encontrar el nodo CharacterController por grupo de animación
+func find_character_animation_node(character_group_name: String) -> Node:
+	"""Encuentra el nodo CharacterController que pertenece al grupo especificado"""
+	if character_group_name.is_empty():
+		print("[FGGlobal] Advertencia: character_group_name está vacío")
+		return null
 	
-	var data = {
-		"version": "1.0",
-		"enabled": input_control_enabled,
-		"group_name": interactable_group_name,
-		"custom_mappings": custom_input_mappings,
-		"created_actions": custom_actions_created
-	}
+	# Buscar todos los nodos en el grupo especificado
+	var nodes_in_group = get_tree().get_nodes_in_group(character_group_name)
 	
-	var json_string = JSON.stringify(data)
-	var file = FileAccess.open(custom_input_json_path, FileAccess.WRITE)
-	if file:
-		file.store_string(json_string)
-		file.close()
-		print("[FGGlobal] Mapeos personalizados guardados en: ", custom_input_json_path)
-		print("[FGGlobal] Mapeos guardados: ", custom_input_mappings)
-		return true
+	if nodes_in_group.is_empty():
+		print("[FGGlobal] No se encontraron nodos en el grupo: ", character_group_name)
+		return null
+	
+	# Buscar el primer CharacterController en el grupo
+	for node in nodes_in_group:
+		if node is Node and node.has_method("set_expression"):
+			# Verificar que tenga la propiedad character_group_name
+			if node.has_method("get_current_expression") or node.has_method("set_expression"):
+				print("[FGGlobal] Encontrado CharacterController en grupo ", character_group_name, ": ", node.name)
+				return node
+	
+	# Si no se encuentra un CharacterController válido
+	print("[FGGlobal] No se encontró CharacterController válido en el grupo: ", character_group_name)
+	return null
+
+# Función para animar un personaje por diálogo
+# Mejorar las funciones de animación con mejor manejo de errores
+func animate_character_for_dialogue(character_group_name: String, expression_id: int) -> bool:
+	"""✅ CAMBIO: Ahora usa expression_id numérico"""
+	if character_group_name.is_empty():
+		print("[FGGlobal] Error: character_group_name está vacío")
+		return false
+	
+	# expression_id = -1 significa no expresión
+	if expression_id < 0:
+		print("[FGGlobal] No expression to set (expression_id = -1)")
+		return false
+	
+	var character_node = find_character_animation_node(character_group_name)
+	if character_node:
+		# Verificar si el índice de expresión existe
+		if character_node.has_method("has_expression_index") and character_node.has_expression_index(expression_id):
+			character_node.set_expression_by_id(expression_id)
+			print("[FGGlobal] Expression ID '", expression_id, "' applied to character group: ", character_group_name)
+			return true
+		else:
+			print("[FGGlobal] Warning: Expression ID '", expression_id, "' not found in character")
+			# Intentar con expresión por defecto
+			if character_node.has_method("set_expression_by_id"):
+				var default_index = character_node.default_expression_index
+				if default_index >= 0:
+					character_node.set_expression_by_id(default_index)
+					print("[FGGlobal] Using default expression index: '", default_index, "'")
+					return true
 	else:
-		print("[FGGlobal] Error guardando mapeos personalizados")
-		return false
-
-# Función para cargar mapeos desde JSON
-func load_custom_input_mappings():
-	"""Carga los mapeos de entrada personalizados desde JSON"""
-	if not FileAccess.file_exists(custom_input_json_path):
-		print("[FGGlobal] Archivo de mapeos personalizados no existe, usando valores por defecto")
+		print("[FGGlobal] No se pudo animar personaje: grupo no encontrado - ", character_group_name)
 		return false
 	
-	var file = FileAccess.open(custom_input_json_path, FileAccess.READ)
-	if not file:
-		print("[FGGlobal] Error abriendo archivo de mapeos personalizados")
-		return false
-	
-	var json_data = file.get_as_text()
-	file.close()
-	
-	var result = JSON.parse_string(json_data)
-	if result == null:
-		print("[FGGlobal] Error parseando JSON de mapeos personalizados")
-		return false
-	
-	# Cargar datos
-	input_control_enabled = result.get("enabled", false)
-	interactable_group_name = result.get("group_name", "interactuable")
-	var loaded_mappings = result.get("custom_mappings", {})
-	custom_actions_created = result.get("created_actions", {})
-	
-	# Aplicar mapeos cargados
-	for action in loaded_mappings:
-		custom_input_mappings[action] = loaded_mappings[action]
-	
-	print("[FGGlobal] Mapeos personalizados cargados:")
-	print("  - Habilitado: ", input_control_enabled)
-	print("  - Grupo: ", interactable_group_name)  
-	print("  - Mapeos: ", custom_input_mappings)
-	
-	# Aplicar mapeos al InputMap inmediatamente
-	apply_custom_input_mappings()
-	
-	return true
+	return false
 
-func apply_custom_input_mappings():
-	if not input_control_enabled:
-		return
-	
-	print("[FGGlobal] Aplicando mapeos personalizados...")
-	
-	for action in ["up", "down", "left", "right", "accept", "back"]:
-		var mappings = get_effective_input_mapping(action)  # Usar la nueva función
-		print("Acción '", action, "' mapeada a: ", mappings)
-		
-		# Verificar que todas las acciones existan en InputMap
-		for mapping in mappings:
-			if not InputMap.has_action(mapping):
-				print("ADVERTENCIA: Acción '", mapping, "' no existe en InputMap")
+# Función mejorada para iniciar animación de boca
+func start_character_talking(character_group_name: String) -> bool:
+	"""Inicia la animación de boca para el personaje especificado"""
+	var character_node = find_character_animation_node(character_group_name)
+	if character_node:
+		if character_node.has_method("start_talking"):
+			character_node.start_talking()
+			print("[FGGlobal] Iniciando animación de boca para: ", character_group_name)
+			return true
+		else:
+			print("[FGGlobal] Advertencia: CharacterController no tiene método start_talking")
+	return false
 	
 
+# Función para detener animación de boca
+func stop_character_talking(character_group_name: String) -> bool:
+	"""Detiene la animación de boca para el personaje especificado"""
+	var character_node = find_character_animation_node(character_group_name)
+	if character_node and character_node.has_method("stop_talking"):
+		character_node.stop_talking()
+		print("[FGGlobal] Deteniendo animación de boca para: ", character_group_name)
+		return true
+	return false
 
+# Función para obtener la expresión actual de un personaje
+func get_character_current_expression(character_group_name: String) -> String:
+	"""Obtiene la expresión actual del personaje especificado"""
+	var character_node = find_character_animation_node(character_group_name)
+	if character_node and character_node.has_method("get_current_expression"):
+		return character_node.get_current_expression()
+	return ""
 
-
-# Función auxiliar para agregar eventos de entrada
-func _add_input_event_to_action(action_name: String, input_key: String):
-	"""Agrega un evento de entrada a una acción específica"""
-	var input_upper = input_key.to_upper()
-	
-	# Mapeo de teclas comunes
-	var key_mappings = {
-		"W": KEY_W, "A": KEY_A, "S": KEY_S, "D": KEY_D,
-		"UP": KEY_UP, "DOWN": KEY_DOWN, "LEFT": KEY_LEFT, "RIGHT": KEY_RIGHT,
-		"ARRIBA": KEY_UP, "ABAJO": KEY_DOWN, "IZQUIERDA": KEY_LEFT, "DERECHA": KEY_RIGHT,
-		"ENTER": KEY_ENTER, "SPACE": KEY_SPACE, "ESCAPE": KEY_ESCAPE,
-		"SHIFT": KEY_SHIFT, "CTRL": KEY_CTRL, "ALT": KEY_ALT,
-		"TAB": KEY_TAB, "BACKSPACE": KEY_BACKSPACE
-	}
-	
-	# Botones de gamepad
-	var gamepad_mappings = {
-		"GAMEPAD_UP": JOY_BUTTON_DPAD_UP,
-		"GAMEPAD_DOWN": JOY_BUTTON_DPAD_DOWN,
-		"GAMEPAD_LEFT": JOY_BUTTON_DPAD_LEFT,
-		"GAMEPAD_RIGHT": JOY_BUTTON_DPAD_RIGHT,
-		"GAMEPAD_A": JOY_BUTTON_A,
-		"GAMEPAD_B": JOY_BUTTON_B,
-		"GAMEPAD_X": JOY_BUTTON_X,
-		"GAMEPAD_Y": JOY_BUTTON_Y
-	}
-	
-	# Primero intentar como tecla
-	if key_mappings.has(input_upper):
-		var event = InputEventKey.new()
-		event.keycode = key_mappings[input_upper]
-		InputMap.action_add_event(action_name, event)
-		print("[FGGlobal] Tecla '", input_key, "' agregada a acción '", action_name, "'")
-		return
-	
-	# Luego intentar como botón de gamepad
-	if gamepad_mappings.has(input_upper):
-		var event = InputEventJoypadButton.new()
-		event.button_index = gamepad_mappings[input_upper]
-		InputMap.action_add_event(action_name, event)
-		print("[FGGlobal] Botón gamepad '", input_key, "' agregado a acción '", action_name, "'")
-		return
-	
-	# Si es una sola letra, intentar mapearla directamente
-	if input_key.length() == 1:
-		var char_code = input_key.to_upper().unicode_at(0)
-		if char_code >= 65 and char_code <= 90:  # A-Z
-			var event = InputEventKey.new()
-			event.keycode = char_code
-			InputMap.action_add_event(action_name, event)
-			print("[FGGlobal] Letra '", input_key, "' agregada a acción '", action_name, "'")
-			return
-	
-	print("[FGGlobal] Advertencia: No se pudo mapear '", input_key, "' para acción '", action_name, "'")
-
-
-
-# ============================================================================
-# Funciones para mandos
-# ============================================================================
-
-
-func save_input_mappings(mappings: Dictionary):
-	input_mappings = mappings.duplicate(true)
-	# Guardar en archivo si es necesario
-	var config_file = ConfigFile.new()
-	config_file.set_value("input", "mappings", input_mappings)
-	config_file.save("user://input_mappings.cfg")
-
-func get_input_mappings() -> Dictionary:
-	if input_mappings.is_empty():
-		# Intentar cargar desde archivo
-		var config_file = ConfigFile.new()
-		if config_file.load("user://input_mappings.cfg") == OK:
-			input_mappings = config_file.get_value("input", "mappings", {})
-	return input_mappings.duplicate(true)
+# Función para verificar si un personaje existe
+func has_character_animation_node(character_group_name: String) -> bool:
+	"""Verifica si existe un CharacterController para el grupo especificado"""
+	return find_character_animation_node(character_group_name) != null
 
 # ============================================================================
 # FUNCIÓN _ready() MEJORADA
@@ -1242,12 +1183,17 @@ func Partida(slot_id: String):
 # UTILIDADES GENERALES
 # ============================================================================
 
-
 func save_game_data():
 	var file = FileAccess.open("user://fennec_gamedata.dat", FileAccess.WRITE)
 	if file:
 		var data = {
-			"current_language" = current_language
+			"current_language" = current_language,
+			"Audio_Master" = Audio_Master,
+			"Audio_Music" = Audio_Music,
+			"Audio_Sounds" = Audio_Sounds,
+			"FOV" = FOV,
+			"Full_screen" = Full_screen,
+			"Shadows" = Shadows
 		}
 		file.store_var(data)
 		file.close()
@@ -1259,16 +1205,24 @@ func load_game_data():
 			var data = file.get_var()
 			file.close()
 			current_language = data.get("current_language", "EN")
-
-
+			Audio_Master = data.get("Audio_Master", 0.0)
+			Audio_Music = data.get("Audio_Music", 0.0)
+			Audio_Sounds = data.get("Audio_Sounds", 0.0)
+			FOV = data.get("FOV", 45)
+			Full_screen = data.get("Full_screen", false)
+			Shadows = data.get("Shadows", false)
 
 func reset_game_data():
 	current_language = "EN"
-	
+	Audio_Master = 0.0
+	Audio_Music = 0.0
+	Audio_Sounds = 0.0
+	FOV = 45
+	Full_screen = false
+	Shadows = false
 	var save_path = "user://fennec_gamedata.dat"
 	if FileAccess.file_exists(save_path):
 		DirAccess.remove_absolute(save_path)
-
 func save_conditionals() -> bool:
 	"""Función de compatibilidad para conditional_editor.gd - guarda en archivo base"""
 	return save_conditionals_to_plugin()
@@ -1509,4 +1463,82 @@ func select_navigation_node(node: Control):
 	if navigation_system and navigation_system.has_method("select_specific_node"):
 		navigation_system.select_specific_node(node)
 
-#
+# Función para guardar mapeos en JSON
+func save_custom_input_mappings():
+	"""Guarda los mapeos de entrada personalizados en JSON"""
+	ensure_directories()
+	
+	var data = {
+		"version": "1.0",
+		"enabled": input_control_enabled,
+		"group_name": interactable_group_name,
+		"custom_mappings": custom_input_mappings,
+		"created_actions": custom_actions_created
+	}
+	
+	var json_string = JSON.stringify(data)
+	var file = FileAccess.open(custom_input_json_path, FileAccess.WRITE)
+	if file:
+		file.store_string(json_string)
+		file.close()
+		print("[FGGlobal] Mapeos personalizados guardados en: ", custom_input_json_path)
+		print("[FGGlobal] Mapeos guardados: ", custom_input_mappings)
+		return true
+	else:
+		print("[FGGlobal] Error guardando mapeos personalizados")
+		return false
+
+# Función para cargar mapeos desde JSON
+func load_custom_input_mappings():
+	"""Carga los mapeos de entrada personalizados desde JSON"""
+	if not FileAccess.file_exists(custom_input_json_path):
+		print("[FGGlobal] Archivo de mapeos personalizados no existe, usando valores por defecto")
+		return false
+	
+	var file = FileAccess.open(custom_input_json_path, FileAccess.READ)
+	if not file:
+		print("[FGGlobal] Error abriendo archivo de mapeos personalizados")
+		return false
+	
+	var json_data = file.get_as_text()
+	file.close()
+	
+	var result = JSON.parse_string(json_data)
+	if result == null:
+		print("[FGGlobal] Error parseando JSON de mapeos personalizados")
+		return false
+	
+	# Cargar datos
+	input_control_enabled = result.get("enabled", false)
+	interactable_group_name = result.get("group_name", "interactuable")
+	var loaded_mappings = result.get("custom_mappings", {})
+	custom_actions_created = result.get("created_actions", {})
+	
+	# Aplicar mapeos cargados
+	for action in loaded_mappings:
+		custom_input_mappings[action] = loaded_mappings[action]
+	
+	print("[FGGlobal] Mapeos personalizados cargados:")
+	print("  - Habilitado: ", input_control_enabled)
+	print("  - Grupo: ", interactable_group_name)  
+	print("  - Mapeos: ", custom_input_mappings)
+	
+	# Aplicar mapeos al InputMap inmediatamente
+	apply_custom_input_mappings()
+	
+	return true
+
+func apply_custom_input_mappings():
+	if not input_control_enabled:
+		return
+	
+	print("[FGGlobal] Aplicando mapeos personalizados...")
+	
+	for action in ["up", "down", "left", "right", "accept", "back"]:
+		var mappings = get_effective_input_mapping(action)  # Usar la nueva función
+		print("Acción '", action, "' mapeada a: ", mappings)
+		
+		# Verificar que todas las acciones existan en InputMap
+		for mapping in mappings:
+			if not InputMap.has_action(mapping):
+				print("ADVERTENCIA: Acción '", mapping, "' no existe en InputMap")
