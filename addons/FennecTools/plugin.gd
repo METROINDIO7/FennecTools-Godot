@@ -47,7 +47,7 @@ func _enter_tree():
 		"ExpressionState",
 		"Resource",
 		ExpressionState,
-		preload("res://addons/FennecTools/icons/flow_branch_node_icon.svg")
+		preload("res://addons/FennecTools/icons/D_states.svg")
 	)
 	
 	main_view = MainView.instantiate()

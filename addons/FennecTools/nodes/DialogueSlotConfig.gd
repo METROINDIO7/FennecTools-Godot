@@ -38,8 +38,9 @@ var character: String = ""
 @export_group("Question & Object System")
 # Escena a instanciar (pregunta u objeto)
 @export var instance_scene: PackedScene
-# Desactivar avance automático cuando se instancia una escena
-@export var disable_auto_advance_when_instanced: bool = false
+# Target donde se instanciará como hijo (dejar vacío para usar default)
+@export var instance_target: NodePath
+
 
 # Método principal que construye los items según el modo seleccionado
 func build_items(context: Dictionary = {}) -> Array:
@@ -102,3 +103,16 @@ func get_debug_info() -> String:
 # ✅ NUEVO: Verificar si tiene expresión configurada
 func has_expression() -> bool:
 	return expression_id >= 0
+
+# ✅ NUEVO: Verificar si tiene escena para instanciar
+func has_instance_scene() -> bool:
+	return instance_scene != null
+
+# ✅ NUEVO: Obtener información de debug de la instancia
+func get_instance_debug_info() -> String:
+	if not has_instance_scene():
+		return "No instance scene"
+	var target_info = "default parent"
+	if instance_target != NodePath(""):
+		target_info = "target: " + str(instance_target)
+	return "Instance: " + instance_scene.resource_path.get_file() + " -> " + target_info

@@ -25,9 +25,13 @@ signal finished()
 @export var use_custom_input_mapping: bool = true
 @export var advance_action_name: String = "accept"
 
+@export_group("Instance Settings")
+@export var default_instance_parent_path: NodePath  # Renombrado para claridad
+
 var _cancelled: bool = false
 var _input_consumed: bool = false
 var _current_character_group: String = ""
+var _current_instance: Node = null
 
 func _ready():
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -145,6 +149,30 @@ func _get_panel_parent() -> Node:
 			return n
 	return get_parent() if get_parent() else self
 
+func _get_instance_parent(slot: DialogueSlotConfig) -> Node:
+	"""Obtiene el nodo padre para instanciar basado en la configuración del slot"""
+	
+	# 1. Primero intenta usar el target específico del slot
+	if slot and slot.instance_target != NodePath(""):
+		var target_node = get_node_or_null(slot.instance_target)
+		if target_node:
+			print("[DialogueLauncher] Using slot-specific instance target: ", target_node.name)
+			return target_node
+		else:
+			print("[DialogueLauncher] WARNING: Slot instance target not found: ", slot.instance_target)
+	
+	# 2. Fallback al target global del DialogueLauncher
+	if default_instance_parent_path != NodePath(""):
+		var global_target = get_node_or_null(default_instance_parent_path)
+		if global_target:
+			print("[DialogueLauncher] Using global instance parent: ", global_target.name)
+			return global_target
+	
+	# 3. Fallback final al padre del panel
+	var panel_parent = _get_panel_parent()
+	print("[DialogueLauncher] Using panel parent as instance parent: ", panel_parent.name)
+	return panel_parent
+
 func _resolve_panel_scene_path(override_path: String) -> String:
 	if override_path.strip_edges() != "":
 		return override_path
@@ -209,6 +237,55 @@ func _setup_panel(controller: Node, slot: DialogueSlotConfig) -> void:
 	
 	if _has_property(controller, "auto_free_on_exit"):
 		controller.set("auto_free_on_exit", auto_free)
+
+func _cleanup_current_instance():
+	"""Limpia la instancia actual si existe"""
+	if _current_instance and is_instance_valid(_current_instance):
+		print("[DialogueLauncher] Cleaning up current instance: ", _current_instance.name)
+		
+		# Si la instancia tiene método de limpieza, usarlo
+		if _current_instance.has_method("cleanup_before_removal"):
+			_current_instance.cleanup_before_removal()
+		elif _current_instance.has_method("queue_free"):
+			_current_instance.queue_free()
+		else:
+			_current_instance.queue_free()
+		
+		_current_instance = null
+
+func _handle_slot_instance(slot: DialogueSlotConfig) -> bool:
+	"""Maneja la instanciación de objetos para un slot"""
+	if not slot or not slot.instance_scene:
+		return false
+	
+	print("[DialogueLauncher] Instantiating scene from slot: ", slot.get_instance_debug_info())
+	_cleanup_current_instance()
+	
+	var instance_parent = _get_instance_parent(slot)
+	if not instance_parent:
+		print("[DialogueLauncher] ERROR: No instance parent found")
+		return false
+	
+	# Instanciar la escena
+	_current_instance = slot.instance_scene.instantiate()
+	if not _current_instance:
+		print("[DialogueLauncher] ERROR: Failed to instantiate scene")
+		return false
+	
+	instance_parent.add_child(_current_instance)
+	
+	# Opcional: Si es CanvasItem y quieres posición específica, pero ahora el target maneja esto
+	if _current_instance is CanvasItem and instance_parent is CanvasItem:
+		# Por defecto en (0,0) relativo al padre, que es lo que queremos
+		print("[DialogueLauncher] Instance is CanvasItem, position: ", _current_instance.position)
+	
+	print("[DialogueLauncher] Successfully instantiated: ", _current_instance.name, " as child of: ", instance_parent.name)
+	
+	# Si la instancia tiene método de inicialización, llamarlo
+	if _current_instance.has_method("initialize_for_dialogue"):
+		_current_instance.initialize_for_dialogue()
+	
+	return true
 
 func cancel():
 	_cancelled = true
@@ -359,19 +436,46 @@ func start() -> void:
 			print("[DialogueLauncher] Slot ", slot_idx, " is invalid, skipping")
 			continue
 		
-		print("[DialogueLauncher] Processing slot ", slot_idx, " - Expression ID: ", slot.expression_id)
+		print("[DialogueLauncher] Processing slot ", slot_idx)
+		print("[DialogueLauncher] Slot info: ", slot.get_debug_info())
+		if slot.has_instance_scene():
+			print("[DialogueLauncher] Slot instance info: ", slot.get_instance_debug_info())
 		
-		# ✅ CAMBIO: Usar expression_id numérico
+		# ✅ Manejar expresión del personaje
 		_current_character_group = slot.character_group_name
 		var slot_expression_id = slot.expression_id
 		
 		if _current_character_group != "" and slot_expression_id >= 0:
-			print("[DialogueLauncher] Attempting to set expression for group: ", _current_character_group, " with ID: ", slot_expression_id)
 			var success = animate_character_for_dialogue(_current_character_group, slot_expression_id)
-			print("[DialogueLauncher] Setting expression ID '", slot_expression_id, "' for group '", _current_character_group, "': ", success)
-		else:
-			print("[DialogueLauncher] No expression to set - Group: ", _current_character_group, " Expression ID: ", slot_expression_id)
+			print("[DialogueLauncher] Expression set: ", success)
 		
+		# ✅ NUEVO: Manejar instanciación de objetos (ANTES del diálogo)
+		if slot.instance_scene:
+			print("[DialogueLauncher] Slot has instance_scene, attempting to instantiate")
+			var instance_success = _handle_slot_instance(slot)
+			
+			if instance_success:
+				print("[DialogueLauncher] Instance created successfully")
+				
+				# Si la instancia tiene su propio flujo de diálogo, manejarlo aquí
+				if _current_instance and _current_instance.has_method("start_dialogue_flow"):
+					print("[DialogueLauncher] Instance has dialogue flow, starting it")
+					await _current_instance.start_dialogue_flow()
+				
+				# Control de avance automático
+				if slot.disable_auto_advance_when_instanced:
+					print("[DialogueLauncher] Auto-advance disabled, waiting for manual input")
+					await _await_advance_input()
+				else:
+					# Esperar un frame para que la instancia se establezca
+					await get_tree().process_frame
+			
+			# Si el slot solo tiene instancia (sin diálogos), continuar al siguiente
+			if not slot.is_valid() or slot.get_total_items() == 0:
+				print("[DialogueLauncher] Slot is instance-only, continuing to next slot")
+				continue
+		
+		# ✅ Continuar con el procesamiento normal de diálogos
 		var items = slot.build_items()
 		print("[DialogueLauncher] Slot has ", items.size(), " items")
 		
@@ -491,7 +595,10 @@ func start() -> void:
 			await current_panel.request_exit()
 		current_panel.queue_free()
 		current_panel = null
-	
+
+	# ✅ Limpiar instancia actual
+	_cleanup_current_instance()
+
 	_current_character_group = ""
 	
 	print("[DialogueLauncher] ===== DIALOGUE LAUNCHER FINISHED =====")

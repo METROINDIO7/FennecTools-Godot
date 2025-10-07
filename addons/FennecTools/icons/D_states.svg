@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- flow_branch_node_icon.svg
+     64x64 flat icon — mono-color accent, 2px stroke, no gradients.
+     Start node (rounded square) connected by arrows to three target nodes.
+     Tiny speech bubble on the first (top) target to imply dialogues.
+-->
+
+<svg
+   width="64"
+   height="64"
+   viewBox="0 0 64 64"
+   aria-hidden="false"
+   role="img"
+   version="1.1"
+   id="svg7"
+   sodipodi:docname="D_states.svg"
+   inkscape:version="1.4.2 (ebf0e940d0, 2025-05-08)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview7"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:zoom="8.828125"
+     inkscape:cx="32"
+     inkscape:cy="32"
+     inkscape:window-width="1366"
+     inkscape:window-height="768"
+     inkscape:window-x="0"
+     inkscape:window-y="0"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg7" />
+  <title
+     id="title1">Flow / Branch Node</title>
+  <defs
+     id="defs1">
+    <linearGradient
+       id="linearGradient7"
+       inkscape:collect="always">
+      <stop
+         style="stop-color:#000000;stop-opacity:1;"
+         offset="0"
+         id="stop7" />
+      <stop
+         style="stop-color:#ffffff;stop-opacity:0;"
+         offset="1"
+         id="stop8" />
+    </linearGradient>
+    <inkscape:perspective
+       sodipodi:type="inkscape:persp3d"
+       inkscape:vp_x="16.538053 : 15.915044 : 1"
+       inkscape:vp_y="0 : 1000 : 0"
+       inkscape:vp_z="80.538053 : 15.915044 : 1"
+       inkscape:persp3d-origin="48.538053 : 5.2483772 : 1"
+       id="perspective1" />
+    <linearGradient
+       id="swatch14"
+       inkscape:swatch="solid">
+      <stop
+         style="stop-color:#000000;stop-opacity:1;"
+         offset="0"
+         id="stop15" />
+    </linearGradient>
+    <linearGradient
+       id="swatch13"
+       inkscape:swatch="solid">
+      <stop
+         style="stop-color:#ffffff;stop-opacity:1;"
+         offset="0"
+         id="stop14" />
+    </linearGradient>
+    <!-- mono-color accent marker for arrowheads -->
+    <marker
+       id="arrow"
+       markerWidth="8"
+       markerHeight="8"
+       refX="6"
+       refY="4"
+       orient="auto"
+       markerUnits="strokeWidth">
+      <path
+         d="M0 2 L6 4 L0 6 z"
+         fill="#1f2937"
+         id="path1" />
+    </marker>
+    <radialGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient7"
+       id="radialGradient8"
+       cx="31.60354"
+       cy="29.677876"
+       fx="31.60354"
+       fy="29.677876"
+       r="16.698231"
+       gradientTransform="matrix(-0.17356496,-1.2210503,0.87587433,-0.12450026,10.528348,9.8879553)"
+       gradientUnits="userSpaceOnUse" />
+  </defs>
+  <rect
+     style="fill:url(#radialGradient8);stroke:#ffffff;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:9.6, 9.6;stroke-dashoffset:0"
+     id="rect7"
+     width="29.451328"
+     height="27.865486"
+     x="16.311506"
+     y="-46.329205"
+     transform="rotate(90)"
+     ry="8.8353987" />
+  <!-- Accent color (single color used for strokes and fills) -->
+  <!-- Tiny speech bubble on the first (top) target -->
+</svg>
