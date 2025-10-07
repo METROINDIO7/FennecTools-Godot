@@ -61,12 +61,14 @@ enum TextHorizontalAlign {
 @export_group("Sound Character and Voiceline")
 @export var sound_enabled: bool = false  # Global control to enable/disable sounds
 
-var character_sound_player: NodePath
+
 @export var character_sound_effect: AudioStream
 @export var character_sound_frequency: int = 3
 @export_range(0.5, 2.0, 0.1) var character_sound_pitch_min: float = 0.9
 @export_range(0.5, 2.0, 0.1) var character_sound_pitch_max: float = 1.1
 @export_range(0.0, 1.0, 0.1) var character_sound_volume: float = 0.7
+
+
 
 var voiceline_player: NodePath
 
@@ -127,9 +129,6 @@ func _ready() -> void:
 
 func _setup_sound_system() -> void:
 	"""Configures the sound system for both character sounds and voicelines."""
-	# Setup character sound player
-	if character_sound_player != NodePath(""):
-		_character_sound_player = get_node_or_null(character_sound_player)
 	if not is_instance_valid(_character_sound_player):
 		_character_sound_player = AudioStreamPlayer.new()
 		_character_sound_player.name = "CharacterSoundPlayer"
