@@ -110,14 +110,14 @@ var input_mappings_cache: Dictionary = {}
 func find_character_animation_node(character_group_name: String) -> Node:
 	"""Finds the CharacterController node that belongs to the specified group"""
 	if character_group_name.is_empty():
-		print("[FGGlobal] Warning: character_group_name is empty")
+		#print("[FGGlobal] Warning: character_group_name is empty")
 		return null
 	
 	# Search all nodes in the specified group
 	var nodes_in_group = get_tree().get_nodes_in_group(character_group_name)
 	
 	if nodes_in_group.is_empty():
-		print("[FGGlobal] No nodes found in group: ", character_group_name)
+		#print("[FGGlobal] No nodes found in group: ", character_group_name)
 		return null
 	
 	# Search for the first CharacterController in the group
@@ -125,11 +125,11 @@ func find_character_animation_node(character_group_name: String) -> Node:
 		if node is Node and node.has_method("set_expression"):
 			# Verify that it has the character_group_name property
 			if node.has_method("get_current_expression") or node.has_method("set_expression"):
-				print("[FGGlobal] Found CharacterController in group ", character_group_name, ": ", node.name)
+				#print("[FGGlobal] Found CharacterController in group ", character_group_name, ": ", node.name)
 				return node
 	
 	# If a valid CharacterController is not found
-	print("[FGGlobal] No valid CharacterController found in group: ", character_group_name)
+	#print("[FGGlobal] No valid CharacterController found in group: ", character_group_name)
 	return null
 
 # Function to animate a character by dialogue
@@ -137,12 +137,12 @@ func find_character_animation_node(character_group_name: String) -> Node:
 func animate_character_for_dialogue(character_group_name: String, expression_id: int) -> bool:
 	"""✅ CHANGE: Now uses numeric expression_id"""
 	if character_group_name.is_empty():
-		print("[FGGlobal] Error: character_group_name is empty")
+		#print("[FGGlobal] Error: character_group_name is empty")
 		return false
 	
 	# expression_id = -1 means no expression
 	if expression_id < 0:
-		print("[FGGlobal] No expression to set (expression_id = -1)")
+		#print("[FGGlobal] No expression to set (expression_id = -1)")
 		return false
 	
 	var character_node = find_character_animation_node(character_group_name)
@@ -150,19 +150,19 @@ func animate_character_for_dialogue(character_group_name: String, expression_id:
 		# Check if the expression index exists
 		if character_node.has_method("has_expression_index") and character_node.has_expression_index(expression_id):
 			character_node.set_expression_by_id(expression_id)
-			print("[FGGlobal] Expression ID '", expression_id, "' applied to character group: ", character_group_name)
+			#print("[FGGlobal] Expression ID '", expression_id, "' applied to character group: ", character_group_name)
 			return true
 		else:
-			print("[FGGlobal] Warning: Expression ID '", expression_id, "' not found in character")
+			#print("[FGGlobal] Warning: Expression ID '", expression_id, "' not found in character")
 			# Try with default expression
 			if character_node.has_method("set_expression_by_id"):
 				var default_index = character_node.default_expression_index
 				if default_index >= 0:
 					character_node.set_expression_by_id(default_index)
-					print("[FGGlobal] Using default expression index: '", default_index, "'")
+					#print("[FGGlobal] Using default expression index: '", default_index, "'")
 					return true
 	else:
-		print("[FGGlobal] Could not animate character: group not found - ", character_group_name)
+		#print("[FGGlobal] Could not animate character: group not found - ", character_group_name)
 		return false
 	
 	return false
@@ -174,7 +174,7 @@ func start_character_talking(character_group_name: String) -> bool:
 	if character_node:
 		if character_node.has_method("start_talking"):
 			character_node.start_talking()
-			print("[FGGlobal] Starting mouth animation for: ", character_group_name)
+			#print("[FGGlobal] Starting mouth animation for: ", character_group_name)
 			return true
 		else:
 			print("[FGGlobal] Warning: CharacterController has no start_talking method")
@@ -187,7 +187,7 @@ func stop_character_talking(character_group_name: String) -> bool:
 	var character_node = find_character_animation_node(character_group_name)
 	if character_node and character_node.has_method("stop_talking"):
 		character_node.stop_talking()
-		print("[FGGlobal] Stopping mouth animation for: ", character_group_name)
+		#print("[FGGlobal] Stopping mouth animation for: ", character_group_name)
 		return true
 	return false
 
@@ -237,55 +237,55 @@ func _ready():
 func initialize_conditionals_safe():
 	"""Initializes conditionals using simplified slot system"""
 	if _conditionals_initialized:
-		print("[FGGlobal] Conditionals already initialized")
+		#print("[FGGlobal] Conditionals already initialized")
 		return
 	
-	print("[FGGlobal] Initializing conditional system with slot ", current_save_slot, "...")
+	#print("[FGGlobal] Initializing conditional system with slot ", current_save_slot, "...")
 	
 	if not load_save_slot(current_save_slot):
-		print("[FGGlobal] Creating slot ", current_save_slot, " from base file...")
+		#print("[FGGlobal] Creating slot ", current_save_slot, " from base file...")
 		if load_conditionals_from_plugin():
 			duplicate_conditionals_for_save_slot(current_save_slot)
 			load_save_slot(current_save_slot)
 		else:
 			# If there is no base file, create an empty structure
-			print("[FGGlobal] Creating empty conditional structure")
+			#print("[FGGlobal] Creating empty conditional structure")
 			condicionales = []
 			save_slot_conditionals(current_save_slot)
 	
 	_conditionals_initialized = true
 	conditionals_loaded.emit()
-	print("[FGGlobal] Conditionals initialized in slot ", current_save_slot, ": ", condicionales.size(), " elements")
+	#print("[FGGlobal] Conditionals initialized in slot ", current_save_slot, ": ", condicionales.size(), " elements")
 
 func load_conditionals_from_plugin() -> bool:
 	"""Loads conditionals from the plugin's base file"""
 	if not FileAccess.file_exists(plugin_conditionals_path):
-		print("[FGGlobal] Base file does not exist: ", plugin_conditionals_path)
+		#print("[FGGlobal] Base file does not exist: ", plugin_conditionals_path)
 		return false
 	
 	var file = FileAccess.open(plugin_conditionals_path, FileAccess.READ)
 	if not file:
-		print("[FGGlobal] Error opening base file: ", plugin_conditionals_path)
+		#print("[FGGlobal] Error opening base file: ", plugin_conditionals_path)
 		return false
 	
 	var json_data = file.get_as_text()
 	file.close()
 	
 	if json_data.is_empty():
-		print("[FGGlobal] Base file is empty: ", plugin_conditionals_path)
+		#print("[FGGlobal] Base file is empty: ", plugin_conditionals_path)
 		return false
 	
 	var result = JSON.parse_string(json_data)
 	if result == null:
-		print("[FGGlobal] Error parsing base JSON: ", plugin_conditionals_path)
+		#print("[FGGlobal] Error parsing base JSON: ", plugin_conditionals_path)
 		return false
 	
 	if not result.has("conditionals"):
-		print("[FGGlobal] Base JSON without 'conditionals' structure: ", plugin_conditionals_path)
+		#print("[FGGlobal] Base JSON without 'conditionals' structure: ", plugin_conditionals_path)
 		return false
 	
 	condicionales = result.conditionals
-	print("[FGGlobal] Loaded ", condicionales.size(), " conditionals from base file")
+	#print("[FGGlobal] Loaded ", condicionales.size(), " conditionals from base file")
 	return true
 
 func save_slot_conditionals(slot_id: int):
@@ -298,51 +298,51 @@ func save_slot_conditionals(slot_id: int):
 	if file:
 		file.store_string(json_string)
 		file.close()
-		print("[FGGlobal] Conditionals saved in slot ", slot_id)
+		#print("[FGGlobal] Conditionals saved in slot ", slot_id)
 	else:
 		print("[FGGlobal] Error saving slot ", slot_id)
 
 func load_conditionals_from_file(file_path: String) -> bool:
 	"""Loads conditionals from a specific file"""
 	if not FileAccess.file_exists(file_path):
-		print("[FGGlobal] File does not exist: ", file_path)
+		#print("[FGGlobal] File does not exist: ", file_path)
 		return false
 	
 	var file = FileAccess.open(file_path, FileAccess.READ)
 	if not file:
-		print("[FGGlobal] Error opening file: ", file_path)
+		#print("[FGGlobal] Error opening file: ", file_path)
 		return false
 	
 	var json_data = file.get_as_text()
 	file.close()
 	
 	if json_data.is_empty():
-		print("[FGGlobal] File is empty: ", file_path)
+		#print("[FGGlobal] File is empty: ", file_path)
 		return false
 	
 	var result = JSON.parse_string(json_data)
 	if result == null:
-		print("[FGGlobal] Error parsing JSON: ", file_path)
+		#print("[FGGlobal] Error parsing JSON: ", file_path)
 		return false
 	
 	if not result.has("conditionals"):
-		print("[FGGlobal] JSON without 'conditionals' structure: ", file_path)
+		#print("[FGGlobal] JSON without 'conditionals' structure: ", file_path)
 		return false
 	
 	condicionales = result.conditionals
-	print("[FGGlobal] Loaded ", condicionales.size(), " conditionals from: ", file_path)
+	#print("[FGGlobal] Loaded ", condicionales.size(), " conditionals from: ", file_path)
 	return true
 
 func duplicate_conditionals_json() -> bool:
 	"""Duplicates the original file to the working location"""
 	var conditionals_path = "res://data/Progress.json"
 	if not FileAccess.file_exists(conditionals_path):
-		print("[FGGlobal] Original file does not exist: ", conditionals_path)
+		#print("[FGGlobal] Original file does not exist: ", conditionals_path)
 		return false
 	
 	var file = FileAccess.open(conditionals_path, FileAccess.READ)
 	if not file:
-		print("[FGGlobal] Error opening original file")
+		#print("[FGGlobal] Error opening original file")
 		return false
 	
 	var json_data = file.get_as_text()
@@ -350,18 +350,18 @@ func duplicate_conditionals_json() -> bool:
 	
 	var file_copy = FileAccess.open("user://fennec_conditionals.json", FileAccess.WRITE)
 	if not file_copy:
-		print("[FGGlobal] Error creating copy")
+		#print("[FGGlobal] Error creating copy")
 		return false
 	
 	file_copy.store_string(json_data)
 	file_copy.close()
-	print("[FGGlobal] Copy created at: user://fennec_conditionals.json")
+	#print("[FGGlobal] Copy created at: user://fennec_conditionals.json")
 	return true
 
 func check_condition(id_condition: int) -> Variant:
 	"""Checks a condition by ID with improved error handling"""
 	if not _conditionals_initialized:
-		print("[FGGlobal] Warning: Conditionals not initialized")
+		#print("[FGGlobal] Warning: Conditionals not initialized")
 		return null
 	
 	for conditional in condicionales:
@@ -374,17 +374,17 @@ func check_condition(id_condition: int) -> Variant:
 				"texts":
 					return conditional.get("text_values", [])
 				_:
-					print("[FGGlobal] Unknown conditional type: ", conditional.get("type", ""))
+					#print("[FGGlobal] Unknown conditional type: ", conditional.get("type", ""))
 					return null
 	
-	print("[FGGlobal] Condition with ID ", id_condition, " not found.")
+	#print("[FGGlobal] Condition with ID ", id_condition, " not found.")
 	return null
 
 # Function to check if user text matches any of the values
 func check_text_condition(id_condition: int, input_text: String) -> bool:
 	"""Checks if a text matches any of the values of a text conditional"""
 	if not _conditionals_initialized:
-		print("[FGGlobal] Warning: Conditionals not initialized")
+		#print("[FGGlobal] Warning: Conditionals not initialized")
 		return false
 	
 	for conditional in condicionales:
@@ -398,17 +398,17 @@ func check_text_condition(id_condition: int, input_text: String) -> bool:
 							return true
 					return false
 				_:
-					print("[FGGlobal] Conditional ", id_condition, " is not of type text")
+					#print("[FGGlobal] Conditional ", id_condition, " is not of type text")
 					return false
 	
-	print("[FGGlobal] Condition with ID ", id_condition, " not found.")
+	#print("[FGGlobal] Condition with ID ", id_condition, " not found.")
 	return false
 
 # Function to get a specific text by index
 func get_text_value(id_condition: int, index: int = 0) -> String:
 	"""Gets a specific text from a text conditional by index"""
 	if not _conditionals_initialized:
-		print("[FGGlobal] Warning: Conditionals not initialized")
+		#print("[FGGlobal] Warning: Conditionals not initialized")
 		return ""
 	
 	for conditional in condicionales:
@@ -419,20 +419,20 @@ func get_text_value(id_condition: int, index: int = 0) -> String:
 					if index >= 0 and index < values.size():
 						return values[index]
 					else:
-						print("[FGGlobal] Index out of range for conditional ", id_condition)
+						#print("[FGGlobal] Index out of range for conditional ", id_condition)
 						return ""
 				_:
-					print("[FGGlobal] Conditional ", id_condition, " is not of type text")
+					#print("[FGGlobal] Conditional ", id_condition, " is not of type text")
 					return ""
 	
-	print("[FGGlobal] Condition with ID ", id_condition, " not found.")
+	#print("[FGGlobal] Condition with ID ", id_condition, " not found.")
 	return ""
 
 # Function to get a random text from the list
 func get_random_text_value(id_condition: int) -> String:
 	"""Gets a random text from a text conditional"""
 	if not _conditionals_initialized:
-		print("[FGGlobal] Warning: Conditionals not initialized")
+		#print("[FGGlobal] Warning: Conditionals not initialized")
 		return ""
 	
 	for conditional in condicionales:
@@ -443,20 +443,20 @@ func get_random_text_value(id_condition: int) -> String:
 					if values.size() > 0:
 						return values[randi() % values.size()]
 					else:
-						print("[FGGlobal] No text values in conditional ", id_condition)
+						#print("[FGGlobal] No text values in conditional ", id_condition)
 						return ""
 				_:
-					print("[FGGlobal] Conditional ", id_condition, " is not of type text")
+					#print("[FGGlobal] Conditional ", id_condition, " is not of type text")
 					return ""
 	
-	print("[FGGlobal] Condition with ID ", id_condition, " not found.")
+	#print("[FGGlobal] Condition with ID ", id_condition, " not found.")
 	return ""
 
 # Function to get the entire list of texts
 func get_all_text_values(id_condition: int) -> Array:
 	"""Gets all text values of a conditional"""
 	if not _conditionals_initialized:
-		print("[FGGlobal] Warning: Conditionals not initialized")
+		#print("[FGGlobal] Warning: Conditionals not initialized")
 		return []
 	
 	for conditional in condicionales:
@@ -465,17 +465,17 @@ func get_all_text_values(id_condition: int) -> Array:
 				"texts":
 					return conditional.get("text_values", [])
 				_:
-					print("[FGGlobal] Conditional ", id_condition, " is not of type text")
+					#print("[FGGlobal] Conditional ", id_condition, " is not of type text")
 					return []
 	
-	print("[FGGlobal] Condition with ID ", id_condition, " not found.")
+	#print("[FGGlobal] Condition with ID ", id_condition, " not found.")
 	return []
 
 # Function to add a text to the list
 func add_text_value(id_condition: int, new_text: String) -> bool:
 	"""Adds a new text to a text conditional"""
 	if not _conditionals_initialized:
-		print("[FGGlobal] Error: Conditionals not initialized")
+		#print("[FGGlobal] Error: Conditionals not initialized")
 		return false
 	
 	for conditional in condicionales:
@@ -490,23 +490,23 @@ func add_text_value(id_condition: int, new_text: String) -> bool:
 						conditional.text_values.append(text_clean)
 						save_slot_conditionals(current_save_slot)
 						conditional_changed.emit(id_condition, conditional.text_values)
-						print("[FGGlobal] Text added to conditional ", id_condition, ": ", text_clean)
+						#print("[FGGlobal] Text added to conditional ", id_condition, ": ", text_clean)
 						return true
 					else:
-						print("[FGGlobal] Empty or already existing text in conditional ", id_condition)
+						#print("[FGGlobal] Empty or already existing text in conditional ", id_condition)
 						return false
 				_:
-					print("[FGGlobal] Conditional ", id_condition, " is not of type text")
+					#print("[FGGlobal] Conditional ", id_condition, " is not of type text")
 					return false
 	
-	print("[FGGlobal] Condition with ID ", id_condition, " not found.")
+	#print("[FGGlobal] Condition with ID ", id_condition, " not found.")
 	return false
 
 # Function to remove a specific text
 func remove_text_value(id_condition: int, text_to_remove: String) -> bool:
 	"""Removes a specific text from a text conditional"""
 	if not _conditionals_initialized:
-		print("[FGGlobal] Error: Conditionals not initialized")
+		#print("[FGGlobal] Error: Conditionals not initialized")
 		return false
 	
 	for conditional in condicionales:
@@ -518,26 +518,26 @@ func remove_text_value(id_condition: int, text_to_remove: String) -> bool:
 						if removed:
 							save_slot_conditionals(current_save_slot)
 							conditional_changed.emit(id_condition, conditional.text_values)
-							print("[FGGlobal] Text removed from conditional ", id_condition, ": ", text_to_remove)
+							#print("[FGGlobal] Text removed from conditional ", id_condition, ": ", text_to_remove)
 							return true
 						else:
-							print("[FGGlobal] Text not found in conditional ", id_condition)
+							#print("[FGGlobal] Text not found in conditional ", id_condition)
 							return false
 					else:
-						print("[FGGlobal] No text values in conditional ", id_condition)
+						#print("[FGGlobal] No text values in conditional ", id_condition)
 						return false
 				_:
-					print("[FGGlobal] Conditional ", id_condition, " is not of type text")
+					#print("[FGGlobal] Conditional ", id_condition, " is not of type text")
 					return false
 	
-	print("[FGGlobal] Condition with ID ", id_condition, " not found.")
+	#print("[FGGlobal] Condition with ID ", id_condition, " not found.")
 	return false
 
 # Function to get the number of texts in a conditional
 func get_text_count(id_condition: int) -> int:
 	"""Gets the number of texts in a text conditional"""
 	if not _conditionals_initialized:
-		print("[FGGlobal] Warning: Conditionals not initialized")
+		#print("[FGGlobal] Warning: Conditionals not initialized")
 		return 0
 	
 	for conditional in condicionales:
@@ -546,16 +546,16 @@ func get_text_count(id_condition: int) -> int:
 				"texts":
 					return conditional.get("text_values", []).size()
 				_:
-					print("[FGGlobal] Conditional ", id_condition, " is not of type text")
+					#print("[FGGlobal] Conditional ", id_condition, " is not of type text")
 					return 0
 	
-	print("[FGGlobal] Condition with ID ", id_condition, " not found.")
+	#print("[FGGlobal] Condition with ID ", id_condition, " not found.")
 	return 0
 
 func modify_condition(id_condition: int, new_value: Variant, operation: String = "replace"):
 	"""Modifies a condition - only affects the user's current slot"""
 	if not _conditionals_initialized:
-		print("[FGGlobal] Error: Conditionals not initialized")
+		#print("[FGGlobal] Error: Conditionals not initialized")
 		return
 	
 	for conditional in condicionales:
@@ -568,7 +568,7 @@ func modify_condition(id_condition: int, new_value: Variant, operation: String =
 						conditional.value_bool = new_value
 						save_slot_conditionals(current_save_slot)
 						conditional_changed.emit(id_condition, new_value)
-						print("[FGGlobal] Boolean conditional updated: ID ", id_condition, " = ", new_value)
+						#print("[FGGlobal] Boolean conditional updated: ID ", id_condition, " = ", new_value)
 						return
 					else:
 						print("[FGGlobal] Error: Non-boolean value for boolean conditional")
@@ -586,7 +586,7 @@ func modify_condition(id_condition: int, new_value: Variant, operation: String =
 						
 						save_slot_conditionals(current_save_slot)
 						conditional_changed.emit(id_condition, conditional.value_float)
-						print("[FGGlobal] Numeric conditional updated: ID ", id_condition, " = ", conditional.value_float)
+						#print("[FGGlobal] Numeric conditional updated: ID ", id_condition, " = ", conditional.value_float)
 						return
 					else:
 						print("[FGGlobal] Error: Non-numeric value for numeric conditional")
@@ -596,7 +596,7 @@ func modify_condition(id_condition: int, new_value: Variant, operation: String =
 						conditional.text_values = new_value
 						save_slot_conditionals(current_save_slot)
 						conditional_changed.emit(id_condition, new_value)
-						print("[FGGlobal] Multiple text conditional updated: ID ", id_condition, " = ", new_value)
+						#print("[FGGlobal] Multiple text conditional updated: ID ", id_condition, " = ", new_value)
 						return
 					elif typeof(new_value) == TYPE_STRING:
 						# If a string is passed, add it to the list
@@ -612,7 +612,7 @@ func modify_condition(id_condition: int, new_value: Variant, operation: String =
 								conditional.text_values = [new_value]
 						save_slot_conditionals(current_save_slot)
 						conditional_changed.emit(id_condition, conditional.text_values)
-						print("[FGGlobal] Multiple text conditional updated: ID ", id_condition, " = ", conditional.text_values)
+						#print("[FGGlobal] Multiple text conditional updated: ID ", id_condition, " = ", conditional.text_values)
 						return
 					else:
 						print("[FGGlobal] Error: Invalid value for multiple text conditional")
@@ -621,12 +621,12 @@ func modify_condition(id_condition: int, new_value: Variant, operation: String =
 					print("[FGGlobal] Error: Unknown conditional type: ", type)
 			return
 	
-	print("[FGGlobal] Condition with ID ", id_condition, " not found.")
+	#print("[FGGlobal] Condition with ID ", id_condition, " not found.")
 
 func duplicate_conditionals_for_save_slot(slot_id: int) -> bool:
 	"""Duplicates the current conditionals for a specific game save"""
 	if not _conditionals_initialized:
-		print("[FGGlobal] Error: Conditionals not initialized")
+		#print("[FGGlobal] Error: Conditionals not initialized")
 		return false
 	
 	# Create a deep copy of the current conditionals
@@ -653,10 +653,10 @@ func duplicate_conditionals_for_save_slot(slot_id: int) -> bool:
 	if file:
 		file.store_string(json_string)
 		file.close()
-		print("[FGGlobal] Conditionals duplicated for slot ", slot_id, ": ", duplicated_conditionals.size(), " elements")
+		#print("[FGGlobal] Conditionals duplicated for slot ", slot_id, ": ", duplicated_conditionals.size(), " elements")
 		return true
 	else:
-		print("[FGGlobal] Error saving slot ", slot_id)
+		#print("[FGGlobal] Error saving slot ", slot_id)
 		return false
 
 func load_save_slot(slot_id: int) -> bool:
@@ -664,12 +664,12 @@ func load_save_slot(slot_id: int) -> bool:
 	var slot_path = "user://fennec_conditionals_slot_" + str(slot_id) + ".json"
 	
 	if not FileAccess.file_exists(slot_path):
-		print("[FGGlobal] Slot ", slot_id, " does not exist")
+		#print("[FGGlobal] Slot ", slot_id, " does not exist")
 		return false
 	
 	var file = FileAccess.open(slot_path, FileAccess.READ)
 	if not file:
-		print("[FGGlobal] Error opening slot ", slot_id)
+		#print("[FGGlobal] Error opening slot ", slot_id)
 		return false
 	
 	var json_data = file.get_as_text()
@@ -677,14 +677,14 @@ func load_save_slot(slot_id: int) -> bool:
 	
 	var result = JSON.parse_string(json_data)
 	if result == null or not result.has("conditionals"):
-		print("[FGGlobal] Error parsing slot ", slot_id)
+		#print("[FGGlobal] Error parsing slot ", slot_id)
 		return false
 	
 	condicionales = result.conditionals
 	current_save_slot = slot_id
 	save_slots[slot_id] = condicionales
 	
-	print("[FGGlobal] Slot ", slot_id, " loaded: ", condicionales.size(), " conditionals")
+	#print("[FGGlobal] Slot ", slot_id, " loaded: ", condicionales.size(), " conditionals")
 	conditionals_loaded.emit()
 	return true
 
@@ -712,7 +712,7 @@ func delete_save_slot(slot_id: int) -> bool:
 	if FileAccess.file_exists(slot_path):
 		DirAccess.remove_absolute(slot_path)
 		save_slots.erase(slot_id)
-		print("[FGGlobal] Slot ", slot_id, " deleted")
+		#print("[FGGlobal] Slot ", slot_id, " deleted")
 		return true
 	
 	return false
@@ -764,7 +764,7 @@ func verify_data_integrity():
 			issues.append("Translations for language '" + lang + "' is not a dictionary")
 	
 	if issues.size() > 0:
-		print("[FGGlobal] Integrity issues found:")
+		#print("[FGGlobal] Integrity issues found:")
 		for issue in issues:
 			print("  - " + issue)
 	else:
@@ -781,7 +781,7 @@ func migrate_legacy_data():
 	
 	# If the legacy file exists but not the new one, perform migration
 	if FileAccess.file_exists(legacy_path) and not FileAccess.file_exists(plugin_conditionals_path):
-		print("[FGGlobal] Migrating legacy data...")
+		#print("[FGGlobal] Migrating legacy data...")
 		duplicate_conditionals_json()
 		
 		# Migrate dialogues as well
@@ -799,7 +799,7 @@ func migrate_legacy_data():
 				if new_file:
 					new_file.store_string(content)
 					new_file.close()
-					print("[FGGlobal] Legacy dialogues migrated")
+					#print("[FGGlobal] Legacy dialogues migrated")
 
 # ============================================================================
 # TRANSLATION SYSTEM
@@ -823,16 +823,16 @@ func load_translations():
 				current_target_group = result.get("target_group", 
 					result.get("selected_group", "translate"))
 				
-				print("[FGGlobal] Translations loaded. Target group: ", current_target_group)
+				#print("[FGGlobal] Translations loaded. Target group: ", current_target_group)
 			else:
-				print("[FGGlobal] Error parsing translations file")
+				#print("[FGGlobal] Error parsing translations file")
 				# Use default values
 				current_target_group = "translate"
 		else:
-			print("[FGGlobal] Error reading translations file")
+			#print("[FGGlobal] Error reading translations file")
 			current_target_group = "translate"
 	else:
-		print("[FGGlobal] Translations file does not exist, using default values")
+		#print("[FGGlobal] Translations file does not exist, using default values")
 		current_target_group = "translate"
 
 func save_translations():
@@ -848,7 +848,7 @@ func save_translations():
 		}
 		file.store_string(JSON.stringify(data))
 		file.close()
-		print("[FGGlobal] Translations saved. Target group: ", current_target_group)
+		#print("[FGGlobal] Translations saved. Target group: ", current_target_group)
 	else:
 		print("[FGGlobal] Error saving translations")
 
@@ -859,17 +859,17 @@ func set_translation_target_group(group_name: String):
 	
 	current_target_group = group_name
 	save_translations()  # Save immediately
-	print("[FGGlobal] Translation target group set to: ", group_name)
+	#print("[FGGlobal] Translation target group set to: ", group_name)
 	
 func update_language():
 	"""Updates all nodes in the target group with current language translations"""
 	if not get_tree():
-		print("[FGGlobal] Error: No tree available")
+		#print("[FGGlobal] Error: No tree available")
 		return
 	
 	var nodes_in_group = get_tree().get_nodes_in_group(current_target_group)
 	if nodes_in_group.is_empty():
-		print("[FGGlobal] Warning: No nodes found in group '", current_target_group, "'")
+		#print("[FGGlobal] Warning: No nodes found in group '", current_target_group, "'")
 		return
 	
 	var updated_count = 0
@@ -886,7 +886,7 @@ func update_language():
 				node.text = translations[current_language][key]
 				updated_count += 1
 	
-	print("[FGGlobal] Updated ", updated_count, " nodes in group '", current_target_group, "' to language '", current_language, "'")
+	#print("[FGGlobal] Updated ", updated_count, " nodes in group '", current_target_group, "' to language '", current_language, "'")
 	language_changed.emit(current_language)
 
 # ============================================================================
@@ -982,7 +982,7 @@ func get_dialog_panel_scene(character: String) -> String:
 
 func start_dialog(dialog_id: int, dialog_count: int, show_question: bool = false, question_path: String = "", character: CharacterBody3D = null):
 	if talk:
-		print("[FGGlobal] Dialogue already in progress, ignoring new request.")
+		#print("[FGGlobal] Dialogue already in progress, ignoring new request.")
 		return
 	
 	if get_tree().has_group("Diag"):
@@ -1001,7 +1001,7 @@ func sync_slot_with_original(slot_id: int) -> bool:
 	# Load original conditionals
 	var original_conditionals = []
 	if not load_original_conditionals_to_array(original_conditionals):
-		print("[FGGlobal] Error: Could not load original JSON for synchronization")
+		#print("[FGGlobal] Error: Could not load original JSON for synchronization")
 		return false
 	
 	# Load current slot (if it exists)
@@ -1010,7 +1010,7 @@ func sync_slot_with_original(slot_id: int) -> bool:
 	
 	if FileAccess.file_exists(slot_path):
 		if not load_slot_conditionals_to_array(slot_id, current_slot_conditionals):
-			print("[FGGlobal] Error loading slot ", slot_id, " for synchronization")
+			#print("[FGGlobal] Error loading slot ", slot_id, " for synchronization")
 			return false
 	else:
 		print("[FGGlobal] Slot ", slot_id, " does not exist, it will be created with all original conditionals")
@@ -1032,14 +1032,14 @@ func sync_slot_with_original(slot_id: int) -> bool:
 				reset_conditional_to_default(new_conditional)
 				current_slot_conditionals.append(new_conditional)
 				added_count += 1
-				print("[FGGlobal] Added missing conditional ID: ", id)
+				#print("[FGGlobal] Added missing conditional ID: ", id)
 	
 	# Update current conditionals and save
 	condicionales = current_slot_conditionals
 	current_save_slot = slot_id
 	save_slot_conditionals(slot_id)
 	
-	print("[FGGlobal] Synchronization completed. Added ", added_count, " conditionals to slot ", slot_id)
+	#print("[FGGlobal] Synchronization completed. Added ", added_count, " conditionals to slot ", slot_id)
 	conditionals_loaded.emit()
 	return true
 
@@ -1047,12 +1047,12 @@ func sync_slot_with_original(slot_id: int) -> bool:
 func load_original_conditionals_to_array(target_array: Array) -> bool:
 	"""Loads the conditionals from the original JSON into a specific array"""
 	if not FileAccess.file_exists(plugin_conditionals_path):
-		print("[FGGlobal] Original file does not exist: ", plugin_conditionals_path)
+		#print("[FGGlobal] Original file does not exist: ", plugin_conditionals_path)
 		return false
 	
 	var file = FileAccess.open(plugin_conditionals_path, FileAccess.READ)
 	if not file:
-		print("[FGGlobal] Error opening original file")
+		#print("[FGGlobal] Error opening original file")
 		return false
 	
 	var json_data = file.get_as_text()
@@ -1060,7 +1060,7 @@ func load_original_conditionals_to_array(target_array: Array) -> bool:
 	
 	var result = JSON.parse_string(json_data)
 	if result == null or not result.has("conditionals"):
-		print("[FGGlobal] Error parsing original JSON")
+		#print("[FGGlobal] Error parsing original JSON")
 		return false
 	
 	target_array.clear()
@@ -1124,12 +1124,12 @@ func sync_all_slots_with_original():
 		if sync_slot_with_original(slot_id):
 			synced_count += 1
 	
-	print("[FGGlobal] Synchronized ", synced_count, " slots out of ", available_slots.size(), " available")
+	#print("[FGGlobal] Synchronized ", synced_count, " slots out of ", available_slots.size(), " available")
 
 
 func load_save_slot_with_sync(slot_id: int) -> bool:
 	if slot_needs_sync(slot_id):
-		print("[FGGlobal] Slot ", slot_id, " needs synchronization")
+		#print("[FGGlobal] Slot ", slot_id, " needs synchronization")
 		sync_slot_with_original(slot_id)
 	else:
 		load_save_slot(slot_id)
@@ -1173,17 +1173,17 @@ func change_save_slot(slot_id: String):
 		# If it is not numeric, use a hash to generate a unique ID
 		numeric_slot = abs(slot_id.hash()) % 1000
 	
-	print("[FGGlobal] Changing to save slot: ", slot_id, " (Numeric ID: ", numeric_slot, ")")
+	#print("[FGGlobal] Changing to save slot: ", slot_id, " (Numeric ID: ", numeric_slot, ")")
 	
 	# If the slot does not exist, create it by duplicating the base conditionals
 	if not load_save_slot(numeric_slot):
-		print("[FGGlobal] Creating new save slot: ", slot_id)
+		#print("[FGGlobal] Creating new save slot: ", slot_id)
 		if load_conditionals_from_plugin():
 			duplicate_conditionals_for_save_slot(numeric_slot)
 			load_save_slot(numeric_slot)
 	
 	current_save_slot = numeric_slot
-	print("[FGGlobal] Active save slot: ", slot_id, " with ", condicionales.size(), " conditionals")
+	#print("[FGGlobal] Active save slot: ", slot_id, " with ", condicionales.size(), " conditionals")
 
 # ============================================================================
 # GENERAL UTILITIES
@@ -1244,10 +1244,10 @@ func save_conditionals_to_plugin() -> bool:
 	if file:
 		file.store_string(json_string)
 		file.close()
-		print("[FGGlobal] Conditionals saved to plugin base file")
+		#print("[FGGlobal] Conditionals saved to plugin base file")
 		return true
 	else:
-		print("[FGGlobal] Error saving to plugin base file")
+		#print("[FGGlobal] Error saving to plugin base file")
 		return false
 
 func get_translation(key: String, language: String = "") -> String:
@@ -1265,7 +1265,7 @@ func navigation_refresh():
 	"""Forces the navigation system to update"""
 	if navigation_system and navigation_system.has_method("refresh_interactables"):
 		navigation_system.refresh_interactables()
-		print("[FGGlobal] Navigation system manually updated")
+		#print("[FGGlobal] Navigation system manually updated")
 
 
 func setup_input_control_system():
@@ -1293,7 +1293,7 @@ func _ensure_custom_input_actions():
 			if not InputMap.has_action(input_action):
 				# Create the action if it doesn't exist
 				InputMap.add_action(input_action)
-				print("[FGGlobal] Action created in InputMap: ", input_action)
+				#print("[FGGlobal] Action created in InputMap: ", input_action)
 				custom_actions_created[input_action] = true
 
 func enable_input_control(enabled: bool):
@@ -1312,7 +1312,7 @@ func enable_input_control(enabled: bool):
 	save_custom_input_mappings()
 	
 	input_control_toggled.emit(enabled)
-	print("[FGGlobal] Input control system: ", "ENABLED" if enabled else "DISABLED")
+	#print("[FGGlobal] Input control system: ", "ENABLED" if enabled else "DISABLED")
 
 func set_custom_input_mapping(action: String, inputs: Array):
 	"""Defines a custom mapping for an action"""
@@ -1326,13 +1326,13 @@ func set_custom_input_mapping(action: String, inputs: Array):
 				if not InputMap.has_action(action_name):
 					InputMap.add_action(action_name)
 					custom_actions_created[action_name] = true
-					print("[FGGlobal] Custom action created: ", action_name)
+					#print("[FGGlobal] Custom action created: ", action_name)
 				valid_inputs.append(action_name)
 		
 		# Always update the mapping (even if it's empty)
 		custom_input_mappings[action] = valid_inputs
 		
-		print("[FGGlobal] Mapping updated for '", action, "': ", valid_inputs)
+		#print("[FGGlobal] Mapping updated for '", action, "': ", valid_inputs)
 
 func debug_input_system():
 	pass
@@ -1411,16 +1411,16 @@ func save_input_control_settings():
 
 func debug_input_mappings():
 	"""Debug function to check current mappings"""
-	print("[FGGlobal] === DEBUG CURRENT MAPPINGS ===")
-	print("System enabled: ", input_control_enabled)
-	print("Interactable group: ", interactable_group_name)
+	#print("[FGGlobal] === DEBUG CURRENT MAPPINGS ===")
+	#print("System enabled: ", input_control_enabled)
+	#print("Interactable group: ", interactable_group_name)
 	for action in custom_input_mappings:
-		print("Action '", action, "': ", custom_input_mappings[action])
+		#print("Action '", action, "': ", custom_input_mappings[action])
 		var defaults = _get_default_mapping(action)
 		var current_mapping = get_custom_input_mapping(action)
 		var effective_mapping = current_mapping if current_mapping.size() > 0 else defaults
-		print("  -> Effective mapping: ", effective_mapping)
-	print("=================================")
+		#print("  -> Effective mapping: ", effective_mapping)
+	#print("=================================")
 
 func load_input_control_settings():
 	"""Loads the input control system settings"""
@@ -1449,7 +1449,7 @@ func set_interactable_group_name(group_name: String):
 	if navigation_system and navigation_system.has_method("refresh_interactables"):
 		navigation_system.refresh_interactables()
 	
-	print("[FGGlobal] Interactable nodes group changed to: ", interactable_group_name)
+	#print("[FGGlobal] Interactable nodes group changed to: ", interactable_group_name)
 
 func get_interactable_group_name() -> String:
 	"""Gets the name of the interactable nodes group"""
@@ -1457,7 +1457,7 @@ func get_interactable_group_name() -> String:
 
 func _on_navigation_selection_changed(node: Control):
 	"""Callback when the selection in the navigation system changes"""
-	print("[FGGlobal] Selection changed to: ", node.name if node else "null")
+	#print("[FGGlobal] Selection changed to: ", node.name if node else "null")
 
 func refresh_navigation_system():
 	"""Refreshes the navigation system"""
@@ -1487,23 +1487,23 @@ func save_custom_input_mappings():
 	if file:
 		file.store_string(json_string)
 		file.close()
-		print("[FGGlobal] Custom mappings saved to: ", custom_input_json_path)
-		print("[FGGlobal] Mappings saved: ", custom_input_mappings)
+		#print("[FGGlobal] Custom mappings saved to: ", custom_input_json_path)
+		#print("[FGGlobal] Mappings saved: ", custom_input_mappings)
 		return true
 	else:
-		print("[FGGlobal] Error saving custom mappings")
+		#print("[FGGlobal] Error saving custom mappings")
 		return false
 
 # Function to load mappings from JSON
 func load_custom_input_mappings():
 	"""Loads custom input mappings from JSON"""
 	if not FileAccess.file_exists(custom_input_json_path):
-		print("[FGGlobal] Custom mappings file does not exist, using default values")
+		#print("[FGGlobal] Custom mappings file does not exist, using default values")
 		return false
 	
 	var file = FileAccess.open(custom_input_json_path, FileAccess.READ)
 	if not file:
-		print("[FGGlobal] Error opening custom mappings file")
+		#print("[FGGlobal] Error opening custom mappings file")
 		return false
 	
 	var json_data = file.get_as_text()
@@ -1511,7 +1511,7 @@ func load_custom_input_mappings():
 	
 	var result = JSON.parse_string(json_data)
 	if result == null:
-		print("[FGGlobal] Error parsing custom mappings JSON")
+		#print("[FGGlobal] Error parsing custom mappings JSON")
 		return false
 	
 	# Load data
@@ -1524,10 +1524,10 @@ func load_custom_input_mappings():
 	for action in loaded_mappings:
 		custom_input_mappings[action] = loaded_mappings[action]
 	
-	print("[FGGlobal] Custom mappings loaded:")
-	print("  - Enabled: ", input_control_enabled)
-	print("  - Group: ", interactable_group_name)  
-	print("  - Mappings: ", custom_input_mappings)
+	#print("[FGGlobal] Custom mappings loaded:")
+	#print("  - Enabled: ", input_control_enabled)
+	#print("  - Group: ", interactable_group_name)  
+	#print("  - Mappings: ", custom_input_mappings)
 	
 	# Apply mappings to InputMap immediately
 	apply_custom_input_mappings()
@@ -1538,11 +1538,11 @@ func apply_custom_input_mappings():
 	if not input_control_enabled:
 		return
 	
-	print("[FGGlobal] Applying custom mappings...")
+	#print("[FGGlobal] Applying custom mappings...")
 	
 	for action in ["up", "down", "left", "right", "accept", "back"]:
 		var mappings = get_effective_input_mapping(action)  # Use the new function
-		print("Action '", action, "' mapped to: ", mappings)
+		#print("Action '", action, "' mapped to: ", mappings)
 		
 		# Check that all actions exist in InputMap
 		for mapping in mappings:

@@ -53,7 +53,7 @@ text = "Node group to update:"
 layout_mode = 2
 size_flags_horizontal = 3
 text = "translate"
-placeholder_text = "Enter group name (e.g., ui, pp, player)"
+placeholder_text = "Enter the group name (e.g., ui, pp, player)"
 
 [node name="ApplyToGroupButton" type="Button" parent="VBoxContainer/NodeGroupsContainer"]
 layout_mode = 2
@@ -70,10 +70,42 @@ size_flags_vertical = 3
 columns = 3
 column_titles_visible = true
 
+[node name="ButtonContainer" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="VSeparator4" type="VSeparator" parent="VBoxContainer/ButtonContainer"]
+custom_minimum_size = Vector2(7, 0)
+layout_mode = 2
+
+[node name="AddButton" type="Button" parent="VBoxContainer/ButtonContainer"]
+layout_mode = 2
+text = "Add"
+
+[node name="VSeparator2" type="VSeparator" parent="VBoxContainer/ButtonContainer"]
+custom_minimum_size = Vector2(7, 0)
+layout_mode = 2
+
+[node name="EditButton" type="Button" parent="VBoxContainer/ButtonContainer"]
+layout_mode = 2
+text = "Edit"
+
+[node name="VSeparator" type="VSeparator" parent="VBoxContainer/ButtonContainer"]
+custom_minimum_size = Vector2(7, 0)
+layout_mode = 2
+
+[node name="DeleteButton" type="Button" parent="VBoxContainer/ButtonContainer"]
+layout_mode = 2
+text = "Delete"
+
+[node name="VSeparator3" type="VSeparator" parent="VBoxContainer/ButtonContainer"]
+custom_minimum_size = Vector2(7, 0)
+layout_mode = 2
+
 [node name="EditContainer" type="VBoxContainer" parent="VBoxContainer"]
 layout_mode = 2
 
 [node name="LanguageOption" type="OptionButton" parent="VBoxContainer/EditContainer"]
+visible = false
 layout_mode = 2
 selected = 0
 item_count = 2
@@ -90,18 +122,3 @@ placeholder_text = "Translation key"
 custom_minimum_size = Vector2(0, 40)
 layout_mode = 2
 placeholder_text = "Translated text..."
-
-[node name="ButtonContainer" type="HBoxContainer" parent="VBoxContainer"]
-layout_mode = 2
-
-[node name="AddButton" type="Button" parent="VBoxContainer/ButtonContainer"]
-layout_mode = 2
-text = "Add"
-
-[node name="EditButton" type="Button" parent="VBoxContainer/ButtonContainer"]
-layout_mode = 2
-text = "Edit"
-
-[node name="DeleteButton" type="Button" parent="VBoxContainer/ButtonContainer"]
-layout_mode = 2
-text = "Delete"

@@ -259,7 +259,38 @@ func _on_add_translation_pressed():
 	clear_inputs()
 
 func _on_edit_translation_pressed():
-	_on_add_translation_pressed()
+	var selected = translation_tree.get_selected()
+	if not selected:
+		return
+
+	if not FGGlobal:
+		return
+
+	var old_key = selected.get_text(0)
+	var new_key = key_input.text.strip_edges()
+	var value = value_input.text.strip_edges()
+	var selected_lang = current_languages[language_option.selected] if language_option.selected < current_languages.size() else "es"
+
+	if new_key == "":
+		return
+
+	# If the key has changed, we need to update it across all languages
+	if old_key != new_key:
+		for lang in FGGlobal.translations:
+			if FGGlobal.translations[lang].has(old_key):
+				var old_value = FGGlobal.translations[lang][old_key]
+				FGGlobal.translations[lang].erase(old_key)
+				FGGlobal.translations[lang][new_key] = old_value
+
+	# Update the value for the current language
+	if value != "":
+		if not FGGlobal.translations.has(selected_lang):
+			FGGlobal.translations[selected_lang] = {}
+		FGGlobal.translations[selected_lang][new_key] = value
+
+	save_translation_data()
+	refresh_display()
+	update_language_nodes()
 
 func _on_delete_translation_pressed():
 	if not FGGlobal:
