@@ -690,25 +690,38 @@ func refresh_board():
 	column_panels.clear()
 	task_cards.clear()
 	
+	# Get the current status filter
+	var status_filter_index = filter_status.selected
+	var status_filter_id = -1
+	if status_filter_index >= 0:
+		status_filter_id = filter_status.get_item_id(status_filter_index)
+
 	# Create columns
 	kanban_data.columns.sort_custom(func(a, b): return a.order < b.order)
 	
 	for column_data in kanban_data.columns:
-		var column_panel = create_column_panel(column_data)
-		columns_container.add_child(column_panel)
-		column_panels.append(column_panel)
+		# Check if the column should be displayed based on the filter
+		var should_display = true
+		if status_filter_index > 0:
+			if column_data.id != status_filter_id:
+				should_display = false
 		
-		# Add tasks to the column
-		var tasks_container = column_panel.find_child("TasksContainer", true, false)
-		
-		if tasks_container != null:
-			for task_data in kanban_data.tasks:
-				if task_data.has("column_id") and task_data.column_id == column_data.id and task_matches_filters(task_data):
-					var task_card = create_task_card(task_data)
-					tasks_container.add_child(task_card)
-					task_cards.append(task_card)
-		else:
-			pass # ERROR: Could not find TasksContainer in column
+		if should_display:
+			var column_panel = create_column_panel(column_data)
+			columns_container.add_child(column_panel)
+			column_panels.append(column_panel)
+			
+			# Add tasks to the column
+			var tasks_container = column_panel.find_child("TasksContainer", true, false)
+			
+			if tasks_container != null:
+				for task_data in kanban_data.tasks:
+					if task_data.has("column_id") and task_data.column_id == column_data.id and task_matches_filters(task_data):
+						var task_card = create_task_card(task_data)
+						tasks_container.add_child(task_card)
+						task_cards.append(task_card)
+			else:
+				pass # ERROR: Could not find TasksContainer in column
 	
 	# Update statistics
 	update_stats_display()

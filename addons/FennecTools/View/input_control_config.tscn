@@ -81,7 +81,7 @@ text = "Up:"
 [node name="VBoxContainer_ScrollContainer_MappingsContainer_UpContainer#UpLineEdit" type="LineEdit" parent="VBoxContainer/VBoxContainer_ScrollContainer#MappingsContainer/VBoxContainer_ScrollContainer_MappingsContainer#UpContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
-text = "ui_up"
+text = "W"
 placeholder_text = "ui_up, joypad_up"
 
 [node name="VBoxContainer_ScrollContainer_MappingsContainer#DownContainer" type="HBoxContainer" parent="VBoxContainer/VBoxContainer_ScrollContainer#MappingsContainer"]
@@ -95,7 +95,7 @@ text = "Down:"
 [node name="VBoxContainer_ScrollContainer_MappingsContainer_DownContainer#DownLineEdit" type="LineEdit" parent="VBoxContainer/VBoxContainer_ScrollContainer#MappingsContainer/VBoxContainer_ScrollContainer_MappingsContainer#DownContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
-text = "ui_down"
+text = "S"
 placeholder_text = "ui_down, joypad_down"
 
 [node name="VBoxContainer_ScrollContainer_MappingsContainer#LeftContainer" type="HBoxContainer" parent="VBoxContainer/VBoxContainer_ScrollContainer#MappingsContainer"]
@@ -109,7 +109,7 @@ text = "Left:"
 [node name="VBoxContainer_ScrollContainer_MappingsContainer_LeftContainer#LeftLineEdit" type="LineEdit" parent="VBoxContainer/VBoxContainer_ScrollContainer#MappingsContainer/VBoxContainer_ScrollContainer_MappingsContainer#LeftContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
-text = "ui_left"
+text = "A"
 placeholder_text = "ui_left, joypad_left"
 
 [node name="VBoxContainer_ScrollContainer_MappingsContainer#RightContainer" type="HBoxContainer" parent="VBoxContainer/VBoxContainer_ScrollContainer#MappingsContainer"]
@@ -123,7 +123,7 @@ text = "Right:"
 [node name="VBoxContainer_ScrollContainer_MappingsContainer_RightContainer#RightLineEdit" type="LineEdit" parent="VBoxContainer/VBoxContainer_ScrollContainer#MappingsContainer/VBoxContainer_ScrollContainer_MappingsContainer#RightContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
-text = "ui_right"
+text = "D"
 placeholder_text = "ui_right, joypad_right"
 
 [node name="VBoxContainer_ScrollContainer_MappingsContainer#AcceptContainer" type="HBoxContainer" parent="VBoxContainer/VBoxContainer_ScrollContainer#MappingsContainer"]
@@ -137,7 +137,7 @@ text = "Accept:"
 [node name="VBoxContainer_ScrollContainer_MappingsContainer_AcceptContainer#AcceptLineEdit" type="LineEdit" parent="VBoxContainer/VBoxContainer_ScrollContainer#MappingsContainer/VBoxContainer_ScrollContainer_MappingsContainer#AcceptContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
-text = "ui_accept"
+text = "E"
 placeholder_text = "ui_accept, joypad_accept"
 
 [node name="VBoxContainer_ScrollContainer_MappingsContainer#BackContainer" type="HBoxContainer" parent="VBoxContainer/VBoxContainer_ScrollContainer#MappingsContainer"]
@@ -151,7 +151,7 @@ text = "Back:"
 [node name="VBoxContainer_ScrollContainer_MappingsContainer_BackContainer#BackLineEdit" type="LineEdit" parent="VBoxContainer/VBoxContainer_ScrollContainer#MappingsContainer/VBoxContainer_ScrollContainer_MappingsContainer#BackContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
-text = "ui_cancel"
+text = "Q"
 placeholder_text = "ui_cancel, joypad_back"
 
 [node name="HSeparator3" type="HSeparator" parent="VBoxContainer"]
@@ -171,6 +171,7 @@ size_flags_horizontal = 3
 text = "Restore Defaults"
 
 [node name="TestButton" type="Button" parent="VBoxContainer/ButtonsContainer"]
+visible = false
 layout_mode = 2
 size_flags_horizontal = 3
 text = "Test Configuration"

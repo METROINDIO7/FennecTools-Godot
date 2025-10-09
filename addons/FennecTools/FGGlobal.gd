@@ -51,6 +51,24 @@ var talk = false
 # Normal keys: to_lower() and strip_edges() of the character's logical key
 var dynamic_character_names: Dictionary = {}
 
+func set_character_name(character_key: String, new_name: String):
+	"""
+	Sets a dynamic name for a character at runtime (e.g., player's name).
+	This name is NOT saved automatically. You must handle saving/loading it
+	with your game's save system and call this function on load.
+
+	- character_key: The logical name of the character (e.g., "Protagonist").
+	- new_name: The new name to display (e.g., the player's input).
+	"""
+	if character_key.is_empty() or new_name.is_empty():
+		print("[FGGlobal] Error: Character key and new name cannot be empty.")
+		return
+	
+	var key_normalized = character_key.to_lower().strip_edges()
+	dynamic_character_names[key_normalized] = new_name
+	#print("[FGGlobal] Set dynamic name for '", character_key, "' to '", new_name, "'")
+
+
 # ============================================================================
 # CONFIGURATION SYSTEM (inherited from your original code)
 # ============================================================================
@@ -70,7 +88,6 @@ signal dialog_started(dialog_id: int)
 signal dialog_finished()
 signal conditionals_loaded()
 
-var input_mappings: Dictionary = {}
 
 # ============================================================================
 # CUSTOMIZABLE INPUT CONTROL SYSTEM
@@ -92,8 +109,6 @@ var navigation_system: Node = null
 
 # Signals for the input system
 signal input_control_toggled(enabled: bool)
-signal custom_input_detected(action: String)
-
 var custom_actions_created: Dictionary = {}
 
 # Additional variables in FGGlobal
@@ -1175,19 +1190,114 @@ func change_save_slot(slot_id: String):
 	
 	#print("[FGGlobal] Changing to save slot: ", slot_id, " (Numeric ID: ", numeric_slot, ")")
 	
-	# If the slot does not exist, create it by duplicating the base conditionals
+	# Load conditionals for the slot, creating it if it doesn't exist
 	if not load_save_slot(numeric_slot):
 		#print("[FGGlobal] Creating new save slot: ", slot_id)
 		if load_conditionals_from_plugin():
 			duplicate_conditionals_for_save_slot(numeric_slot)
 			load_save_slot(numeric_slot)
+
+	# Also load player-specific data for this slot
+	load_player_data(numeric_slot)
 	
 	current_save_slot = numeric_slot
 	#print("[FGGlobal] Active save slot: ", slot_id, " with ", condicionales.size(), " conditionals")
 
+func save_game_to_current_slot():
+	"""
+	Saves all data for the currently active slot, including conditionals and player data.
+	This is the main function you should call to save progress.
+	"""
+	if current_save_slot == -1:
+		print("[FGGlobal] Error: No active save slot to save to.")
+		return
+
+	#print("[FGGlobal] Saving all data to slot ", current_save_slot)
+	save_slot_conditionals(current_save_slot)
+	save_player_data(current_save_slot)
+
+# ============================================================================
+# PLAYER DATA (PER SAVE SLOT)
+# ============================================================================
+
+func save_player_data(slot_id: int):
+	"""Saves player-specific data (like dynamic names) to the specified slot."""
+	var slot_path = "user://fennec_player_data_slot_" + str(slot_id) + ".json"
+	var data = {
+		"dynamic_character_names": dynamic_character_names
+	}
+	var json_string = JSON.stringify(data)
+	
+	var file = FileAccess.open(slot_path, FileAccess.WRITE)
+	if file:
+		file.store_string(json_string)
+		file.close()
+		#print("[FGGlobal] Player data saved in slot ", slot_id)
+	else:
+		print("[FGGlobal] Error saving player data for slot ", slot_id)
+
+func load_player_data(slot_id: int):
+	"""Loads player-specific data from the specified slot."""
+	var slot_path = "user://fennec_player_data_slot_" + str(slot_id) + ".json"
+	
+	# Reset names before loading to not mix data between slots
+	dynamic_character_names.clear()
+	
+	if not FileAccess.file_exists(slot_path):
+		#print("[FGGlobal] No player data file for slot ", slot_id, ". Using defaults.")
+		return
+
+	var file = FileAccess.open(slot_path, FileAccess.READ)
+	if file:
+		var json_data = file.get_as_text()
+		file.close()
+		var result = JSON.parse_string(json_data)
+		
+		if result and typeof(result) == TYPE_DICTIONARY:
+			dynamic_character_names = result.get("dynamic_character_names", {})
+			#print("[FGGlobal] Player data loaded from slot ", slot_id)
+
 # ============================================================================
 # GENERAL UTILITIES
 # ============================================================================
+
+# ============================================================================
+# DATA RESET UTILITY
+# ============================================================================
+
+func reset_fennec_data():
+	"""
+	Resets all Fennec Tools data files within the project to their default empty state.
+	This is useful for clearing test data.
+	"""
+	print("[FGGlobal] Resetting all Fennec Tools project data...")
+
+	# Path definitions
+	var base_path = "res://addons/FennecTools/data/"
+	var paths_to_reset = {
+		"fennec_conditionals.json": "{\"conditionals\": []}",
+		"fennec_custom_inputs.json": "{\"version\": \"1.0\", \"enabled\": false, \"group_name\": \"interactable\", \"custom_mappings\": {}, \"created_actions\": {}}",
+		"fennec_dialogue_config.json": "{\"default_panel_scene\": \"\", \"character_overrides\": {}}",
+		"fennec_dialogues.json": "{\"data\": []}",
+		"fennec_kanban_data.json": "[]",
+		"fennec_translations.json": "{\"translations\": {}, \"groups\": {}, \"target_group\": \"translate\", \"selected_group\": \"translate\"}"
+	}
+
+	for file_name in paths_to_reset:
+		var file_path = base_path + file_name
+		var empty_content = paths_to_reset[file_name]
+		
+		var file = FileAccess.open(file_path, FileAccess.WRITE)
+		if file:
+			file.store_string(empty_content)
+			file.close()
+			print("  - Reset: ", file_path)
+		else:
+			print("  - ERROR: Could not open file for writing: ", file_path)
+
+	print("[FGGlobal] Fennec Tools data reset complete.")
+	# Optionally, reload data into the running application
+	_ready()
 
 func save_game_data():
 	var file = FileAccess.open("user://fennec_gamedata.dat", FileAccess.WRITE)
@@ -1334,8 +1444,6 @@ func set_custom_input_mapping(action: String, inputs: Array):
 		
 		#print("[FGGlobal] Mapping updated for '", action, "': ", valid_inputs)
 
-func debug_input_system():
-	pass
 
 
 func get_custom_input_mapping(action: String) -> Array:
