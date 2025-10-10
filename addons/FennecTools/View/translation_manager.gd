@@ -21,12 +21,55 @@ extends Control
 
 var current_languages: Array = ["es", "en"]
 var selected_update_group: String = "translate"  # Default value
+var delete_language_panel: PanelContainer
+var delete_language_option_button: OptionButton
+
 
 func _ready():
 	load_translation_data()
+	_create_delete_language_panel()
 	setup_ui()
 	connect_signals()
 	refresh_display()
+
+
+func _create_delete_language_panel():
+	delete_language_panel = PanelContainer.new()
+	delete_language_panel.name = "DeleteLanguagePanel"
+
+	var temp_container = VBoxContainer.new()
+	
+	var label = Label.new()
+	label.text = "Select the language to delete:"
+	temp_container.add_child(label)
+	
+	delete_language_option_button = OptionButton.new()
+	temp_container.add_child(delete_language_option_button)
+	
+	var button_container = HBoxContainer.new()
+	
+	var delete_btn = Button.new()
+	delete_btn.text = "Delete"
+	delete_btn.pressed.connect(func():
+		var selected_lang = current_languages[delete_language_option_button.selected]
+		_delete_language(selected_lang)
+		delete_language_panel.visible = false
+	)
+	button_container.add_child(delete_btn)
+	
+	var cancel_btn = Button.new()
+	cancel_btn.text = "Cancel"
+	cancel_btn.pressed.connect(func():
+		delete_language_panel.visible = false
+	)
+	button_container.add_child(cancel_btn)
+	
+	temp_container.add_child(button_container)
+	
+	delete_language_panel.add_child(temp_container)
+	$VBoxContainer.add_child(delete_language_panel)
+	delete_language_panel.visible = false
+
 
 func setup_ui():
 	update_language_options()
@@ -38,6 +81,7 @@ func setup_ui():
 	else:
 		group_target_input.text = selected_update_group
 	group_target_input.placeholder_text = "Enter the group name (e.g., ui, pp, player)"
+
 
 func connect_signals():
 	add_language_button.pressed.connect(_on_add_language_pressed)
@@ -52,9 +96,11 @@ func connect_signals():
 	# Also connect the text change to save automatically
 	group_target_input.text_changed.connect(_on_group_target_changed)
 
+
 func clear_inputs():
 	key_input.text = ""
 	value_input.text = ""
+
 
 func _on_add_language_pressed():
 	var new_lang = add_language_input.text.strip_edges()
@@ -68,48 +114,20 @@ func _on_add_language_pressed():
 		save_translation_data()
 		add_language_input.text = ""
 
+
 func _on_delete_language_pressed():
 	if current_languages.size() <= 1:
 		return
 	
 	if not FGGlobal:
 		return
-	
-	# Create a temporary container for language selection
-	var temp_container = VBoxContainer.new()
-	temp_container.name = "DeleteLanguageContainer"
-	
-	var label = Label.new()
-	label.text = "Select the language to delete:"
-	temp_container.add_child(label)
-	
-	var option_button = OptionButton.new()
+
+	delete_language_option_button.clear()
 	for lang in current_languages:
-		option_button.add_item(lang)
-	temp_container.add_child(option_button)
-	
-	var button_container = HBoxContainer.new()
-	
-	var delete_btn = Button.new()
-	delete_btn.text = "Delete"
-	delete_btn.pressed.connect(func():
-		var selected_lang = current_languages[option_button.selected]
-		_delete_language(selected_lang)
-		temp_container.queue_free()
-	)
-	button_container.add_child(delete_btn)
-	
-	var cancel_btn = Button.new()
-	cancel_btn.text = "Cancel"
-	cancel_btn.pressed.connect(func():
-		temp_container.queue_free()
-	)
-	button_container.add_child(cancel_btn)
-	
-	temp_container.add_child(button_container)
-	
-	# Add to the main container instead of using popup
-	$VBoxContainer.add_child(temp_container)
+		delete_language_option_button.add_item(lang)
+
+	delete_language_panel.visible = true
+
 
 func _delete_language(lang_to_delete: String):
 	if current_languages.has(lang_to_delete):
@@ -124,6 +142,7 @@ func _delete_language(lang_to_delete: String):
 	else:
 		pass
 
+
 # New function to handle real-time changes
 func _on_group_target_changed(new_text: String):
 	selected_update_group = new_text.strip_edges()
@@ -137,6 +156,7 @@ func _on_group_target_changed(new_text: String):
 	# Save data for persistence
 	save_translation_data()
 
+
 func _on_group_target_submitted(new_text: String):
 	selected_update_group = new_text.strip_edges()
 	if selected_update_group.is_empty():
@@ -147,6 +167,7 @@ func _on_group_target_submitted(new_text: String):
 		FGGlobal.set_translation_target_group(selected_update_group)
 	
 	save_translation_data()
+
 
 func _on_apply_to_group_pressed():
 	var group_name = group_target_input.text.strip_edges()
@@ -161,6 +182,7 @@ func _on_apply_to_group_pressed():
 	
 	save_translation_data()
 
+
 func setup_translation_tree():
 	translation_tree.set_columns(current_languages.size() + 1)  # +1 for key column
 	translation_tree.set_column_title(0, "Key")
@@ -169,6 +191,7 @@ func setup_translation_tree():
 	translation_tree.column_titles_visible = true
 	translation_tree.set_column_expand(0, false)
 	translation_tree.set_column_custom_minimum_width(0, 150)
+
 
 func _validate_and_apply_to_group():
 	if selected_update_group == "":
@@ -183,6 +206,7 @@ func _validate_and_apply_to_group():
 			node.update_language()
 		else:
 			pass
+
 
 func _on_cell_edited():
 	var selected = translation_tree.get_selected()
@@ -201,6 +225,7 @@ func _on_cell_edited():
 		
 		save_translation_data()
 		update_language_nodes()
+
 
 func refresh_display():
 	translation_tree.clear()
@@ -226,6 +251,7 @@ func refresh_display():
 			item.set_text(i + 1, value)
 			item.set_editable(i + 1, true)
 
+
 func _on_item_selected():
 	var selected = translation_tree.get_selected()
 	if selected and FGGlobal:
@@ -237,6 +263,7 @@ func _on_item_selected():
 			value_input.text = FGGlobal.translations[selected_lang][key]
 		else:
 			value_input.text = ""
+
 
 func _on_add_translation_pressed():
 	if not FGGlobal:
@@ -257,6 +284,7 @@ func _on_add_translation_pressed():
 	refresh_display()
 	update_language_nodes()
 	clear_inputs()
+
 
 func _on_edit_translation_pressed():
 	var selected = translation_tree.get_selected()
@@ -292,6 +320,7 @@ func _on_edit_translation_pressed():
 	refresh_display()
 	update_language_nodes()
 
+
 func _on_delete_translation_pressed():
 	if not FGGlobal:
 		return
@@ -309,8 +338,10 @@ func _on_delete_translation_pressed():
 	update_language_nodes()
 	clear_inputs()
 
+
 func update_language_nodes():
 	_validate_and_apply_to_group()
+
 
 func save_translation_data():
 	if not FGGlobal:
@@ -335,6 +366,7 @@ func save_translation_data():
 			FGGlobal.save_translations()
 	else:
 		pass
+
 
 func load_translation_data():
 	var translation_path = "res://addons/FennecTools/data/fennec_translations.json"
@@ -369,10 +401,12 @@ func load_translation_data():
 		if FGGlobal and FGGlobal.current_target_group:
 			selected_update_group = FGGlobal.current_target_group
 
+
 func ensure_data_directory():
 	var dir = DirAccess.open("res://addons/FennecTools/")
 	if dir and not dir.dir_exists("data"):
 		dir.make_dir("data")
+
 
 func update_language_options():
 	language_option.clear()
