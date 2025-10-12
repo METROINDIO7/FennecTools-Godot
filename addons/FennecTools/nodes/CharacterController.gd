@@ -2,6 +2,7 @@
 extends Node
 
 # Character Controller with an expression state system based on child nodes
+# ✨ AHORA CON SOPORTE PARA RETORNO AUTOMÁTICO DE ESTADOS
 
 @export var character_group_name: String = ""
 
@@ -34,6 +35,10 @@ var _current_state_id: int = -1
 var _node_cache: Dictionary = {}
 var _talking: bool = false
 var _mouth_task_running: bool = false
+
+# ✨ NUEVO: Sistema de retorno automático
+var _current_dialog_panel: Node = null
+var _return_connection_active: bool = false
 
 func _ready() -> void:
 	if character_group_name != "":
@@ -96,6 +101,10 @@ func _setup_expression_states() -> void:
 		if child is ExpressionState:
 			var state = child as ExpressionState
 			_expression_states[state.state_id] = state
+			
+			# ✨ NUEVO: Conectar señal de retorno
+			if not state.return_requested.is_connected(_on_state_return_requested):
+				state.return_requested.connect(_on_state_return_requested)
 
 func _find_expression_states_container() -> Node:
 	# Search by name
@@ -111,7 +120,8 @@ func _find_expression_states_container() -> Node:
 	
 	return null
 
-func set_expression_state(state_id: int) -> void:
+# ✨ MEJORADO: Ahora con soporte para retorno automático
+func set_expression_state(state_id: int, dialog_panel: Node = null) -> void:
 	if state_id == _current_state_id:
 		return
 	
@@ -125,14 +135,31 @@ func set_expression_state(state_id: int) -> void:
 		var new_state = _expression_states[state_id]
 		new_state.activate()
 		_current_state_id = state_id
+		
+		# ✨ NUEVO: Iniciar secuencia de retorno si está configurada
+		if new_state.should_auto_return():
+			_current_dialog_panel = dialog_panel
+			new_state.start_return_sequence(dialog_panel)
 	else:
 		# Try default state
 		if default_state_id in _expression_states and state_id != default_state_id:
-			set_expression_state(default_state_id)
+			set_expression_state(default_state_id, dialog_panel)
+
+# ✨ NUEVO: Callback para cuando un estado solicita regresar
+func _on_state_return_requested(target_state_id: int) -> void:
+	# Determinar el estado objetivo
+	var target_id = target_state_id if target_state_id >= 0 else default_state_id
+	
+	# Cambiar al estado objetivo
+	set_expression_state(target_id)
+	
+	# Limpiar referencia al panel de diálogo
+	_current_dialog_panel = null
 
 # ✅ CRITICAL COMPATIBILITY: This is the method called by DialogueLauncher
-func set_expression_by_id(expression_id: int) -> void:
-	set_expression_state(expression_id)
+# ✨ MEJORADO: Ahora acepta referencia al DialogPanel
+func set_expression_by_id(expression_id: int, dialog_panel: Node = null) -> void:
+	set_expression_state(expression_id, dialog_panel)
 
 # ✅ CRITICAL METHOD: Check if an expression exists
 func has_expression_index(expression_id: int) -> bool:
@@ -164,6 +191,13 @@ func get_expression_states_info() -> Array:
 			"active": state.is_active()
 		})
 	return info
+
+# ✨ NUEVO: Cancelar retorno automático del estado actual
+func cancel_auto_return() -> void:
+	if _current_state_id in _expression_states:
+		var current_state = _expression_states[_current_state_id]
+		current_state.cancel_return_sequence()
+	_current_dialog_panel = null
 
 # =====================
 # Mouth System - IMPORTANT: Works independently of expressions
@@ -225,7 +259,7 @@ func _is_playing_expression_animation(anim_player: AnimationPlayer) -> bool:
 	# Check if the AnimationPlayer is being used by any active expression
 	if _current_state_id in _expression_states:
 		var current_state = _expression_states[_current_state_id]
-		for path in current_state.animation_players:
+		for path in current_state.animation_nodes:
 			var node = get_node_or_null(path)
 			if node == anim_player and anim_player.is_playing():
 				# If it is playing and it is not a mouth animation, it is an expression
@@ -282,6 +316,11 @@ func add_expression_state(state: ExpressionState) -> void:
 		return
 	
 	_expression_states[state.state_id] = state
+	
+	# ✨ NUEVO: Conectar señal de retorno
+	if not state.return_requested.is_connected(_on_state_return_requested):
+		state.return_requested.connect(_on_state_return_requested)
+	
 	if not state.get_parent():
 		var container = get_node_or_null(states_container_path)
 		if container:
@@ -294,6 +333,11 @@ func remove_expression_state(state_id: int) -> void:
 		var state = _expression_states[state_id]
 		if state.is_active():
 			state.deactivate()
+		
+		# ✨ NUEVO: Desconectar señal
+		if state.return_requested.is_connected(_on_state_return_requested):
+			state.return_requested.disconnect(_on_state_return_requested)
+		
 		_expression_states.erase(state_id)
 		state.queue_free()
 		

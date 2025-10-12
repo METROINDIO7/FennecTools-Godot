@@ -149,7 +149,7 @@ func find_character_animation_node(character_group_name: String) -> Node:
 
 # Function to animate a character by dialogue
 # Improve animation functions with better error handling
-func animate_character_for_dialogue(character_group_name: String, expression_id: int) -> bool:
+func animate_character_for_dialogue(character_group_name: String, expression_id: int, dialog_panel: Node = null) -> bool:
 	"""✅ CHANGE: Now uses numeric expression_id"""
 	if character_group_name.is_empty():
 		#print("[FGGlobal] Error: character_group_name is empty")

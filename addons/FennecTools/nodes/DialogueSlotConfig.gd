@@ -1,28 +1,44 @@
 @tool
 extends Resource
 class_name DialogueSlotConfig
+
+# ✨ MEJORADO: Ahora soporta múltiples personajes con el delimitador "|"
 # Unified configuration resource for DialogueLauncher
 # Allows defining both sequences (SEQUENCE) and chains (CHAIN) in a single resource
+
 enum DialogueMode {
 	CHAIN, # Generates consecutive IDs from start_id for count elements
 	SEQUENCE # Uses a specific list of IDs
 }
+
 # === MODE SETTINGS ===
 @export var mode: DialogueMode = DialogueMode.CHAIN
+
 # === CHAIN SETTINGS ===
 @export_group("Chain Mode", "chain")
 @export var chain_start_id: int = 1
 @export var chain_count: int = 1
+
 # === SEQUENCE SETTINGS ===
 @export_group("Sequence Mode", "sequence")
 @export var sequence_ids: Array[int] = []
+
 # === GENERAL SETTINGS ===
 @export_group("Character & Presentation")
 var character: String = ""
+
+# ✨ NUEVO: Soporta múltiples personajes usando "|" como delimitador
+# Ejemplos:
+#   "miguel" - Solo afecta a miguel
+#   "miguel|santi|mario" - Afecta a los 3 personajes simultáneamente
+#   "miguel | santi | mario" - También funciona con espacios (se limpian automáticamente)
 @export var character_group_name: String = "" 
+
 @export var panel_override: PackedScene
-# ✅ CHANGE: Expression is now a numeric ID instead of a string
-@export var expression_id: int = -1  # -1 = no expression, 0+ = expression slot index
+
+# Expression ID to apply to the character(s)
+# -1 = no expression, 0+ = expression slot index
+@export var expression_id: int = -1
 
 # === PLAYBACK SETTINGS ===
 @export_group("Playback Settings")
@@ -31,10 +47,12 @@ var character: String = ""
 @export var between_chunks_delay: float = 0.3
 @export var exit_delay: float = 0.0
 @export var auto_free_on_exit: bool = true
+
 # === PANEL CONTROL ===
 @export_group("Panel Control")
 @export var reuse_single_panel: bool = false
-# === NEW: QUESTION/OBJECT INSTANTIATION SYSTEM ===
+
+# === QUESTION/OBJECT INSTANTIATION SYSTEM ===
 @export_group("Question & Object System")
 # Scene to instantiate (question or object)
 @export var instance_scene: PackedScene
@@ -48,7 +66,6 @@ var character: String = ""
 @export_range(0.5, 2.0, 0.1) var voiceline_pitch_min: float = 0.9
 @export_range(0.5, 2.0, 0.1) var voiceline_pitch_max: float = 1.1
 @export_range(0.0, 1.0, 0.1) var voiceline_volume: float = 0.7
-
 
 # Main method that builds the items according to the selected mode
 func build_items(context: Dictionary = {}) -> Array:
@@ -98,25 +115,33 @@ func is_valid() -> bool:
 		_:
 			return false
 
-# Helper method to get debugging information
+# ✨ MEJORADO: Muestra información sobre múltiples personajes
 func get_debug_info() -> String:
+	var char_info := ""
+	if character_group_name != "":
+		var groups := _parse_character_groups()
+		if groups.size() > 1:
+			char_info = " [Characters: %s]" % ", ".join(groups)
+		elif groups.size() == 1:
+			char_info = " [Character: %s]" % groups[0]
+	
 	match mode:
 		DialogueMode.CHAIN:
-			return "CHAIN: %d items from ID %d (Expression ID: %d)" % [chain_count, chain_start_id, expression_id]
+			return "CHAIN: %d items from ID %d (Expression ID: %d)%s" % [chain_count, chain_start_id, expression_id, char_info]
 		DialogueMode.SEQUENCE:
-			return "SEQUENCE: %d items %s (Expression ID: %d)" % [sequence_ids.size(), str(sequence_ids), expression_id]
+			return "SEQUENCE: %d items %s (Expression ID: %d)%s" % [sequence_ids.size(), str(sequence_ids), expression_id, char_info]
 		_:
 			return "INVALID MODE"
 
-# ✅ NEW: Check if it has a configured expression
+# Check if it has a configured expression
 func has_expression() -> bool:
 	return expression_id >= 0
 
-# ✅ NEW: Check if it has a scene to instantiate
+# Check if it has a scene to instantiate
 func has_instance_scene() -> bool:
 	return instance_scene != null
 
-# ✅ NEW: Get instance debug information
+# Get instance debug information
 func get_instance_debug_info() -> String:
 	if not has_instance_scene():
 		return "No instance scene"
@@ -125,11 +150,11 @@ func get_instance_debug_info() -> String:
 		target_info = "target: " + str(instance_target)
 	return "Instance: " + instance_scene.resource_path.get_file() + " -> " + target_info
 
-# ✅ NEW: Check if it has a voiceline configured
+# Check if it has a voiceline configured
 func has_voiceline() -> bool:
 	return voiceline_enabled and voiceline_stream != null
 
-# ✅ NEW: Get voiceline debug information
+# Get voiceline debug information
 func get_voiceline_debug_info() -> String:
 	if not has_voiceline():
 		return "No voiceline"
@@ -140,7 +165,7 @@ func get_voiceline_debug_info() -> String:
 		voiceline_volume
 	]
 
-# ✅ NEW: Get a dictionary with the voiceline configuration
+# Get a dictionary with the voiceline configuration
 func get_voiceline_config() -> Dictionary:
 	if not has_voiceline():
 		return {}
@@ -150,3 +175,40 @@ func get_voiceline_config() -> Dictionary:
 		"pitch_min": voiceline_pitch_min,
 		"pitch_max": voiceline_pitch_max
 	}
+
+# ✨ NUEVO: Helper para parsear character groups en el propio resource
+func _parse_character_groups() -> PackedStringArray:
+	"""
+	Parsea character_group_name para obtener la lista de personajes
+	"""
+	if character_group_name.is_empty():
+		return PackedStringArray()
+	
+	var groups := character_group_name.split("|", false)
+	var result := PackedStringArray()
+	
+	for group in groups:
+		var cleaned := group.strip_edges()
+		if not cleaned.is_empty():
+			result.append(cleaned)
+	
+	return result
+
+# ✨ NUEVO: Obtener el número de personajes afectados
+func get_character_count() -> int:
+	return _parse_character_groups().size()
+
+# ✨ NUEVO: Obtener lista de personajes afectados
+func get_character_list() -> PackedStringArray:
+	return _parse_character_groups()
+
+# ✨ NUEVO: Verificar si afecta a un personaje específico
+func affects_character(character_name: String) -> bool:
+	var groups := _parse_character_groups()
+	var search_name := character_name.strip_edges().to_lower()
+	
+	for group in groups:
+		if group.to_lower() == search_name:
+			return true
+	
+	return false

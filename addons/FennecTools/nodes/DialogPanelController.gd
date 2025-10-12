@@ -2,20 +2,15 @@
 extends Control
 
 # Dialog Panel/Bubble controller
-# - Entry/Exit animations
-# - Typewriter effect with configurable speed and delays
-# - Optional speaker label visibility using a CheckButton
-# - RichTextLabel visibility progress control
-# - Configurable text alignment options
-# - Ability to pause exit until an external node (e.g., question UI) is removed
-# - Exposed methods to be controlled from a dialogue editor
+# ✨ FIXED: Mejor coordinación de señales para ExpressionState
 
 signal dialog_started(text: String, speaker: String)
 signal chunk_shown(index: int, total: int)
-signal dialog_completed()
-signal dialog_exited()
-# Additional signal for compatibility with the old launcher
-signal dialogue_finished()
+signal dialog_completed()  # Se emite cuando el texto termina de mostrarse
+signal dialog_ready_to_advance()  # ✨ NUEVO: Se emite después del delay y antes de avanzar
+signal dialog_exit_started()  # ✨ NUEVO: Se emite cuando comienza la animación de salida
+signal dialog_exited()  # Se emite cuando termina la animación de salida
+signal dialogue_finished()  # Compatibility
 
 @export var auto_play_entry: bool = true
 @export var auto_free_on_exit: bool = true
@@ -34,7 +29,7 @@ signal dialogue_finished()
 @export var pre_entry_delay: float = 0.0
 @export var between_chunks_delay: float = 0.3
 @export var exit_delay: float = 0.0
-@export var chunk_delimiter: String = "|"   # Split text into visible chunks using this delimiter
+@export var chunk_delimiter: String = "|"
 
 # Label visibility default when no toggle is provided
 @export var show_speaker_label: bool = true
@@ -42,7 +37,6 @@ signal dialogue_finished()
 # === ALIGNMENT SETTINGS ===
 @export_group("Text Alignment and Margin")
 
-# Horizontal alignment for the text (RichTextLabel)
 enum TextHorizontalAlign {
 	LEFT,
 	CENTER, 
@@ -59,16 +53,13 @@ enum TextHorizontalAlign {
 
 # === SOUND SETTINGS ===
 @export_group("Sound Character and Voiceline")
-@export var sound_enabled: bool = false  # Global control to enable/disable sounds
-
+@export var sound_enabled: bool = false
 
 @export var character_sound_effect: AudioStream
 @export var character_sound_frequency: int = 3
 @export_range(0.5, 2.0, 0.1) var character_sound_pitch_min: float = 0.9
 @export_range(0.5, 2.0, 0.1) var character_sound_pitch_max: float = 1.1
 @export_range(0.0, 1.0, 0.1) var character_sound_volume: float = 0.7
-
-
 
 var voiceline_player: NodePath
 
@@ -81,7 +72,7 @@ var _char_count_since_last_sound: int = 0
 var _label: Label
 var _rtl: RichTextLabel
 var _anim: AnimationPlayer
-var _original_rtl_stylebox: StyleBox  # To save the original StyleBox of the RichTextLabel
+var _original_rtl_stylebox: StyleBox
 
 # Internal state
 var _pending_text: String = ""
@@ -93,8 +84,6 @@ var _cancel_reveal: bool = false
 var _block_node: Node = null
 
 # === DYNAMIC NAME SYSTEM ===
-# Dictionary to store custom names assigned by code
-# Format: {"character_name": "Displayed Name"}
 var _custom_character_names: Dictionary = {}
 
 func _ready() -> void:
@@ -107,20 +96,15 @@ func _ready() -> void:
 		if _anim and not _anim.animation_finished.is_connected(_on_anim_finished):
 			_anim.animation_finished.connect(_on_anim_finished)
 
-	# Make sure RichTextLabel starts hidden text
 	if _rtl:
 		_rtl.visible_characters = 0
-		# Save the original StyleBox of the RichTextLabel
 		_original_rtl_stylebox = _rtl.get_theme_stylebox("normal")
 	
-	# Apply initial alignment settings
 	_apply_alignment_settings()
 	
-	# Connect additional signal for compatibility
 	if not dialog_completed.is_connected(_on_dialog_completed):
 		dialog_completed.connect(_on_dialog_completed)
 	
-	# ✅ NEW: Initialize sound system (now done after nodes are ready)
 	call_deferred("_setup_sound_system")
 
 # ==============
@@ -128,14 +112,12 @@ func _ready() -> void:
 # ==============
 
 func _setup_sound_system() -> void:
-	"""Configures the sound system for both character sounds and voicelines."""
 	if not is_instance_valid(_character_sound_player):
 		_character_sound_player = AudioStreamPlayer.new()
 		_character_sound_player.name = "CharacterSoundPlayer"
 		add_child(_character_sound_player)
 	_character_sound_player.process_mode = Node.PROCESS_MODE_ALWAYS
 
-	# Setup voiceline player
 	if voiceline_player != NodePath(""):
 		_voiceline_player = get_node_or_null(voiceline_player)
 	if not is_instance_valid(_voiceline_player):
@@ -161,22 +143,15 @@ func play_voiceline(voiceline_config: Dictionary) -> void:
 	_voiceline_player.play()
 
 func _play_character_sound() -> void:
-	"""Plays the character tick sound."""
 	if not sound_enabled or not _character_sound_player or not character_sound_effect:
 		return
 	
-	# Configure the audio player
 	_character_sound_player.stream = character_sound_effect
 	_character_sound_player.volume_db = linear_to_db(character_sound_volume)
-	
-	# Apply random pitch variation
 	_character_sound_player.pitch_scale = randf_range(character_sound_pitch_min, character_sound_pitch_max)
-	
-	# Play sound
 	_character_sound_player.play()
 
 func _should_play_character_sound() -> bool:
-	"""Determines if the character tick sound should be played."""
 	if not sound_enabled or not character_sound_effect:
 		return false
 	
@@ -191,17 +166,14 @@ func _should_play_character_sound() -> bool:
 	return false
 
 func _reset_sound_counter() -> void:
-	"""Resets the character counter for sounds"""
 	_char_count_since_last_sound = 0
 
 # ==============
-# Compatibility with old launcher
+# Compatibility
 # ==============
 func _on_dialog_completed():
-	# Emit compatibility signal
 	dialogue_finished.emit()
 
-# Method to reset the panel without exit animation (for reuse)
 func reset_for_reuse() -> void:
 	_pending_text = ""
 	_pending_speaker = ""
@@ -211,7 +183,6 @@ func reset_for_reuse() -> void:
 	_cancel_reveal = false
 	_block_node = null
 	
-	# Reset visual state
 	if _rtl:
 		_rtl.visible_characters = 0
 		_rtl.text = ""
@@ -219,25 +190,21 @@ func reset_for_reuse() -> void:
 	if _label:
 		_label.text = ""
 	
-	# ✅ NEW: Reset sound system
 	_reset_sound_counter()
 	
-	# Reset animations if necessary
 	if _anim:
 		_anim.stop()
-		# If "reset" or "idle" animation exists, play it
 		if _anim.has_animation("reset"):
 			_anim.play("reset")
 		elif _anim.has_animation("idle"):
 			_anim.play("idle")
 		elif _anim.has_animation(entry_animation):
-			# Play entry animation from the beginning but paused
 			_anim.play(entry_animation)
 			_anim.seek(0.0)
 			_anim.stop()
 
 # ==============
-# ALIGNMENT METHODS
+# ALIGNMENT
 # ==============
 
 func _apply_alignment_settings() -> void:
@@ -245,43 +212,33 @@ func _apply_alignment_settings() -> void:
 	_apply_speaker_alignment()
 
 func _apply_text_alignment() -> void:
-	# Horizontal text alignment is handled with BBCode tags
-	# It will be applied when the text is set
 	pass
 
 func _apply_speaker_alignment() -> void:
 	if not _rtl:
 		return
 	
-	# Calculate the current text height
 	var text_height := _rtl.get_content_height()
 	var rect_height := _rtl.size.y
 	if text_height <= 0:
 		text_height = rect_height
 	
-	# Difference between the available height and the text
 	var extra_space := rect_height - text_height
-	
-	# Dynamic adjustment ONLY for the top, using the user's value as a preference
 	var top_margin := clampi(Margin_top, 0, max(0, extra_space))
 	
-	# Create StyleBoxEmpty with all configured margins
 	var style_box = StyleBoxEmpty.new()
 	style_box.content_margin_top = top_margin
 	style_box.content_margin_bottom = Margin_bottom
 	style_box.content_margin_left = Margin_left
 	style_box.content_margin_right = Margin_right
 	
-	# Apply the new stylebox
 	_rtl.add_theme_stylebox_override("normal", style_box)
 
-# Helper function to wrap text with horizontal alignment BBCode
 func _wrap_text_with_alignment(text: String) -> String:
 	var wrapped_text = text
 	
 	match text_alignment:
 		TextHorizontalAlign.LEFT:
-			# By default it is already left-aligned, no tags needed
 			wrapped_text = text
 		TextHorizontalAlign.CENTER:
 			wrapped_text = "[center]" + text + "[/center]"
@@ -292,12 +249,10 @@ func _wrap_text_with_alignment(text: String) -> String:
 	
 	return wrapped_text
 
-# Public methods to change alignments
 func set_text_alignment(alignment: TextHorizontalAlign) -> void:
 	text_alignment = alignment
 	_apply_text_alignment()
 
-# Method to configure custom vertical spacings
 func set_vertical_spacings(top: int) -> void:
 	Margin_top = max(0, top)
 	_apply_speaker_alignment()
@@ -306,7 +261,6 @@ func set_vertical_spacings(top: int) -> void:
 # Public API
 # ==============
 
-# Local API for panel-level dynamic names
 func set_character_name(character_key: String, display_name: String) -> void:
 	var key := character_key.strip_edges().to_lower()
 	var name := display_name.strip_edges()
@@ -323,17 +277,13 @@ func get_character_name(character_key: String) -> String:
 func clear_character_names() -> void:
 	_custom_character_names.clear()
 
-# Plays a dialog with optional speaker name.
-# Supports chunked text separated by chunk_delimiter. Returns when all chunks are finished.
-# Now supports @p:character_name commands in text and speaker
 func play_dialog(text: String, speaker: String = "") -> void:
-	# Process special commands in the text and the speaker
 	var processed_text := _process_text_commands(text)
 	var processed_speaker := _process_speaker_command(speaker)
 	
 	_pending_text = processed_text
 	_pending_speaker = processed_speaker
-	# Prepare chunks
+	
 	_chunks = PackedStringArray()
 	if chunk_delimiter != "" and processed_text.find(chunk_delimiter) != -1:
 		_chunks = processed_text.split(chunk_delimiter, false)
@@ -341,26 +291,22 @@ func play_dialog(text: String, speaker: String = "") -> void:
 		_chunks = PackedStringArray([processed_text])
 	_current_chunk = -1
 
-	# Apply horizontal alignment to all chunks
 	for i in range(_chunks.size()):
 		_chunks[i] = _wrap_text_with_alignment(_chunks[i])
 
-	# Label handling with vertical alignment
 	if _label:
 		_label.text = processed_speaker
 		_label.visible = _should_show_label()
 	
-	# Apply vertical alignment to the RichTextLabel
 	_apply_speaker_alignment()
 
-	# Entry
 	if pre_entry_delay > 0.0:
 		await get_tree().create_timer(pre_entry_delay).timeout
 	if auto_play_entry:
 		await _play_entry()
 
 	dialog_started.emit(processed_text, processed_speaker)
-	# Show chunks
+	
 	for i in range(_chunks.size()):
 		_current_chunk = i
 		await _reveal_text(_chunks[i])
@@ -370,24 +316,32 @@ func play_dialog(text: String, speaker: String = "") -> void:
 				await get_tree().create_timer(between_chunks_delay).timeout
 
 	dialog_completed.emit()
+	
+	# ✨ NUEVO: Emitir señal cuando está listo para avanzar (después de cualquier delay)
+	# Esto se hace aquí porque el DialogueLauncher manejará el delay de avance
+	dialog_ready_to_advance.emit()
 
-# Request exit. Optionally waits for a node to be removed before playing exit animation.
-# Example: await request_exit(question_node)
+# ✨ MODIFICADO: Ahora emite dialog_exit_started
 func request_exit(wait_for_node: Node = null) -> void:
 	_block_node = wait_for_node
 	if is_instance_valid(_block_node):
-		# Wait until it's removed from the tree
 		while is_instance_valid(_block_node) and _block_node.get_parent() != null:
 			await get_tree().process_frame
 		_block_node = null
+	
 	if exit_delay > 0.0:
 		await get_tree().create_timer(exit_delay).timeout
+	
+	# ✨ NUEVO: Notificar que la animación de salida está por comenzar
+	dialog_exit_started.emit()
+	
 	await _play_exit()
+	
 	if auto_free_on_exit:
 		queue_free()
+	
 	dialog_exited.emit()
 
-# Immediately reveal entire current chunk or advance to next if already revealed.
 func skip_or_advance() -> void:
 	if not _rtl:
 		return
@@ -395,12 +349,10 @@ func skip_or_advance() -> void:
 		_cancel_reveal = true
 		_rtl.visible_characters = _total_chars()
 	else:
-		# Advance to next chunk if any
 		if _current_chunk >= 0 and _current_chunk < _chunks.size() - 1:
 			_current_chunk += 1
 			_reveal_text(_chunks[_current_chunk])
 
-# Allows external control of visibility progress 0..1
 func set_visibility_progress(progress: float) -> void:
 	if not _rtl:
 		return
@@ -408,7 +360,6 @@ func set_visibility_progress(progress: float) -> void:
 	var total = _total_chars()
 	_rtl.visible_characters = int(ceil(total * p))
 
-# Allows external configuration from editors
 func set_typewriter_speed(cps: float) -> void:
 	chars_per_second = max(1.0, cps)
 
@@ -425,12 +376,9 @@ func set_animations(entry: String, exit: String) -> void:
 # Internals
 # ==============
 
-# Processes special commands in the dialog text
-# Currently supports: @p:character_name
 func _process_text_commands(text: String) -> String:
 	var result := text
 	
-	# Find and replace @p:character_name commands
 	var regex := RegEx.new()
 	regex.compile("@p:([a-zA-Z0-9_ -áéíóúÁÉÍÓÚñÑ]+)")
 	
@@ -443,28 +391,22 @@ func _process_text_commands(text: String) -> String:
 	
 	return result
 
-# Processes the speaker name to resolve @p: commands
 func _process_speaker_command(speaker: String) -> String:
 	if speaker.begins_with("@p:"):
 		var character_key := speaker.substr(3).strip_edges().to_lower()
 		return _resolve_character_display_name(character_key)
 	return speaker
 
-# Resolves the display name for a character
-# Priority: 1) Custom name by code (panel local), 2) Global FGGlobal, 3) Capitalized fallback
 func _resolve_character_display_name(character_key: String) -> String:
 	var key := character_key.strip_edges().to_lower()
 	
-	# 1. Check if there is a custom name assigned by code (panel local override)
 	if _custom_character_names.has(key):
 		return _custom_character_names[key]
 	
-	# 2. Use global resolution if it exists (includes dynamic names + editor overrides)
 	if typeof(FGGlobal) != TYPE_NIL and FGGlobal:
 		if FGGlobal.has_method("resolve_character_display_name"):
 			return FGGlobal.resolve_character_display_name(key)
 		else:
-			# Manual fallback to dialog_config.character_overrides
 			var cfg := FGGlobal.dialog_config if typeof(FGGlobal.dialog_config) == TYPE_DICTIONARY else {}
 			var overrides := cfg.get("character_overrides", {})
 			if typeof(overrides) == TYPE_DICTIONARY and overrides.keys().size() > 0:
@@ -483,7 +425,6 @@ func _resolve_character_display_name(character_key: String) -> String:
 							if def != "":
 								return def
 	
-	# 3. Fallback: return the original capitalized key
 	return character_key.capitalize()
 
 func _should_show_label() -> bool:
@@ -508,10 +449,9 @@ func _wait_anim(name: String) -> void:
 	if not _anim:
 		await get_tree().process_frame
 		return
-	# Wait until this animation finishes
+	
 	while _anim.is_playing():
 		await _anim.animation_finished
-		# Ensure we exit when the specific anim finished
 		if _anim.current_animation == "" or _anim.current_animation == name:
 			break
 
@@ -524,7 +464,6 @@ func _reveal_text(text: String) -> void:
 	_rtl.text = text
 	_rtl.visible_characters = 0
 	
-	# ✅ NEW: Reset sound counter
 	_reset_sound_counter()
 	
 	var total := _total_chars()
@@ -539,18 +478,15 @@ func _reveal_text(text: String) -> void:
 		_rtl.visible_characters = i
 		i += 1
 		
-		# ✅ MODIFIED: Play character sound if applicable
 		if _should_play_character_sound():
 			_play_character_sound()
 		
 		await get_tree().create_timer(tpc).timeout
-		_apply_speaker_alignment() # <-- Adjusts dynamically as it appears
+		_apply_speaker_alignment()
 	
-	# Final
 	_rtl.visible_characters = total
 	_is_revealing = false
 	_apply_speaker_alignment()
 
 func _on_anim_finished(anim_name: StringName) -> void:
-	# Placeholder if extra handling needed
 	pass

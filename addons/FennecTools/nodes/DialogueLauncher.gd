@@ -1,6 +1,8 @@
 @tool
 extends Node
 
+# ✨ FIXED: Mejor coordinación entre DialogPanel y ExpressionState
+
 signal started(total: int)
 signal item_started(index: int, id: int)
 signal item_finished(index: int, id: int)
@@ -26,7 +28,7 @@ signal finished()
 @export var advance_action_name: String = "accept"
 
 @export_group("Instance Settings")
-@export var default_instance_parent_path: NodePath  # Renamed for clarity
+@export var default_instance_parent_path: NodePath
 
 var _cancelled: bool = false
 var _input_consumed: bool = false
@@ -48,52 +50,81 @@ func find_character_animation_node(character_group_name: String) -> Node:
 	
 	return null
 
-func animate_character_for_dialogue(character_group_name: String, expression_id: int) -> bool:
-	"""✅ CHANGE: Now uses numeric expression_id instead of name"""
+func animate_character_for_dialogue(character_group_name: String, expression_id: int, dialog_panel: Node = null) -> bool:
+	"""
+	✨ MEJORADO: Ahora soporta múltiples personajes usando "|" como delimitador
+	Ejemplo: "miguel|santi|mario" aplicará la expresión a los 3 personajes
+	"""
 	if character_group_name.is_empty():
 		return false
 	
-	# expression_id = -1 means no expression
 	if expression_id < 0:
 		return false
-
-	var character_node = find_character_animation_node(character_group_name)
-	if character_node:
-		# Check if the expression index exists
-		if character_node.has_method("has_expression_index"):
-			var has_expression = character_node.has_expression_index(expression_id)
-			
-			if has_expression:
-				character_node.set_expression_by_id(expression_id)
-				return true
-			else:
-				# Try with default expression
-				if character_node.has_method("set_expression_by_id"):
-					var default_index = character_node.default_expression_index
-					
-					if default_index >= 0 and character_node.has_expression_index(default_index):
-						character_node.set_expression_by_id(default_index)
-						return true
-	else:
+	
+	# ✨ NUEVO: Detectar si hay múltiples personajes
+	var character_groups := _parse_character_groups(character_group_name)
+	
+	if character_groups.size() == 0:
 		return false
 	
-	return false
+	var any_success := false
+	
+	# Aplicar expresión a cada personaje
+	for group_name in character_groups:
+		var character_node = find_character_animation_node(group_name)
+		if character_node:
+			if character_node.has_method("has_expression_index"):
+				var has_expression = character_node.has_expression_index(expression_id)
+				
+				if has_expression:
+					character_node.set_expression_by_id(expression_id, dialog_panel)
+					any_success = true
+				else:
+					# Intentar con expresión por defecto
+					if character_node.has_method("set_expression_by_id"):
+						var default_index = character_node.default_expression_index
+						
+						if default_index >= 0 and character_node.has_expression_index(default_index):
+							character_node.set_expression_by_id(default_index, dialog_panel)
+							any_success = true
+	
+	return any_success
 
 func start_character_talking(character_group_name: String) -> bool:
-	var character_node = find_character_animation_node(character_group_name)
-	if character_node and character_node.has_method("start_talking"):
-		character_node.start_talking()
-		return true
+	"""
+	✨ MEJORADO: Soporta múltiples personajes con "|"
+	"""
+	if character_group_name.is_empty():
+		return false
 	
-	return false
+	var character_groups := _parse_character_groups(character_group_name)
+	var any_success := false
+	
+	for group_name in character_groups:
+		var character_node = find_character_animation_node(group_name)
+		if character_node and character_node.has_method("start_talking"):
+			character_node.start_talking()
+			any_success = true
+	
+	return any_success
 
 func stop_character_talking(character_group_name: String) -> bool:
-	var character_node = find_character_animation_node(character_group_name)
-	if character_node and character_node.has_method("stop_talking"):
-		character_node.stop_talking()
-		return true
+	"""
+	✨ MEJORADO: Soporta múltiples personajes con "|"
+	"""
+	if character_group_name.is_empty():
+		return false
 	
-	return false
+	var character_groups := _parse_character_groups(character_group_name)
+	var any_success := false
+	
+	for group_name in character_groups:
+		var character_node = find_character_animation_node(group_name)
+		if character_node and character_node.has_method("stop_talking"):
+			character_node.stop_talking()
+			any_success = true
+	
+	return any_success
 
 func _get_panel_scene_reference(panel_node: Node) -> PackedScene:
 	if not panel_node:
@@ -113,21 +144,16 @@ func _get_panel_parent() -> Node:
 	return get_parent() if get_parent() else self
 
 func _get_instance_parent(slot: DialogueSlotConfig) -> Node:
-	"""Gets the parent node to instantiate based on the slot's configuration"""
-	
-	# 1. First try to use the slot's specific target
 	if slot and slot.instance_target != NodePath(""):
 		var target_node = get_node_or_null(slot.instance_target)
 		if target_node:
 			return target_node
 	
-	# 2. Fallback to the DialogueLauncher's global target
 	if default_instance_parent_path != NodePath(""):
 		var global_target = get_node_or_null(default_instance_parent_path)
 		if global_target:
 			return global_target
 	
-	# 3. Final fallback to the panel's parent
 	var panel_parent = _get_panel_parent()
 	return panel_parent
 
@@ -197,9 +223,7 @@ func _setup_panel(controller: Node, slot: DialogueSlotConfig) -> void:
 		controller.set("auto_free_on_exit", auto_free)
 
 func _cleanup_current_instance():
-	"""Cleans up the current instance if it exists"""
 	if _current_instance and is_instance_valid(_current_instance):
-		# If the instance has a cleanup method, use it
 		if _current_instance.has_method("cleanup_before_removal"):
 			_current_instance.cleanup_before_removal()
 		elif _current_instance.has_method("queue_free"):
@@ -210,7 +234,6 @@ func _cleanup_current_instance():
 		_current_instance = null
 
 func _handle_slot_instance(slot: DialogueSlotConfig) -> bool:
-	"""Handles object instantiation for a slot"""
 	if not slot or not slot.instance_scene:
 		return false
 	
@@ -220,19 +243,15 @@ func _handle_slot_instance(slot: DialogueSlotConfig) -> bool:
 	if not instance_parent:
 		return false
 	
-	# Instantiate the scene
 	_current_instance = slot.instance_scene.instantiate()
 	if not _current_instance:
 		return false
 	
 	instance_parent.add_child(_current_instance)
 	
-	# Optional: If it's a CanvasItem and you want a specific position, but now the target handles this
 	if _current_instance is CanvasItem and instance_parent is CanvasItem:
-		# Default at (0,0) relative to the parent, which is what we want
 		pass
 	
-	# If the instance has an initialization method, call it
 	if _current_instance.has_method("initialize_for_dialogue"):
 		_current_instance.initialize_for_dialogue()
 	
@@ -277,6 +296,7 @@ func _resolve_display_speaker_name(char_name: String) -> String:
 	
 	return name
 
+# ✨ MODIFICADO: Ahora respeta mejor el flujo de señales del DialogPanel
 func _await_between_dialogue_advance(is_last_dialogue: bool = false) -> void:
 	if auto_advance_between_items and not is_last_dialogue:
 		if auto_advance_delay > 0.0:
@@ -382,31 +402,32 @@ func start() -> void:
 		if not slot or not slot.is_valid():
 			continue
 		
-		# ✅ Handle character expression
+		# ✨ Configurar expresión ANTES de mostrar el diálogo
 		_current_character_group = slot.character_group_name
 		var slot_expression_id = slot.expression_id
 		
-		if _current_character_group != "" and slot_expression_id >= 0:
-			animate_character_for_dialogue(_current_character_group, slot_expression_id)
+		# ✨ MEJORADO: No animar si no hay diálogos válidos en este slot
+		var items = slot.build_items()
+		var has_valid_dialogues = items.size() > 0
 		
-		# ✅ NEW: Handle object instantiation (BEFORE the dialogue)
+		if _current_character_group != "" and slot_expression_id >= 0 and has_valid_dialogues:
+			# Solo animaremos cuando tengamos un panel válido
+			pass
+		
+		# Manejar instanciación de objetos
 		if slot.instance_scene:
 			var instance_success = _handle_slot_instance(slot)
 			
 			if instance_success:
-				# If the instance has its own dialogue flow, handle it here
 				if _current_instance and _current_instance.has_method("start_dialogue_flow"):
 					await _current_instance.start_dialogue_flow()
 				
 				await get_tree().process_frame
 			
-			# If the slot only has an instance (without dialogues), continue to the next one
 			if not slot.is_valid() or slot.get_total_items() == 0:
 				continue
 		
-		# ✅ Continue with normal dialogue processing
-		var items = slot.build_items()
-		
+		# Procesar diálogos
 		for item_idx in range(items.size()):
 			if _cancelled:
 				break
@@ -453,18 +474,22 @@ func start() -> void:
 			if current_panel:
 				_setup_panel(current_panel, slot)
 				
+				# ✨ CRÍTICO: Configurar expresión AHORA que tenemos el panel
+				if _current_character_group != "" and slot_expression_id >= 0:
+					animate_character_for_dialogue(_current_character_group, slot_expression_id, current_panel)
+				
 				var text = _get_text_for_id(id, effective_char)
 				var display_name = _resolve_display_speaker_name(effective_char)
 				
-				# START: Start mouth animation BEFORE showing text
+				# Iniciar animación de boca ANTES del texto
 				if _current_character_group != "":
 					start_character_talking(_current_character_group)
 				
-				# ✅ NEW: Play voiceline if configured
+				# ✨ Reproducir voiceline si está configurada
 				if slot.has_voiceline() and current_panel.has_method("play_voiceline"):
 					current_panel.play_voiceline(slot.get_voiceline_config())
 				
-				# Show dialogue
+				# ✨ IMPORTANTE: play_dialog maneja todo el ciclo interno
 				if current_panel.has_method("play_dialog"):
 					await current_panel.play_dialog(text, display_name)
 				elif current_panel.has_method("show_dialogue"):
@@ -474,12 +499,14 @@ func start() -> void:
 					elif current_panel.has_signal("dialog_completed"):
 						await current_panel.dialog_completed
 				
-				# END: Stop mouth animation AFTER the text finishes
+				# Detener animación de boca DESPUÉS del texto
 				if _current_character_group != "":
 					stop_character_talking(_current_character_group)
 				
 				var is_last_item = (slot_idx == slots.size() - 1) and (item_idx == items.size() - 1)
 				
+				# ✨ CRÍTICO: El delay de avance ocurre AQUÍ
+				# Esto permite que READY_TO_ADVANCE se emita en el momento correcto
 				if not _cancelled:
 					await _await_between_dialogue_advance(is_last_item)
 				
@@ -494,31 +521,26 @@ func start() -> void:
 				item_finished.emit(global_index, id)
 				global_index += 1
 	
-	# Final cleanup
+	# Limpieza final
 	if current_panel and is_instance_valid(current_panel):
 		if current_panel.has_method("request_exit"):
 			await current_panel.request_exit()
 		current_panel.queue_free()
 		current_panel = null
 
-	# ✅ Clean up current instance
 	_cleanup_current_instance()
 
 	_current_character_group = ""
 	
 	finished.emit()
 
-# Function to get the current expression of a character
 func get_character_current_expression(character_group_name: String) -> String:
-	"""Gets the current expression of the specified character"""
 	var character_node = find_character_animation_node(character_group_name)
 	if character_node and character_node.has_method("get_current_expression_name"):
 		return character_node.get_current_expression_name()
 	return ""
 
-# Function to check if a character exists
 func has_character_animation_node(character_group_name: String) -> bool:
-	"""Checks if a CharacterController exists for the specified group"""
 	return find_character_animation_node(character_group_name) != null
 
 func _get_character_controller() -> Node:
@@ -533,3 +555,27 @@ func _panel_from_path(path: String) -> Node:
 	if s and s is PackedScene:
 		return (s as PackedScene).instantiate()
 	return null
+
+# ✨ NUEVO: Helper para parsear múltiples character groups
+func _parse_character_groups(character_group_name: String) -> PackedStringArray:
+	"""
+	Parsea una cadena de character groups separados por "|"
+	Ejemplos:
+	  "miguel" -> ["miguel"]
+	  "miguel|santi|mario" -> ["miguel", "santi", "mario"]
+	  "miguel | santi | mario" -> ["miguel", "santi", "mario"] (elimina espacios)
+	"""
+	if character_group_name.is_empty():
+		return PackedStringArray()
+	
+	# Dividir por "|"
+	var groups := character_group_name.split("|", false)
+	var result := PackedStringArray()
+	
+	# Limpiar espacios en blanco de cada grupo
+	for group in groups:
+		var cleaned := group.strip_edges()
+		if not cleaned.is_empty():
+			result.append(cleaned)
+	
+	return result
