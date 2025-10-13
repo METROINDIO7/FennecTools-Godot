@@ -105,7 +105,7 @@ func _ready() -> void:
 	if not dialog_completed.is_connected(_on_dialog_completed):
 		dialog_completed.connect(_on_dialog_completed)
 	
-	call_deferred("_setup_sound_system")
+	_setup_sound_system()
 
 # ==============
 # SOUND SYSTEM
@@ -140,6 +140,13 @@ func play_voiceline(voiceline_config: Dictionary) -> void:
 		voiceline_config.get("pitch_min", 0.9),
 		voiceline_config.get("pitch_max", 1.1)
 	)
+	
+	var bus_name = voiceline_config.get("bus", "Master")
+	if bus_name != "" and AudioServer.get_bus_index(bus_name) != -1:
+		_voiceline_player.bus = bus_name
+	else:
+		_voiceline_player.bus = "Master"
+	
 	_voiceline_player.play()
 
 func _play_character_sound() -> void:

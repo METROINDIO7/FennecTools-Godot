@@ -62,7 +62,8 @@ var character: String = ""
 # === VOICELINE AUDIO SETTINGS ===
 @export_group("Voiceline Audio", "voiceline_")
 @export var voiceline_enabled: bool = false
-@export var voiceline_stream: AudioStream
+@export var voiceline_streams: Array[AudioStream]
+@export var voiceline_bus_name: String = "Master"
 @export_range(0.5, 2.0, 0.1) var voiceline_pitch_min: float = 0.9
 @export_range(0.5, 2.0, 0.1) var voiceline_pitch_max: float = 1.1
 @export_range(0.0, 1.0, 0.1) var voiceline_volume: float = 0.7
@@ -150,30 +151,27 @@ func get_instance_debug_info() -> String:
 		target_info = "target: " + str(instance_target)
 	return "Instance: " + instance_scene.resource_path.get_file() + " -> " + target_info
 
-# Check if it has a voiceline configured
-func has_voiceline() -> bool:
-	return voiceline_enabled and voiceline_stream != null
+# Check if it has a voiceline configured for a specific index
+func has_voiceline(index: int) -> bool:
+	return voiceline_enabled and index >= 0 and index < voiceline_streams.size() and voiceline_streams[index] != null
 
 # Get voiceline debug information
 func get_voiceline_debug_info() -> String:
-	if not has_voiceline():
-		return "No voiceline"
-	return "Voiceline: %s (pitch: %.1f-%.1f, vol: %.1f)" % [
-		voiceline_stream.resource_path.get_file() if voiceline_stream else "null",
-		voiceline_pitch_min,
-		voiceline_pitch_max,
-		voiceline_volume
-	]
+	if not voiceline_enabled or voiceline_streams.is_empty():
+		return "No voicelines"
+	var valid_streams = voiceline_streams.filter(func(s): return s != null).size()
+	return "%d voicelines (%d valid)" % [voiceline_streams.size(), valid_streams]
 
-# Get a dictionary with the voiceline configuration
-func get_voiceline_config() -> Dictionary:
-	if not has_voiceline():
+# Get a dictionary with the voiceline configuration for a specific index
+func get_voiceline_config(index: int) -> Dictionary:
+	if not has_voiceline(index):
 		return {}
 	return {
-		"stream": voiceline_stream,
+		"stream": voiceline_streams[index],
 		"volume": voiceline_volume,
 		"pitch_min": voiceline_pitch_min,
-		"pitch_max": voiceline_pitch_max
+		"pitch_max": voiceline_pitch_max,
+		"bus": voiceline_bus_name
 	}
 
 # ✨ NUEVO: Helper para parsear character groups en el propio resource

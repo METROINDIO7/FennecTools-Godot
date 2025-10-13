@@ -216,9 +216,18 @@ func _mouth_loop() -> void:
 		var interval = mouth_interval
 		if use_random_interval:
 			interval = randf_range(mouth_interval_min, mouth_interval_max)
+
+		# Check if the current expression allows mouth animation
+		var can_animate_mouth = true
+		if _current_state_id in _expression_states:
+			var current_state = _expression_states[_current_state_id]
+			if not current_state.animate_mouth:
+				can_animate_mouth = false
+
+		if can_animate_mouth:
+			_animate_mouth_3d()
+			_animate_mouth_2d(true)
 		
-		_animate_mouth_3d()
-		_animate_mouth_2d(true)
 		await get_tree().create_timer(interval).timeout
 	
 	_mouth_task_running = false
@@ -269,12 +278,24 @@ func _is_playing_expression_animation(anim_player: AnimationPlayer) -> bool:
 	return false
 
 func _reset_mouth_3d() -> void:
+	# Check if the current expression allows mouth animation. If not, do not reset.
+	if _current_state_id in _expression_states:
+		var current_state = _expression_states[_current_state_id]
+		if "animate_mouth" in current_state and not current_state.animate_mouth:
+			return  # Do not reset the mouth, as the expression controls it.
+			
 	for path in mouth_targets_mesh:
 		var mesh = _get_cached_node(path) as MeshInstance3D
 		if mesh:
 			_set_blend_shape_on_mesh(mesh, mouth_blendshape_index, 0.0)
 
 func _reset_mouth_2d() -> void:
+	# Check if the current expression allows mouth animation. If not, do not reset.
+	if _current_state_id in _expression_states:
+		var current_state = _expression_states[_current_state_id]
+		if "animate_mouth" in current_state and not current_state.animate_mouth:
+			return  # Do not reset the mouth, as the expression controls it.
+
 	for path in mouth_targets_plays:
 		var node = _get_cached_node(path)
 		if not node:

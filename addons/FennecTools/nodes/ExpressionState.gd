@@ -6,6 +6,10 @@ class_name ExpressionState
 
 @export var state_id: int = 0
 @export var state_name: String = "default"
+
+@export_group("Mouth Animation")
+@export var animate_mouth: bool = true
+
 @export var auto_play_on_activate: bool = true
 
 # ✨ SISTEMA DE RETORNO MEJORADO

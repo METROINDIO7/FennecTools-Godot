@@ -34,6 +34,7 @@ var _cancelled: bool = false
 var _input_consumed: bool = false
 var _current_character_group: String = ""
 var _current_instance: Node = null
+var _is_dialogue_active: bool = false
 
 func _ready():
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -379,12 +380,18 @@ func _calculate_total_items() -> int:
 	return total
 
 func start() -> void:
+	if _is_dialogue_active:
+		push_warning("DialogueLauncher: A dialogue is already active. Ignoring new start request.")
+		return
+	_is_dialogue_active = true
+
 	_cancelled = false
 	_input_consumed = false
 	
 	var parent = _get_panel_parent()
 	
 	if slots.size() == 0:
+		_is_dialogue_active = false
 		finished.emit()
 		return
 	
@@ -486,8 +493,8 @@ func start() -> void:
 					start_character_talking(_current_character_group)
 				
 				# ✨ Reproducir voiceline si está configurada
-				if slot.has_voiceline() and current_panel.has_method("play_voiceline"):
-					current_panel.play_voiceline(slot.get_voiceline_config())
+				if slot.has_voiceline(item_idx) and current_panel.has_method("play_voiceline"):
+					current_panel.play_voiceline(slot.get_voiceline_config(item_idx))
 				
 				# ✨ IMPORTANTE: play_dialog maneja todo el ciclo interno
 				if current_panel.has_method("play_dialog"):
@@ -532,6 +539,7 @@ func start() -> void:
 
 	_current_character_group = ""
 	
+	_is_dialogue_active = false
 	finished.emit()
 
 func get_character_current_expression(character_group_name: String) -> String:
@@ -558,13 +566,6 @@ func _panel_from_path(path: String) -> Node:
 
 # ✨ NUEVO: Helper para parsear múltiples character groups
 func _parse_character_groups(character_group_name: String) -> PackedStringArray:
-	"""
-	Parsea una cadena de character groups separados por "|"
-	Ejemplos:
-	  "miguel" -> ["miguel"]
-	  "miguel|santi|mario" -> ["miguel", "santi", "mario"]
-	  "miguel | santi | mario" -> ["miguel", "santi", "mario"] (elimina espacios)
-	"""
 	if character_group_name.is_empty():
 		return PackedStringArray()
 	
