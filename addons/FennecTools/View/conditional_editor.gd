@@ -263,9 +263,6 @@ func _on_add_pressed():
 		return
 	
 	var original_conditionals = safe_load_conditionals()
-	for conditional in original_conditionals:
-		if conditional.get("name", "") == name_text:
-			return
 	
 	# Generate new unique ID
 	var new_id = 1
@@ -315,12 +312,7 @@ func _on_edit_pressed():
 	var conditional = filtered_conditionals[index]
 	var name_text = name_input.text.strip_edges()
 	
-	# Validate unique name (excluding current conditional)
 	var original_conditionals = safe_load_conditionals()
-	for other_conditional in original_conditionals:
-		if other_conditional.get("id", -1) != conditional.get("id", -1) and other_conditional.get("name", "") == name_text:
-			return
-	
 	# Find real conditional in original array (not filtered)
 	var real_conditional = null
 	var real_index = -1
