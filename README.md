@@ -33,7 +33,6 @@ FennecTools is a comprehensive, professionally-designed plugin that integrates e
 | **Translation Manager** | 🌍 | Multi-language with automatic UI synchronization |
 | **Input Control** | 🎯 | Customizable input mapping for all control schemes |
 | **Kanban Board** | 📋 | Integrated project management inside Godot |
-| **Character Controller** | 🎭 | Facial expressions and animation coordination |
 
 ## 🎮 Quick Start - Get Running in 5 Minutes
 
@@ -151,8 +150,6 @@ var greeting = FGGlobal.get_translation("welcome_message")
 - **Troubleshooting guides** for common issues
 - **Best practices** for optimal performance
 
-### 🎥 Video Tutorials
-*Coming soon - check repository for updates*
 
 ## 🤝 Community & Support
 
