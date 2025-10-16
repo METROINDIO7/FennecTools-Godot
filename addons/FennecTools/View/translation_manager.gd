@@ -19,7 +19,7 @@ extends Control
 @onready var edit_button: Button = $VBoxContainer/ButtonContainer/EditButton
 @onready var delete_button: Button = $VBoxContainer/ButtonContainer/DeleteButton
 
-var current_languages: Array = ["es", "en"]
+var current_languages: Array = ["EN", "ES"]
 var selected_update_group: String = "translate"  # Default value
 var delete_language_panel: PanelContainer
 var delete_language_option_button: OptionButton
@@ -113,6 +113,7 @@ func _on_add_language_pressed():
 		refresh_display()
 		save_translation_data()
 		add_language_input.text = ""
+		FGGlobal.update_language()
 
 
 func _on_delete_language_pressed():
@@ -139,6 +140,7 @@ func _delete_language(lang_to_delete: String):
 		setup_translation_tree()
 		refresh_display()
 		save_translation_data()
+		FGGlobal.update_language()
 	else:
 		pass
 
@@ -224,7 +226,7 @@ func _on_cell_edited():
 			FGGlobal.translations[lang][key] = value
 		
 		save_translation_data()
-		update_language_nodes()
+		FGGlobal.update_language()
 
 
 func refresh_display():
@@ -282,7 +284,7 @@ func _on_add_translation_pressed():
 	FGGlobal.translations[selected_lang][key] = value
 	save_translation_data()
 	refresh_display()
-	update_language_nodes()
+	FGGlobal.update_language()
 	clear_inputs()
 
 
@@ -318,7 +320,7 @@ func _on_edit_translation_pressed():
 
 	save_translation_data()
 	refresh_display()
-	update_language_nodes()
+	FGGlobal.update_language()
 
 
 func _on_delete_translation_pressed():
@@ -335,7 +337,7 @@ func _on_delete_translation_pressed():
 	
 	save_translation_data()
 	refresh_display()
-	update_language_nodes()
+	FGGlobal.update_language()
 	clear_inputs()
 
 

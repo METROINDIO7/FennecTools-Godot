@@ -16,6 +16,7 @@ class_name NodeGrouper
 @export var search_depth: int = -1  # -1 = sin límite
 
 @export_group("Comportamiento")
+@export var group_at_start: bool = true
 @export var restore_on_tree_exit: bool = true
 @export var debug_mode: bool = false
 
@@ -38,6 +39,14 @@ func _ready():
 	
 	if debug_mode:
 		print("[NodeGrouper] Iniciado con ", managed_nodes.size(), " nodos gestionados")
+
+	# Agrupar o desagrupar al inicio según la configuración
+	if group_at_start:
+		nodes_currently_grouped = false # Forzar ejecución de group_nodes
+		group_nodes()
+	else:
+		nodes_currently_grouped = true # Forzar ejecución de ungroup_nodes
+		ungroup_nodes()
 
 func _exit_tree():
 	# Restaurar grupos originales si está configurado
@@ -295,4 +304,10 @@ func ungroup():
 
 func toggle():
 	"""Alterna agrupación"""
+	var was_grouped = nodes_currently_grouped
 	toggle_grouping()
+	if was_grouped:
+		group_nodes()
+	
+	if debug_mode:
+		print("[NodeGrouper] Grupo objetivo cambiado a: ", target_group_name)
