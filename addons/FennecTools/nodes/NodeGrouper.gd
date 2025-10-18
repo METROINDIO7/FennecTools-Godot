@@ -112,6 +112,10 @@ func group_nodes():
 	
 	for node in managed_nodes:
 		if is_instance_valid(node):
+			# Remover del grupo backup si existe
+			if not backup_group_name.is_empty() and node.is_in_group(backup_group_name):
+				node.remove_from_group(backup_group_name)
+			
 			# Agregar al grupo objetivo si no está
 			if not node.is_in_group(target_group_name):
 				node.add_to_group(target_group_name)
@@ -140,7 +144,7 @@ func ungroup_nodes():
 	
 	for node in managed_nodes:
 		if is_instance_valid(node):
-			# Remover del grupo objetivo
+			# SOLO remover del grupo objetivo (no de otros grupos)
 			if node.is_in_group(target_group_name):
 				node.remove_from_group(target_group_name)
 				ungrouped_count += 1
@@ -304,10 +308,4 @@ func ungroup():
 
 func toggle():
 	"""Alterna agrupación"""
-	var was_grouped = nodes_currently_grouped
 	toggle_grouping()
-	if was_grouped:
-		group_nodes()
-	
-	if debug_mode:
-		print("[NodeGrouper] Grupo objetivo cambiado a: ", target_group_name)

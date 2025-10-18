@@ -339,10 +339,16 @@ func request_exit(wait_for_node: Node = null) -> void:
 	if exit_delay > 0.0:
 		await get_tree().create_timer(exit_delay).timeout
 	
-	# ✨ NUEVO: Notificar que la animación de salida está por comenzar
+	# Notificar que la animación de salida está por comenzar
 	dialog_exit_started.emit()
 	
 	await _play_exit()
+	
+	# ✨ NUEVO: Limpiar estado global si es necesario
+	if typeof(FGGlobal) != TYPE_NIL and FGGlobal:
+		# Solo establecer en false si este es el último panel activo
+		# Puedes ajustar esta lógica según tus necesidades
+		FGGlobal.talk = false
 	
 	if auto_free_on_exit:
 		queue_free()
