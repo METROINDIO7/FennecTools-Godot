@@ -721,16 +721,55 @@ func get_available_save_slots() -> Array:
 	return slots
 
 func delete_save_slot(slot_id: int) -> bool:
-	"""Deletes a save slot"""
-	var slot_path = "user://fennec_conditionals_slot_" + str(slot_id) + ".json"
+	"""Deletes a save slot COMPLETELY - including player data and memory cleanup"""
+	var deleted_anything = false
 	
+	# 1. Delete conditionals file
+	var slot_path = "user://fennec_conditionals_slot_" + str(slot_id) + ".json"
 	if FileAccess.file_exists(slot_path):
 		DirAccess.remove_absolute(slot_path)
 		save_slots.erase(slot_id)
-		#print("[FGGlobal] Slot ", slot_id, " deleted")
-		return true
+		deleted_anything = true
+		print("[FGGlobal] Conditionals file deleted for slot ", slot_id)
 	
-	return false
+	# 2. Delete player data file
+	var player_data_path = "user://fennec_player_data_slot_" + str(slot_id) + ".json"
+	if FileAccess.file_exists(player_data_path):
+		DirAccess.remove_absolute(player_data_path)
+		deleted_anything = true
+		print("[FGGlobal] Player data file deleted for slot ", slot_id)
+	
+	# 3. If the deleted slot is the current one, reset to default state
+	if current_save_slot == slot_id:
+		print("[FGGlobal] Current slot was deleted, resetting to empty state")
+		
+		# Clear current conditionals
+		condicionales.clear()
+		
+		# Clear player data in memory
+		dynamic_character_names.clear()
+		
+		# Option 1: Load default slot 1 if exists
+		if load_save_slot(1):
+			print("[FGGlobal] Switched to slot 1 after deletion")
+		else:
+			# Option 2: Initialize empty conditionals
+			current_save_slot = 1
+			if load_conditionals_from_plugin():
+				duplicate_conditionals_for_save_slot(1)
+				load_save_slot(1)
+				print("[FGGlobal] Created new slot 1 after deletion")
+			else:
+				# Last resort: empty conditionals
+				condicionales = []
+				_conditionals_initialized = true
+				conditionals_loaded.emit()
+				print("[FGGlobal] Initialized empty conditionals after deletion")
+	
+	return deleted_anything
+
+
+
 
 func get_conditional_groups() -> Array:
 	"""Gets the list of unique conditional groups"""
