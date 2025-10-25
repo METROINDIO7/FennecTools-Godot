@@ -1609,7 +1609,7 @@ func _on_navigation_selection_changed(node: Control):
 func refresh_navigation_system():
 	"""Refreshes the navigation system"""
 	if navigation_system and navigation_system.has_method("refresh_interactables"):
-		navigation_system.refresh_interactables()
+		navigation_system.call_deferred("refresh_interactables")
 
 func select_navigation_node(node: Control):
 	"""Selects a specific node in the navigation system"""

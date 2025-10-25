@@ -1,6 +1,6 @@
 extends Node
 
-# Improved navigation system integrated with FGGlobal
+# Sistema de navegación mejorado con protección contra bugs de sincronización
 var current_button_index: int = 0
 var interactuable_nodes: Array[Node] = []
 var navigation_sound: AudioStreamPlayer
@@ -18,9 +18,14 @@ var navigation_sound: AudioStreamPlayer
 # States
 var original_colors: Dictionary = {}
 var is_adjusting_slider: bool = false
-var is_editing_text: bool = false  # new state for text fields
+var is_editing_text: bool = false
 var refresh_timer: Timer
 var last_node_count: int = 0
+
+# 🔒 PROTECCIÓN CONTRA BUGS
+var is_refreshing: bool = false  # Previene refresh concurrente
+var refresh_scheduled: bool = false  # Para diferir refresh si está ocupado
+var interaction_lock: bool = false  # Previene interacción durante cambios
 
 # Signals
 signal selection_changed(node: Control)
@@ -31,7 +36,6 @@ func _ready():
 		
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	refresh_interactables()
-	
 	
 	# Configure navigation sound
 	if navigation_sound_path:
@@ -59,6 +63,10 @@ func _process(delta: float) -> void:
 	# Check if the system is enabled
 	if not FGGlobal or not FGGlobal.input_control_enabled:
 		return
+	
+	# 🔒 No procesar input si estamos en medio de un refresh
+	if is_refreshing or interaction_lock:
+		return
 		
 	# Check for visibility changes
 	_check_visibility_changes()
@@ -66,19 +74,32 @@ func _process(delta: float) -> void:
 	if interactuable_nodes.size() == 0:
 		return
 	
+	# 🔒 VALIDACIÓN: Verificar que el índice actual es válido
+	if current_button_index >= interactuable_nodes.size():
+		current_button_index = 0
+		_update_focus()
+		return
+	
 	var current_node = interactuable_nodes[current_button_index]
+	
+	# 🔒 VALIDACIÓN: Verificar que el nodo actual es válido
+	if not is_instance_valid(current_node) or not _is_node_usable(current_node):
+		_safe_refresh_with_selection_recovery()
+		return
 	
 	if is_editing_text and (current_node is TextEdit or current_node is LineEdit):
 		_handle_text_editing(current_node)
 		return
 	
-	# Handle slider adjustment mode
 	if is_adjusting_slider and (current_node is HSlider or current_node is VSlider):
 		_handle_slider_adjustment(current_node)
-		return  # IMPORTANT: return here prevents normal navigation from being processed
-		
+		return
 	
-	# Handle normal navigation using the custom system
+	# 🔒 CRÍTICO: Capturar el nodo ANTES de procesar input para evitar race conditions
+	var node_snapshot = current_node
+	var index_snapshot = current_button_index
+		
+	# Handle normal navigation
 	var old_index = current_button_index
 	
 	if grid_navigation:
@@ -91,150 +112,187 @@ func _process(delta: float) -> void:
 		_play_navigation_sound()
 		_update_focus()
 		
-		# Emit signal with the newly selected node
 		if current_button_index < interactuable_nodes.size():
 			selection_changed.emit(interactuable_nodes[current_button_index])
+		
+		# Actualizar snapshot si cambió la selección
+		if current_button_index < interactuable_nodes.size():
+			node_snapshot = interactuable_nodes[current_button_index]
+			index_snapshot = current_button_index
 	
-	# Handle interaction with the current control
+	# 🔒 CRÍTICO: Usar el snapshot capturado para interacción
 	if FGGlobal.is_custom_action_just_pressed("accept"):
-		_interact_with_control(current_node)
+		_safe_interact_with_control_snapshot(node_snapshot, index_snapshot)
 
+# 🔒 NUEVA FUNCIÓN: Interacción segura con snapshot del nodo
+func _safe_interact_with_control_snapshot(node_snapshot: Node, index_snapshot: int) -> void:
+	# Bloquear INMEDIATAMENTE para prevenir refreshes durante interacción
+	interaction_lock = true
+	
+	# Verificar que el snapshot del nodo es válido
+	if not is_instance_valid(node_snapshot):
+		print("[Navigation] ❌ ERROR: Snapshot node is invalid")
+		interaction_lock = false
+		return
+	
+	# Verificar que el índice no ha cambiado (detectar refresh durante navegación)
+	if index_snapshot >= interactuable_nodes.size():
+		print("[Navigation] ❌ ERROR: Index snapshot out of bounds (", index_snapshot, " >= ", interactuable_nodes.size(), ")")
+		interaction_lock = false
+		return
+	
+	# Verificar que el nodo en el snapshot sigue siendo el mismo
+	var current_node_at_index = interactuable_nodes[index_snapshot]
+	if node_snapshot != current_node_at_index:
+		print("[Navigation] ⚠️ WARNING: Node changed during interaction!")
+		print("  Snapshot node: ", node_snapshot.name)
+		print("  Current node at index: ", current_node_at_index.name if is_instance_valid(current_node_at_index) else "invalid")
+		
+		# Buscar el nodo snapshot en la lista actual
+		var new_index = interactuable_nodes.find(node_snapshot)
+		if new_index != -1:
+			print("[Navigation] ✓ Found snapshot node at new index: ", new_index)
+			current_button_index = new_index
+			_update_focus()
+			# Usar el snapshot node original
+			_interact_with_control(node_snapshot)
+		else:
+			print("[Navigation] ❌ ERROR: Snapshot node no longer in list!")
+		
+		interaction_lock = false
+		return
+	
+	# Verificar que current_button_index coincide con index_snapshot
+	if current_button_index != index_snapshot:
+		print("[Navigation] ⚠️ WARNING: Index mismatch!")
+		print("  Snapshot index: ", index_snapshot)
+		print("  Current index: ", current_button_index)
+		# Sincronizar con el snapshot
+		current_button_index = index_snapshot
+		_update_focus()
+	
+	# TODO: Verificación final - el nodo debe estar visible y usable
+	if not _is_node_usable(node_snapshot):
+		print("[Navigation] ❌ ERROR: Snapshot node is not usable")
+		interaction_lock = false
+		return
+	
+	# ✅ Todas las verificaciones pasadas - ejecutar interacción
+	print("[Navigation] ✓ Interacting with: ", node_snapshot.name, " at index ", index_snapshot)
+	_interact_with_control(node_snapshot)
+	
+	# Desbloquear después de un frame para asegurar que la interacción se complete
+	await get_tree().process_frame
+	interaction_lock = false
 
-
+# 🔒 NUEVA FUNCIÓN: Interacción segura con validaciones
+func _safe_interact_with_control(node: Node) -> void:
+	# Verificar que el nodo es válido antes de interactuar
+	if not is_instance_valid(node):
+		print("[Navigation] WARNING: Attempted to interact with invalid node")
+		return
+	
+	# Verificar que el nodo está en el índice correcto
+	if current_button_index >= interactuable_nodes.size():
+		print("[Navigation] WARNING: Index out of bounds during interaction")
+		return
+	
+	# Verificar que es el nodo correcto
+	if interactuable_nodes[current_button_index] != node:
+		print("[Navigation] WARNING: Node mismatch during interaction!")
+		print("  Expected: ", node.name if is_instance_valid(node) else "invalid")
+		print("  Got: ", interactuable_nodes[current_button_index].name)
+		# Intentar sincronizar
+		_update_focus()
+		return
+	
+	# Bloquear interacciones durante el proceso
+	interaction_lock = true
+	_interact_with_control(node)
+	interaction_lock = false
 
 func _handle_text_editing(text_node: Control) -> void:
-	# Only ui_cancel can exit text editing mode
-	# This avoids conflicts with custom keys like "Q" for back
 	if Input.is_action_just_pressed("ui_cancel"):
 		is_editing_text = false
 		text_node.release_focus()
 		_update_focus()
 		return
-	
-	# The rest of the input is handled normally by the TextEdit/LineEdit
-	# We do not intercept other keys to allow normal writing
-
-
-
 
 func _handle_option_button(option_button: OptionButton) -> void:
-	# Get the popup menu
 	var popup = option_button.get_popup()
 	if not popup:
 		return
 	
-	# Store current selection
 	var current_selection = option_button.selected
-	
-	# Show the popup
 	option_button.show_popup()
-	
-	# Wait for the popup to appear
 	await get_tree().process_frame
 	
-	# Temporarily disable our normal navigation
 	var was_processing = is_processing()
 	set_process(false)
 	
-	# Current selected item in the popup
 	var current_item = current_selection
 	var item_count = popup.item_count
-	
-	# Variables to control the delay of pressed keys
-	var input_delay = 0.15  # seconds between each movement when held down
+	var input_delay = 0.15
 	var time_since_last_input = 0.0
-	var is_holding_key = false
 	
-	# Handle popup navigation until it closes
 	while popup.visible:
 		var delta = get_process_delta_time()
 		time_since_last_input += delta
 		
-		# Check if any navigation key is being pressed
 		var up_pressed = FGGlobal.is_custom_action_pressed("up")
 		var down_pressed = FGGlobal.is_custom_action_pressed("down")
 		var accept_pressed = FGGlobal.is_custom_action_just_pressed("accept") or Input.is_action_just_pressed("ui_accept")
 		var back_pressed = FGGlobal.is_custom_action_just_pressed("back") or Input.is_action_just_pressed("ui_cancel")
 		
-		# Navigate up
 		if (up_pressed and (FGGlobal.is_custom_action_just_pressed("up") or time_since_last_input >= input_delay)):
 			current_item = (current_item - 1 + item_count) % item_count
-			
-			# Skip disabled items
 			var attempts = 0
 			while attempts < item_count and popup.is_item_disabled(current_item):
 				current_item = (current_item - 1 + item_count) % item_count
 				attempts += 1
-			
-			# Visually highlight the current item
 			popup.set_focused_item(current_item)
-			
 			time_since_last_input = 0.0
-			is_holding_key = true
 			_play_navigation_sound()
 		
-		# Navigate down
 		elif (down_pressed and (FGGlobal.is_custom_action_just_pressed("down") or time_since_last_input >= input_delay)):
 			current_item = (current_item + 1) % item_count
-			
-			# Skip disabled items
 			var attempts = 0
 			while attempts < item_count and popup.is_item_disabled(current_item):
 				current_item = (current_item + 1) % item_count
 				attempts += 1
-			
-			# Visually highlight the current item
 			popup.set_focused_item(current_item)
-			
 			time_since_last_input = 0.0
-			is_holding_key = true
 			_play_navigation_sound()
 		
-		# Reset the counter if no key is being pressed
 		if not up_pressed and not down_pressed:
-			is_holding_key = false
 			time_since_last_input = 0.0
 		
-		# Select the item
 		if accept_pressed:
-			# Verify that the item is not disabled
 			if not popup.is_item_disabled(current_item):
-				# Close the popup
 				popup.hide()
-				
-				# Manually select the item
 				option_button.selected = current_item
-				
-				# Manually emit the item_selected signal
 				if option_button.has_signal("item_selected"):
 					option_button.item_selected.emit(current_item)
-				
 			break
 		
-		# Cancel selection
 		if back_pressed:
 			popup.hide()
 			break
 		
 		await get_tree().process_frame
 	
-	# Re-enable our normal processing
 	set_process(was_processing)
-	
-	# Restore focus to the option button
 	_update_focus()
-	
-
 
 func _update_focus() -> void:
-	# Reset all nodes to their original state
+	# Reset all nodes
 	for node in interactuable_nodes:
 		if is_instance_valid(node) and node is Control:
 			node.modulate = Color.WHITE
 			if node.has_method("release_focus"):
 				node.release_focus()
 	
-	# Highlight and focus the current node
+	# Highlight current node
 	if interactuable_nodes.size() > 0 and current_button_index < interactuable_nodes.size():
 		var current_node = interactuable_nodes[current_button_index]
 		if is_instance_valid(current_node) and current_node is Control:
@@ -243,43 +301,29 @@ func _update_focus() -> void:
 			if current_node.has_method("grab_focus") and not is_editing_text:
 				current_node.grab_focus()
 
-
-# Modify the _interact_with_control function to include VSlider
 func _interact_with_control(node: Node) -> void:
 	if node is BaseButton:
 		if node is CheckButton or node is CheckBox:
 			node.button_pressed = !node.button_pressed
-			# Emit the toggled signal
 			if node.has_signal("toggled"):
 				node.toggled.emit(node.button_pressed)
 		elif node is OptionButton:
-			# For OptionButton, handle the selection manually
 			_handle_option_button(node)
 		else:
-			# For regular buttons
 			if node.has_signal("pressed"):
 				node.pressed.emit()
 	
-	elif node is HSlider or node is VSlider:  # Modified to include VSlider
-		# Enter slider adjustment mode
+	elif node is HSlider or node is VSlider:
 		is_adjusting_slider = true
-		# Visual feedback that we are adjusting this slider
 		node.modulate = Color(1.5, 1.5, 0.5, 1)
 	
 	elif node is TextEdit or node is LineEdit:
-		# Enter text editing mode
 		is_editing_text = true
 		node.grab_focus()
-		
-		# Visual feedback that we are editing this field
 		node.modulate = Color(0.5, 1.5, 0.5, 1)
 
-# Add function to force external update
 func force_refresh_from_external():
-	"""Allows updating the list from external scripts"""
-	refresh_interactables()
-
-
+	_safe_refresh_with_selection_recovery()
 
 func _handle_linear_navigation() -> void:
 	if FGGlobal.is_custom_action_just_pressed("down") or FGGlobal.is_custom_action_just_pressed("right"):
@@ -295,7 +339,6 @@ func _handle_grid_navigation() -> void:
 	var new_index = current_button_index
 	
 	if FGGlobal.is_custom_action_just_pressed("right"):
-		# Move right
 		var attempts = 0
 		while attempts < grid_columns:
 			attempts += 1
@@ -313,7 +356,6 @@ func _handle_grid_navigation() -> void:
 				break
 	
 	elif FGGlobal.is_custom_action_just_pressed("left"):
-		# Move left
 		var attempts = 0
 		while attempts < grid_columns:
 			attempts += 1
@@ -331,7 +373,6 @@ func _handle_grid_navigation() -> void:
 				break
 	
 	elif FGGlobal.is_custom_action_just_pressed("down"):
-		# Move down
 		var attempts = 0
 		while attempts < rows:
 			attempts += 1
@@ -344,25 +385,22 @@ func _handle_grid_navigation() -> void:
 			else:
 				break
 				
-			# Ensure we don't go out of bounds
 			if new_index >= interactuable_nodes.size():
 				if wrap_selection:
 					new_index = col
 					row = 0
 				else:
-					# Find the last valid index in this column
 					new_index = interactuable_nodes.size() - 1
 					while new_index >= 0 and new_index % grid_columns != col:
 						new_index -= 1
 					if new_index < 0:
-							break
+						break
 			
 			if _is_node_usable(interactuable_nodes[new_index]):
 				current_button_index = new_index
 				break
 	
 	elif FGGlobal.is_custom_action_just_pressed("up"):
-		# Move up
 		var attempts = 0
 		while attempts < rows:
 			attempts += 1
@@ -379,10 +417,8 @@ func _handle_grid_navigation() -> void:
 				current_button_index = new_index
 				break
 
-
 func _handle_slider_adjustment(slider) -> void:
 	if FGGlobal.is_custom_action_just_pressed("accept") or FGGlobal.is_custom_action_just_pressed("back"):
-		# Exit slider adjustment mode
 		is_adjusting_slider = false
 		_update_focus()
 		return
@@ -391,7 +427,6 @@ func _handle_slider_adjustment(slider) -> void:
 	var new_value = slider.value
 	
 	if slider is HSlider:
-		# Horizontal navigation for HSlider
 		if FGGlobal.is_custom_action_just_pressed("right") or FGGlobal.is_custom_action_pressed("right"):
 			new_value = min(slider.value + slider_step, slider.max_value)
 			value_changed = true
@@ -399,8 +434,6 @@ func _handle_slider_adjustment(slider) -> void:
 			new_value = max(slider.value - slider_step, slider.min_value)
 			value_changed = true
 	elif slider is VSlider:
-		# Vertical navigation for VSlider - FIXED
-		# up increases the value, down decreases it (standard VSlider behavior)
 		if FGGlobal.is_custom_action_just_pressed("up") or FGGlobal.is_custom_action_pressed("up"):
 			new_value = min(slider.value + slider_step, slider.max_value)
 			value_changed = true
@@ -410,70 +443,33 @@ func _handle_slider_adjustment(slider) -> void:
 	
 	if value_changed and new_value != slider.value:
 		slider.value = new_value
-		# Emit the value_changed signal
 		if slider.has_signal("value_changed"):
 			slider.value_changed.emit(new_value)
 
-
-
-
-func _find_next_enabled_item(popup: PopupMenu, current: int) -> int:
-	var item_count = popup.item_count
-	var next_item = (current + 1) % item_count
-	var attempts = 0
-	
-	while attempts < item_count and popup.is_item_disabled(next_item):
-		next_item = (next_item + 1) % item_count
-		attempts += 1
-	
-	return next_item if attempts < item_count else current
-
-func _find_previous_enabled_item(popup: PopupMenu, current: int) -> int:
-	var item_count = popup.item_count
-	var prev_item = (current - 1 + item_count) % item_count
-	var attempts = 0
-	
-	while attempts < item_count and popup.is_item_disabled(prev_item):
-		prev_item = (prev_item - 1 + item_count) % item_count
-		attempts += 1
-	
-	return prev_item if attempts < item_count else current
-
-
-
-
 func _is_node_usable(node: Node) -> bool:
-	# Check if the node is still valid
 	if not is_instance_valid(node):
 		return false
 		
-	# Check if it is a Control
 	if not node is Control:
 		return false
 		
 	var control = node as Control
 	
-	# Check if the node is still in the scene tree
 	if not control.is_inside_tree():
 		return false
 	
-	# Check if the node is visible
 	if not control.visible:
 		return false
 		
-	# Check if the node is completely transparent
 	if control.modulate.a <= 0.01:
 		return false
 		
-	# Check if the node is disabled (if it has that property)
 	if control.has_method("is_disabled") and control.is_disabled():
 		return false
 	
-	# For buttons
 	if control is BaseButton and control.disabled:
 		return false
 	
-	# Check if any parent is invisible
 	var parent = control.get_parent()
 	while is_instance_valid(parent):
 		if parent is Control and (not parent.visible or parent.modulate.a <= 0.01):
@@ -482,28 +478,53 @@ func _is_node_usable(node: Node) -> bool:
 	
 	return true
 
+# 🔒 NUEVA FUNCIÓN: Refresh seguro con recuperación de selección
+func _safe_refresh_with_selection_recovery():
+	if is_refreshing:
+		refresh_scheduled = true
+		return
+	
+	# Guardar referencia al nodo actual
+	var previous_node = null
+	if current_button_index < interactuable_nodes.size():
+		previous_node = interactuable_nodes[current_button_index]
+	
+	refresh_interactables()
+	
+	# Intentar recuperar la selección
+	if is_instance_valid(previous_node) and previous_node in interactuable_nodes:
+		current_button_index = interactuable_nodes.find(previous_node)
+		_update_focus()
+	
+	# Procesar refresh programado si existe
+	if refresh_scheduled:
+		refresh_scheduled = false
+		call_deferred("_safe_refresh_with_selection_recovery")
+
 func refresh_interactables() -> void:
-	# Get the group name from FGGlobal
-	var group_name = "interactuable"  # default value
+	# 🔒 Prevenir refresh concurrente
+	if is_refreshing:
+		refresh_scheduled = true
+		return
+	
+	is_refreshing = true
+	
+	var group_name = "interactuable"
 	if FGGlobal and FGGlobal.has_method("get_interactable_group_name"):
 		group_name = FGGlobal.get_interactable_group_name()
 	
-	# Get all nodes in the specified group
 	var all_nodes = get_tree().get_nodes_in_group(group_name)
 	
-	# Filter invalid nodes
 	interactuable_nodes.clear()
 	for node in all_nodes:
 		if is_instance_valid(node) and _is_node_usable(node):
 			interactuable_nodes.append(node)
 	
-	# Store original colors
 	original_colors.clear()
 	for node in interactuable_nodes:
 		if is_instance_valid(node) and node is Control:
 			original_colors[node] = node.modulate
 	
-	# Reset current index if necessary
 	if interactuable_nodes.size() > 0:
 		if current_button_index >= interactuable_nodes.size():
 			current_button_index = 0
@@ -511,13 +532,19 @@ func refresh_interactables() -> void:
 	else:
 		current_button_index = 0
 	
-	# Update the node count using the customizable group
 	last_node_count = get_tree().get_nodes_in_group(group_name).size()
+	
+	is_refreshing = false
+	
+	# Procesar refresh programado si existe
+	if refresh_scheduled:
+		refresh_scheduled = false
+		call_deferred("refresh_interactables")
 
 func _move_selection(direction: int) -> void:
 	var new_index = current_button_index
 	var attempts = 0
-	var max_attempts = interactuable_nodes.size() * 2  # Prevent infinite loops
+	var max_attempts = interactuable_nodes.size() * 2
 	
 	while attempts < max_attempts:
 		attempts += 1
@@ -527,16 +554,13 @@ func _move_selection(direction: int) -> void:
 		else:
 			new_index = clamp(new_index + direction, 0, interactuable_nodes.size() - 1)
 			
-			# If we reach the edge and can't move anymore, stop
 			if (direction > 0 and new_index == interactuable_nodes.size() - 1) or \
 			   (direction < 0 and new_index == 0):
 				break
 		
-		# If we have returned to the starting point, stop
 		if new_index == current_button_index:
 			break
 			
-		# If we find a usable node, use it
 		if _is_node_usable(interactuable_nodes[new_index]):
 			current_button_index = new_index
 			break
@@ -546,22 +570,23 @@ func _play_navigation_sound() -> void:
 		navigation_sound.play()
 
 func _check_visibility_changes() -> void:
+	# 🔒 No verificar durante refresh o durante interacción
+	if is_refreshing or interaction_lock:
+		return
+		
 	var visible_nodes = _get_visible_interactables()
 	
-	# If the current selection is no longer valid, we need to update
 	if interactuable_nodes.size() > 0 and current_button_index < interactuable_nodes.size():
 		var current_node = interactuable_nodes[current_button_index]
 		if not is_instance_valid(current_node) or not _is_node_usable(current_node) or not visible_nodes.has(current_node):
-			# Our current selection is no longer valid, refresh the list
-			refresh_interactables()
+			_safe_refresh_with_selection_recovery()
 	
-	# If the visible node count has changed, refresh the list
 	if visible_nodes.size() != interactuable_nodes.size():
-		refresh_interactables()
+		_safe_refresh_with_selection_recovery()
 
 func _get_visible_interactables() -> Array[Node]:
 	var visible_nodes: Array[Node] = []
-	var group_name = "interactuable"  # default value
+	var group_name = "interactuable"
 	if FGGlobal and FGGlobal.has_method("get_interactable_group_name"):
 		group_name = FGGlobal.get_interactable_group_name()
 	
@@ -574,7 +599,7 @@ func _get_visible_interactables() -> Array[Node]:
 	return visible_nodes
 
 func select_specific_node(node: Control) -> void:
-	var group_name = "interactuable"  # default value
+	var group_name = "interactuable"
 	if FGGlobal and FGGlobal.has_method("get_interactable_group_name"):
 		group_name = FGGlobal.get_interactable_group_name()
 	
@@ -585,42 +610,33 @@ func select_specific_node(node: Control) -> void:
 			_update_focus()
 
 func register_new_scene(scene_root: Node) -> void:
-	# Ensure the scene root is valid
 	if not is_instance_valid(scene_root):
 		return
 		
-	# Wait two frames to ensure all children are initialized
 	await get_tree().process_frame
 	await get_tree().process_frame
 	
-	# Check again if scene_root is still valid after waiting
 	if not is_instance_valid(scene_root):
 		return
 		
-	# Refresh the list of interactable nodes
-	refresh_interactables()
+	_safe_refresh_with_selection_recovery()
 	
-	# Find the first interactable in this scene
 	var first_interactable = _find_first_interactable_in_scene(scene_root)
 	if first_interactable != null:
 		select_specific_node(first_interactable)
 
 func _find_first_interactable_in_scene(scene_root: Node) -> Control:
-	# Ensure the scene root is valid
 	if not is_instance_valid(scene_root):
 		return null
 	
-	var group_name = "interactuable"  # default value
+	var group_name = "interactuable"
 	if FGGlobal and FGGlobal.has_method("get_interactable_group_name"):
 		group_name = FGGlobal.get_interactable_group_name()
 		
-	# Get all interactable nodes
 	var all_interactables = get_tree().get_nodes_in_group(group_name)
 	
-	# Filter to include only valid nodes that are descendants of scene_root
 	for node in all_interactables:
 		if is_instance_valid(node) and node is Control and _is_node_usable(node):
-			# Check if the node is a descendant of scene_root
 			var parent = node
 			while is_instance_valid(parent):
 				if parent == scene_root:
@@ -630,35 +646,30 @@ func _find_first_interactable_in_scene(scene_root: Node) -> Control:
 	return null
 
 func _on_node_added(node: Node) -> void:
-	var group_name = "interactuable"  # default value
+	var group_name = "interactuable"
 	if FGGlobal and FGGlobal.has_method("get_interactable_group_name"):
 		group_name = FGGlobal.get_interactable_group_name()
 	
-	# When a node is added to the scene tree, check if it is in the interactable group
-	# or if it could contain interactable nodes
 	if node.is_in_group(group_name):
-		# A new interactable node was added directly
-		call_deferred("refresh_interactables")
+		call_deferred("_safe_refresh_with_selection_recovery")
 	elif node is Control:
-		# This is a control that could contain interactable nodes
-		# Wait one frame for it to fully initialize
 		call_deferred("_check_for_new_interactables")
 
 func _check_for_new_interactables() -> void:
-	var group_name = "interactuable"  # default value
+	var group_name = "interactuable"
 	if FGGlobal and FGGlobal.has_method("get_interactable_group_name"):
 		group_name = FGGlobal.get_interactable_group_name()
 	
 	var current_count = get_tree().get_nodes_in_group(group_name).size()
 	if current_count != last_node_count:
-		refresh_interactables()
+		_safe_refresh_with_selection_recovery()
 		last_node_count = current_count
 
 func _on_refresh_timer_timeout() -> void:
+	# 🔒 No refrescar durante interacciones
+	if interaction_lock:
+		return
 	_check_for_new_interactables()
 
 func _on_joy_connection_changed(device_id: int, connected: bool) -> void:
-	if connected:
-		pass
-	else:
-		pass
+	pass

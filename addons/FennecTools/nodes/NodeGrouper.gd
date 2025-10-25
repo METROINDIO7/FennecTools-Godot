@@ -204,8 +204,8 @@ func restore_original_groups():
 
 func _force_navigation_update():
 	"""Fuerza la actualización del sistema de navegación si está disponible"""
-	if FGGlobal and FGGlobal.has_method("force_navigation_refresh"):
-		FGGlobal.force_navigation_refresh()
+	if FGGlobal and FGGlobal.has_method("refresh_navigation_system"):
+		FGGlobal.refresh_navigation_system()
 
 func add_node_to_management(node: Node):
 	"""Agrega un nodo a la gestión dinámica"""
