@@ -17,6 +17,8 @@ extends Control
 @onready var text_input: LineEdit = $VBoxContainer/TextValuesContainer/HBoxContainer/TextInput
 @onready var add_text_button: Button = $VBoxContainer/TextValuesContainer/HBoxContainer/AddTextButton
 @onready var remove_text_button: Button = $VBoxContainer/TextValuesContainer/HBoxContainer/RemoveTextButton
+@onready var edit_text_button: Button = $VBoxContainer/TextValuesContainer/HBoxContainer/EditTextButton
+@onready var cancel_edit_button: Button = $VBoxContainer/TextValuesContainer/HBoxContainer/CancelEditButton
 
 @onready var add_button: Button = $VBoxContainer/ButtonContainer/AddButton
 @onready var edit_button: Button = $VBoxContainer/ButtonContainer/EditButton
@@ -25,6 +27,10 @@ extends Control
 var _fgglobal_connected: bool = false
 var current_filter_group: String = "All"
 var current_text_values: Array = []
+
+# Variables para el sistema de edición
+var current_editing_index: int = -1
+var allow_duplicate_texts: bool = true  # Nueva opción para permitir duplicados
 
 func safe_load_conditionals() -> Array:
 	"""Helper function to safely load conditionals"""
@@ -85,6 +91,16 @@ func setup_ui():
 	
 	# Initially hide multiple text container
 	text_values_container.visible = false
+	
+	# Configurar botones de edición (inicialmente ocultos)
+	cancel_edit_button.visible = false
+	edit_text_button.visible = true
+	
+	# Agregar tooltips para mejor usabilidad
+	add_text_button.tooltip_text = "Agregar nuevo texto a la lista"
+	remove_text_button.tooltip_text = "Eliminar texto seleccionado"
+	edit_text_button.tooltip_text = "Editar texto seleccionado"
+	cancel_edit_button.tooltip_text = "Cancelar edición"
 
 func connect_signals():
 	add_button.pressed.connect(_on_add_pressed)
@@ -99,6 +115,8 @@ func connect_signals():
 	# Connect signals for multiple text
 	add_text_button.pressed.connect(_on_add_text_pressed)
 	remove_text_button.pressed.connect(_on_remove_text_pressed)
+	edit_text_button.pressed.connect(_on_edit_text_pressed)
+	cancel_edit_button.pressed.connect(_on_cancel_edit_pressed)
 	text_input.text_submitted.connect(_on_text_submitted)
 
 func _on_type_selected(index: int):
@@ -109,6 +127,9 @@ func _on_type_selected(index: int):
 	# For simple text, we'll use description_input
 	if index == 2:  # Multiple Text
 		update_text_values_list()
+	
+	# Resetear modo edición al cambiar tipo
+	_cancel_text_edit()
 
 func update_group_filter():
 	"""Updates OptionButton with available groups"""
@@ -182,6 +203,10 @@ func refresh_list():
 		item_list.add_item(text)
 
 func _on_item_selected(index: int):
+	"""Cuando se selecciona un conditional en la lista"""
+	# Cancelar cualquier edición en curso al cambiar de elemento
+	_cancel_text_edit()
+	
 	if not FGGlobal or not FGGlobal._conditionals_initialized:
 		return
 	
@@ -228,33 +253,97 @@ func get_filtered_conditionals() -> Array:
 	return filtered
 
 func update_text_values_list():
-	"""Updates multiple text values list"""
+	"""Actualiza la lista de valores de texto múltiple"""
 	text_values_list.clear()
-	for value in current_text_values:
-		text_values_list.add_item(value)
+	for i in range(current_text_values.size()):
+		var value = current_text_values[i]
+		# Resaltar el texto que se está editando actualmente
+		if i == current_editing_index:
+			text_values_list.add_item("✏️ " + value)
+		else:
+			text_values_list.add_item(value)
 
 func _on_add_text_pressed():
-	"""Adds new text value"""
+	"""Agrega nuevo texto valor - AHORA PERMITE DUPLICADOS"""
 	var text = text_input.text.strip_edges()
-	if text != "" and text not in current_text_values:
-		current_text_values.append(text)
-		update_text_values_list()
-		text_input.text = ""
+	if text != "":
+		# VERIFICACIÓN MODIFICADA: Ya no chequea duplicados si allow_duplicate_texts es true
+		if allow_duplicate_texts or text not in current_text_values:
+			if current_editing_index >= 0:
+				# Modo edición: actualizar texto existente
+				current_text_values[current_editing_index] = text
+				current_editing_index = -1
+				_exit_edit_mode()
+			else:
+				# Modo normal: agregar nuevo texto
+				current_text_values.append(text)
+			
+			update_text_values_list()
+			text_input.text = ""
+		else:
+			# Solo mostrar advertencia si no permitimos duplicados
+			if not allow_duplicate_texts:
+				print("El texto ya existe en la lista")
 
 func _on_remove_text_pressed():
-	"""Removes selected text value"""
+	"""Elimina texto valor seleccionado"""
 	var selected = text_values_list.get_selected_items()
 	if selected.size() > 0:
 		var index = selected[0]
 		if index >= 0 and index < current_text_values.size():
+			# Si estamos editando el elemento que se va a eliminar, cancelar edición
+			if index == current_editing_index:
+				_cancel_text_edit()
+			
 			current_text_values.remove_at(index)
 			update_text_values_list()
 
+func _on_edit_text_pressed():
+	"""Inicia el modo edición para el texto seleccionado"""
+	var selected = text_values_list.get_selected_items()
+	if selected.size() > 0:
+		var index = selected[0]
+		if index >= 0 and index < current_text_values.size():
+			_enter_edit_mode(index)
+
+func _on_cancel_edit_pressed():
+	"""Cancela el modo edición"""
+	_cancel_text_edit()
+
 func _on_text_submitted(text: String):
-	"""Callback when Enter is pressed in text input"""
+	"""Callback cuando se presiona Enter en el input de texto"""
 	_on_add_text_pressed()
 
+func _enter_edit_mode(index: int):
+	"""Entra en modo edición para el índice especificado"""
+	current_editing_index = index
+	text_input.text = current_text_values[index]
+	text_input.grab_focus()
+	
+	# Actualizar interfaz para modo edición
+	edit_text_button.visible = false
+	cancel_edit_button.visible = true
+	add_text_button.text = "Actualizar"
+	
+	update_text_values_list()
+
+func _exit_edit_mode():
+	"""Sale del modo edición"""
+	edit_text_button.visible = true
+	cancel_edit_button.visible = false
+	add_text_button.text = "Agregar"
+	update_text_values_list()
+
+func _cancel_text_edit():
+	"""Cancela la edición actual"""
+	current_editing_index = -1
+	text_input.text = ""
+	_exit_edit_mode()
+
 func _on_add_pressed():
+	# Cancelar edición al agregar nuevo conditional
+	_cancel_text_edit()
+
 	if not FGGlobal or not FGGlobal._conditionals_initialized:
 		return
 	
@@ -297,6 +386,9 @@ func _on_add_pressed():
 	clear_inputs()
 
 func _on_edit_pressed():
+	# Cancelar edición al modificar conditional
+	_cancel_text_edit()
+
 	if not FGGlobal or not FGGlobal._conditionals_initialized:
 		return
 	
@@ -360,6 +452,9 @@ func _on_edit_pressed():
 	update_group_filter()
 
 func _on_delete_pressed():
+	# Cancelar edición al eliminar conditional
+	_cancel_text_edit()
+
 	if not FGGlobal or not FGGlobal._conditionals_initialized:
 		return
 	
@@ -395,6 +490,7 @@ func clear_inputs():
 	value_checkbox.button_pressed = false
 	value_spinbox.value = 0.0
 	current_text_values.clear()
+	_cancel_text_edit()  # Asegurarse de cancelar edición
 	update_text_values_list()
 
 func _exit_tree():

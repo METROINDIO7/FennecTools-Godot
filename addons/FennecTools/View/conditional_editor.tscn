@@ -121,10 +121,23 @@ placeholder_text = "New text value..."
 
 [node name="AddTextButton" type="Button" parent="VBoxContainer/TextValuesContainer/HBoxContainer"]
 layout_mode = 2
-text = "Add"
+tooltip_text = "Agregar nuevo texto a la lista"
+text = "Agregar"
+
+[node name="EditTextButton" type="Button" parent="VBoxContainer/TextValuesContainer/HBoxContainer"]
+layout_mode = 2
+tooltip_text = "Editar texto seleccionado"
+text = "Edit"
+
+[node name="CancelEditButton" type="Button" parent="VBoxContainer/TextValuesContainer/HBoxContainer"]
+visible = false
+layout_mode = 2
+tooltip_text = "Cancelar edición"
+text = "Cancel"
 
 [node name="RemoveTextButton" type="Button" parent="VBoxContainer/TextValuesContainer/HBoxContainer"]
 layout_mode = 2
+tooltip_text = "Eliminar texto seleccionado"
 text = "Remove"
 
 [node name="ButtonContainer" type="HBoxContainer" parent="VBoxContainer"]
