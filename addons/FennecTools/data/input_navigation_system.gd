@@ -1,6 +1,8 @@
 extends Node
 
+# 🔒 IMPORTANTE: NO usar @tool - este script solo debe ejecutarse en runtime
 # Sistema de navegación mejorado con protección contra bugs de sincronización
+
 var current_button_index: int = 0
 var interactuable_nodes: Array[Node] = []
 var navigation_sound: AudioStreamPlayer
@@ -12,8 +14,9 @@ var navigation_sound: AudioStreamPlayer
 @export var grid_navigation: bool = false
 @export var grid_columns: int = 3
 @export var slider_step: float = 1.5
-@export var auto_refresh_enabled: bool = true
-@export var auto_refresh_interval: float = 0.5
+@export var auto_refresh_enabled: bool = false  # 🔒 DESACTIVADO por defecto
+@export var auto_refresh_interval: float = 1.0  # 🔒 Aumentado a 1 segundo
+@export var debug_mode: bool = false  # 🔒 Activar para ver logs detallados
 
 # States
 var original_colors: Dictionary = {}
@@ -22,15 +25,29 @@ var is_editing_text: bool = false
 var refresh_timer: Timer
 var last_node_count: int = 0
 
+
 # 🔒 PROTECCIÓN CONTRA BUGS
 var is_refreshing: bool = false  # Previene refresh concurrente
 var refresh_scheduled: bool = false  # Para diferir refresh si está ocupado
 var interaction_lock: bool = false  # Previene interacción durante cambios
+var last_refresh_time: float = 0.0  # Para evitar refreshes muy seguidos
+var min_refresh_interval: float = 0.2  # Mínimo 200ms entre refreshes
 
 # Signals
 signal selection_changed(node: Control)
 
 func _ready():
+	# 🔒 LIMPIEZA: Resetear todo al iniciar para evitar estado residual
+	current_button_index = 0
+	interactuable_nodes.clear()
+	original_colors.clear()
+	is_refreshing = false
+	refresh_scheduled = false
+	interaction_lock = false
+	is_adjusting_slider = false
+	is_editing_text = false
+	last_node_count = 0
+	
 	if not FGGlobal or not FGGlobal.input_control_enabled:
 		return
 		
@@ -67,6 +84,19 @@ func _process(delta: float) -> void:
 	# 🔒 No procesar input si estamos en medio de un refresh
 	if is_refreshing or interaction_lock:
 		return
+	
+	# 🔒 CRÍTICO: Capturar el input de accept ANTES de cualquier otra cosa
+	var accept_just_pressed = FGGlobal.is_custom_action_just_pressed("accept")
+	
+	# Capturar snapshot INMEDIATAMENTE si se presionó accept
+	var interaction_node_snapshot = null
+	var interaction_index_snapshot = -1
+	
+	if accept_just_pressed and interactuable_nodes.size() > 0 and current_button_index < interactuable_nodes.size():
+		interaction_node_snapshot = interactuable_nodes[current_button_index]
+		interaction_index_snapshot = current_button_index
+		if debug_mode:
+			print("[Navigation] 📸 Snapshot capturado: ", interaction_node_snapshot.name, " at index ", interaction_index_snapshot)
 		
 	# Check for visibility changes
 	_check_visibility_changes()
@@ -94,10 +124,6 @@ func _process(delta: float) -> void:
 	if is_adjusting_slider and (current_node is HSlider or current_node is VSlider):
 		_handle_slider_adjustment(current_node)
 		return
-	
-	# 🔒 CRÍTICO: Capturar el nodo ANTES de procesar input para evitar race conditions
-	var node_snapshot = current_node
-	var index_snapshot = current_button_index
 		
 	# Handle normal navigation
 	var old_index = current_button_index
@@ -114,20 +140,20 @@ func _process(delta: float) -> void:
 		
 		if current_button_index < interactuable_nodes.size():
 			selection_changed.emit(interactuable_nodes[current_button_index])
-		
-		# Actualizar snapshot si cambió la selección
-		if current_button_index < interactuable_nodes.size():
-			node_snapshot = interactuable_nodes[current_button_index]
-			index_snapshot = current_button_index
 	
-	# 🔒 CRÍTICO: Usar el snapshot capturado para interacción
-	if FGGlobal.is_custom_action_just_pressed("accept"):
-		_safe_interact_with_control_snapshot(node_snapshot, index_snapshot)
+	# 🔒 CRÍTICO: Procesar interacción usando el snapshot capturado AL INICIO
+	if accept_just_pressed and is_instance_valid(interaction_node_snapshot):
+		if debug_mode:
+			print("[Navigation] 🎯 Ejecutando interacción con snapshot capturado")
+		_safe_interact_with_control_snapshot(interaction_node_snapshot, interaction_index_snapshot)
 
 # 🔒 NUEVA FUNCIÓN: Interacción segura con snapshot del nodo
 func _safe_interact_with_control_snapshot(node_snapshot: Node, index_snapshot: int) -> void:
 	# Bloquear INMEDIATAMENTE para prevenir refreshes durante interacción
 	interaction_lock = true
+	
+	if debug_mode:
+		print("[Navigation] 🔐 Lock activado para interacción")
 	
 	# Verificar que el snapshot del nodo es válido
 	if not is_instance_valid(node_snapshot):
@@ -135,18 +161,25 @@ func _safe_interact_with_control_snapshot(node_snapshot: Node, index_snapshot: i
 		interaction_lock = false
 		return
 	
-	# Verificar que el índice no ha cambiado (detectar refresh durante navegación)
-	if index_snapshot >= interactuable_nodes.size():
+	# Verificar que el nodo es usable
+	if not _is_node_usable(node_snapshot):
+		print("[Navigation] ❌ ERROR: Snapshot node is not usable")
+		interaction_lock = false
+		return
+	
+	# Verificar que el índice snapshot era válido en el momento de captura
+	if index_snapshot < 0 or index_snapshot >= interactuable_nodes.size():
 		print("[Navigation] ❌ ERROR: Index snapshot out of bounds (", index_snapshot, " >= ", interactuable_nodes.size(), ")")
 		interaction_lock = false
 		return
 	
 	# Verificar que el nodo en el snapshot sigue siendo el mismo
 	var current_node_at_index = interactuable_nodes[index_snapshot]
+	
 	if node_snapshot != current_node_at_index:
 		print("[Navigation] ⚠️ WARNING: Node changed during interaction!")
 		print("  Snapshot node: ", node_snapshot.name)
-		print("  Current node at index: ", current_node_at_index.name if is_instance_valid(current_node_at_index) else "invalid")
+		print("  Current node at snapshot index: ", current_node_at_index.name if is_instance_valid(current_node_at_index) else "invalid")
 		
 		# Buscar el nodo snapshot en la lista actual
 		var new_index = interactuable_nodes.find(node_snapshot)
@@ -154,36 +187,30 @@ func _safe_interact_with_control_snapshot(node_snapshot: Node, index_snapshot: i
 			print("[Navigation] ✓ Found snapshot node at new index: ", new_index)
 			current_button_index = new_index
 			_update_focus()
-			# Usar el snapshot node original
+			# IMPORTANTE: Usar el snapshot node original que estaba seleccionado
 			_interact_with_control(node_snapshot)
 		else:
-			print("[Navigation] ❌ ERROR: Snapshot node no longer in list!")
+			print("[Navigation] ❌ ERROR: Snapshot node no longer in list! Node may have been removed.")
 		
 		interaction_lock = false
 		return
 	
-	# Verificar que current_button_index coincide con index_snapshot
-	if current_button_index != index_snapshot:
-		print("[Navigation] ⚠️ WARNING: Index mismatch!")
-		print("  Snapshot index: ", index_snapshot)
+	# ✅ TODO CORRECTO: El nodo snapshot coincide perfectamente
+	if debug_mode:
+		print("[Navigation] ✅ Snapshot validation passed")
+		print("  Node: ", node_snapshot.name)
+		print("  Index: ", index_snapshot)
 		print("  Current index: ", current_button_index)
-		# Sincronizar con el snapshot
-		current_button_index = index_snapshot
-		_update_focus()
 	
-	# TODO: Verificación final - el nodo debe estar visible y usable
-	if not _is_node_usable(node_snapshot):
-		print("[Navigation] ❌ ERROR: Snapshot node is not usable")
-		interaction_lock = false
-		return
-	
-	# ✅ Todas las verificaciones pasadas - ejecutar interacción
-	print("[Navigation] ✓ Interacting with: ", node_snapshot.name, " at index ", index_snapshot)
+	# Ejecutar interacción
 	_interact_with_control(node_snapshot)
 	
 	# Desbloquear después de un frame para asegurar que la interacción se complete
 	await get_tree().process_frame
 	interaction_lock = false
+	
+	if debug_mode:
+		print("[Navigation] 🔓 Lock liberado")
 
 # 🔒 NUEVA FUNCIÓN: Interacción segura con validaciones
 func _safe_interact_with_control(node: Node) -> void:
@@ -285,10 +312,15 @@ func _handle_option_button(option_button: OptionButton) -> void:
 	_update_focus()
 
 func _update_focus() -> void:
-	# Reset all nodes
+	# Reset all nodes to their ORIGINAL colors
 	for node in interactuable_nodes:
 		if is_instance_valid(node) and node is Control:
-			node.modulate = Color.WHITE
+			# 🔧 FIX: Restaurar color original si existe
+			if original_colors.has(node):
+				node.modulate = original_colors[node]
+			else:
+				node.modulate = Color.WHITE
+			
 			if node.has_method("release_focus"):
 				node.release_focus()
 	
@@ -448,33 +480,62 @@ func _handle_slider_adjustment(slider) -> void:
 
 func _is_node_usable(node: Node) -> bool:
 	if not is_instance_valid(node):
+		if debug_mode:
+			print("[Navigation] 🚫 Node invalid")
 		return false
 		
 	if not node is Control:
+		if debug_mode:
+			print("[Navigation] 🚫 Node is not Control: ", node.name)
 		return false
 		
 	var control = node as Control
 	
 	if not control.is_inside_tree():
+		if debug_mode:
+			print("[Navigation] 🚫 Node not in tree: ", control.name)
 		return false
 	
 	if not control.visible:
+		if debug_mode:
+			print("[Navigation] 🚫 Node not visible: ", control.name)
 		return false
-		
-	if control.modulate.a <= 0.01:
+	
+	# 🔧 FIX: Ignorar modulate si está siendo usado para highlight
+	# Solo rechazar si es COMPLETAMENTE invisible (0.0)
+	if control.modulate.a <= 0.0:
+		if debug_mode:
+			print("[Navigation] 🚫 Node completely transparent: ", control.name, " (alpha: ", control.modulate.a, ")")
 		return false
 		
 	if control.has_method("is_disabled") and control.is_disabled():
+		if debug_mode:
+			print("[Navigation] 🚫 Node has is_disabled() = true: ", control.name)
 		return false
 	
 	if control is BaseButton and control.disabled:
+		if debug_mode:
+			print("[Navigation] 🚫 Button disabled: ", control.name)
 		return false
 	
+	# 🔧 FIX: Solo verificar padres inmediatos, no toda la jerarquía
 	var parent = control.get_parent()
-	while is_instance_valid(parent):
-		if parent is Control and (not parent.visible or parent.modulate.a <= 0.01):
-			return false
+	var parent_checks = 0
+	var max_parent_checks = 3  # Solo verificar 3 niveles arriba
+	
+	while is_instance_valid(parent) and parent_checks < max_parent_checks:
+		if parent is Control:
+			if not parent.visible:
+				if debug_mode:
+					print("[Navigation] 🚫 Parent not visible: ", control.name, " -> parent: ", parent.name)
+				return false
+			# 🔧 FIX: Ignorar alpha en padres también
+			if parent.modulate.a <= 0.0:
+				if debug_mode:
+					print("[Navigation] 🚫 Parent completely transparent: ", control.name, " -> parent: ", parent.name)
+				return false
 		parent = parent.get_parent()
+		parent_checks += 1
 	
 	return true
 
@@ -507,7 +568,20 @@ func refresh_interactables() -> void:
 		refresh_scheduled = true
 		return
 	
+	# 🔒 Prevenir refreshes muy seguidos (throttling)
+	var current_time = Time.get_ticks_msec() / 1000.0
+	if current_time - last_refresh_time < min_refresh_interval:
+		if debug_mode:
+			print("[Navigation] ⏱️ Refresh bloqueado por throttling (", 
+				  "%.2f" % (current_time - last_refresh_time), "s desde último refresh)")
+		refresh_scheduled = true
+		return
+	
 	is_refreshing = true
+	last_refresh_time = current_time
+	
+	if debug_mode:
+		print("[Navigation] 🔄 Iniciando refresh...")
 	
 	var group_name = "interactuable"
 	if FGGlobal and FGGlobal.has_method("get_interactable_group_name"):
@@ -515,10 +589,46 @@ func refresh_interactables() -> void:
 	
 	var all_nodes = get_tree().get_nodes_in_group(group_name)
 	
+	if debug_mode:
+		print("[Navigation] 📋 Nodos en grupo '", group_name, "': ", all_nodes.size())
+	
+	var old_count = interactuable_nodes.size()
 	interactuable_nodes.clear()
+	
+	# 🔍 DEBUG: Contador de por qué se rechazan nodos
+	var rejection_reasons: Dictionary = {}
+	
 	for node in all_nodes:
 		if is_instance_valid(node) and _is_node_usable(node):
 			interactuable_nodes.append(node)
+		elif is_instance_valid(node) and debug_mode:
+			# Intentar determinar por qué fue rechazado
+			if not node is Control:
+				rejection_reasons["not_control"] = rejection_reasons.get("not_control", 0) + 1
+			elif not node.is_inside_tree():
+				rejection_reasons["not_in_tree"] = rejection_reasons.get("not_in_tree", 0) + 1
+			elif not node.visible:
+				rejection_reasons["not_visible"] = rejection_reasons.get("not_visible", 0) + 1
+			elif node.modulate.a <= 0.0:
+				rejection_reasons["transparent"] = rejection_reasons.get("transparent", 0) + 1
+			elif node is BaseButton and node.disabled:
+				rejection_reasons["disabled"] = rejection_reasons.get("disabled", 0) + 1
+			else:
+				rejection_reasons["parent_issue"] = rejection_reasons.get("parent_issue", 0) + 1
+	
+	if debug_mode and rejection_reasons.size() > 0:
+		print("[Navigation] ⚠️ Nodos rechazados:")
+		for reason in rejection_reasons:
+			print("  - ", reason, ": ", rejection_reasons[reason])
+	
+	if debug_mode:
+		print("[Navigation] ✅ Nodos usables: ", interactuable_nodes.size(), " (antes: ", old_count, ")")
+		if interactuable_nodes.size() > 0:
+			print("[Navigation] 📝 Lista de nodos:")
+			for i in range(interactuable_nodes.size()):
+				print("  [", i, "] ", interactuable_nodes[i].name)
+		else:
+			print("[Navigation] ❌ NO HAY NODOS USABLES - El sistema no puede navegar")
 	
 	original_colors.clear()
 	for node in interactuable_nodes:
@@ -528,6 +638,8 @@ func refresh_interactables() -> void:
 	if interactuable_nodes.size() > 0:
 		if current_button_index >= interactuable_nodes.size():
 			current_button_index = 0
+			if debug_mode:
+				print("[Navigation] ⚠️ Índice ajustado a 0 (estaba fuera de rango)")
 		_update_focus()
 	else:
 		current_button_index = 0
@@ -536,9 +648,14 @@ func refresh_interactables() -> void:
 	
 	is_refreshing = false
 	
+	if debug_mode:
+		print("[Navigation] ✅ Refresh completado")
+	
 	# Procesar refresh programado si existe
 	if refresh_scheduled:
 		refresh_scheduled = false
+		if debug_mode:
+			print("[Navigation] 🔄 Ejecutando refresh programado...")
 		call_deferred("refresh_interactables")
 
 func _move_selection(direction: int) -> void:
@@ -673,3 +790,59 @@ func _on_refresh_timer_timeout() -> void:
 
 func _on_joy_connection_changed(device_id: int, connected: bool) -> void:
 	pass
+
+# 🔒 CRÍTICO: Limpieza completa al salir del árbol
+func _exit_tree() -> void:
+	if debug_mode:
+		print("[Navigation] 🧹 Iniciando limpieza completa...")
+	
+	# 🔧 FIX: Restaurar TODOS los colores originales ANTES de limpiar
+	for node in original_colors:
+		if is_instance_valid(node) and node is Control:
+			node.modulate = original_colors[node]
+			if node.has_method("release_focus"):
+				node.release_focus()
+	
+	# 🔧 FIX: Restaurar colores de nodos actuales también
+	for node in interactuable_nodes:
+		if is_instance_valid(node) and node is Control:
+			if original_colors.has(node):
+				node.modulate = original_colors[node]
+			else:
+				node.modulate = Color.WHITE
+			if node.has_method("release_focus"):
+				node.release_focus()
+	
+	# Detener el timer si existe
+	if is_instance_valid(refresh_timer):
+		refresh_timer.stop()
+		refresh_timer.queue_free()
+	
+	# Limpiar el audio si existe
+	if is_instance_valid(navigation_sound):
+		navigation_sound.stop()
+		navigation_sound.queue_free()
+	
+	# Resetear todas las variables de estado
+	is_refreshing = false
+	refresh_scheduled = false
+	interaction_lock = false
+	is_adjusting_slider = false
+	is_editing_text = false
+	
+	# Limpiar arrays y diccionarios
+	interactuable_nodes.clear()
+	original_colors.clear()
+	
+	# Resetear índice
+	current_button_index = 0
+	last_node_count = 0
+	last_refresh_time = 0.0
+	
+	if FGGlobal:
+		FGGlobal.navigation_system = null
+	
+	if debug_mode:
+		print("[Navigation] ✅ Sistema completamente limpiado")
+	else:
+		print("[Navigation] Sistema completamente limpiado")

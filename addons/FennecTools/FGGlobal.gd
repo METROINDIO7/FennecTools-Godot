@@ -222,14 +222,58 @@ func has_character_animation_node(character_group_name: String) -> bool:
 # ============================================================================
 # IMPROVED _ready() FUNCTION
 # ============================================================================
+# ============================================================================
+# AGREGAR ESTAS FUNCIONES A FGGlobal.gd
+# ============================================================================
+
+# 🔒 NUEVO: Limpiar sistema de navegación al cambiar de escena
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_PREDELETE:
+		_cleanup_navigation_system()
+
+func _cleanup_navigation_system():
+	"""Limpia completamente el sistema de navegación"""
+	if is_instance_valid(navigation_system):
+		# Desconectar señales
+		if navigation_system.has_signal("selection_changed"):
+			if navigation_system.selection_changed.is_connected(_on_navigation_selection_changed):
+				navigation_system.selection_changed.disconnect(_on_navigation_selection_changed)
+		
+		# Remover del árbol
+		if navigation_system.is_inside_tree():
+			navigation_system.queue_free()
+		
+		navigation_system = null
+		print("[FGGlobal] Sistema de navegación limpiado")
+
+
+# 🔒 NUEVO: Reiniciar sistema de navegación completamente
+func reset_navigation_system():
+	"""Reinicia completamente el sistema de navegación (útil para debugging)"""
+	print("[FGGlobal] Reiniciando sistema de navegación...")
+	_cleanup_navigation_system()
+	
+	# Esperar un frame para asegurar limpieza completa
+	await get_tree().process_frame
+	
+	# Recrear sistema
+	setup_input_control_system()
+	print("[FGGlobal] Sistema de navegación reiniciado")
+
+# ============================================================================
+# MODIFICAR LA FUNCIÓN _ready() EXISTENTE
+# ============================================================================
+
 func _ready():
+	# 🔒 NUEVO: Limpiar navegación previa si existe
+	if is_instance_valid(navigation_system):
+		_cleanup_navigation_system()
 	
 	# Create necessary directories
 	ensure_directories()
 	
 	# Migrate legacy data if necessary
 	migrate_legacy_data()
-	
 	
 	await initialize_conditionals_safe()
 	
@@ -238,14 +282,13 @@ func _ready():
 	initialize_translations()
 	initialize_dialogs()
 	
-	setup_input_control_system()
+	setup_input_control_system()  # Ya incluye limpieza
 	
 	# Verify integrity
 	verify_data_integrity()
 	
 	if current_save_slot != -1:
 		sync_slot_with_original(current_save_slot)
-
 # ============================================================================
 # SIMPLIFIED CONDITIONAL SYSTEM WITH SLOTS
 # ============================================================================
@@ -1413,25 +1456,32 @@ func get_translation(key: String, language: String = "") -> String:
 func navigation_refresh():
 	"""Forces the navigation system to update"""
 	if navigation_system and navigation_system.has_method("refresh_interactables"):
-		navigation_system.refresh_interactables()
+		navigation_system.call_deferred("refresh_interactables")
 		#print("[FGGlobal] Navigation system manually updated")
 
 
+# 🔒 MEJORADO: Setup con verificación de instancia previa
 func setup_input_control_system():
-	"""Configures the customizable input control system"""
-	# Load custom mappings from JSON first
+	"""Configura el sistema de control de input con limpieza previa"""
+	# Limpiar sistema anterior si existe
+	if is_instance_valid(navigation_system):
+		_cleanup_navigation_system()
+	
+	# Cargar mapeos personalizados desde JSON
 	load_custom_input_mappings()
 	
-	# Create the navigation system if it doesn't exist
+	# Crear nuevo sistema de navegación
 	if not navigation_system:
 		var navigation_scene = preload("res://addons/FennecTools/data/input_navigation_system.gd")
 		navigation_system = navigation_scene.new()
 		navigation_system.name = "InputNavigationSystem"
 		add_child(navigation_system)
 		
-		# Connect signals
+		# Conectar señales
 		if navigation_system.has_signal("selection_changed"):
 			navigation_system.selection_changed.connect(_on_navigation_selection_changed)
+		
+		print("[FGGlobal] Sistema de navegación creado y configurado")
 
 
 func _ensure_custom_input_actions():
